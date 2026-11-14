@@ -71,3 +71,70 @@ def test_smap_rejects_quality_flag_fill_value(tmp_path):
                   pre + "soil_moisture": [0.3, 0.3, 0.3], pre + "retrieval_qual_flag": [0, 1, 65534]}).to_csv(f, index=False)
     d = appeears.parse_smap(f, 1.0, 1.0)
     assert d["soil_moisture"].notna().tolist() == [True, False, False]      # recommended / not recommended / fill
+
+
+# ---- real NASA AppEEARS output (subsets of a downloaded bundle), checked against NASA's own decoded QA columns
+P = "MOD13Q1_061__250m_16_days_"
+SP = "SPL3SMP_E_006_Soil_Moisture_Retrieval_Data_AM_"
+REAL_NDVI = FIX / "real_appeears_MOD13Q1_subset.csv"
+REAL_SMAP = FIX / "real_appeears_SPL3SMP_E_subset.csv"
+FERGANA_CITY, SAMARKAND_CITY, NUKUS_CITY = (40.3842, 71.7843), (39.6542, 66.9597), (42.4602, 59.6166)
+
+
+def _ndvi_truth(raw: pd.DataFrame) -> pd.Series:
+    """QA truth from NASA's decoded description columns (independent of the bit decoding in the parser)."""
+    return (raw[P + "VI_Quality_MODLAND_Description"].isin(["VI produced with good quality", "VI produced, but check other QA"])
+            & (raw[P + "VI_Quality_Mixed_Clouds_Description"] == "No")
+            & (raw[P + "VI_Quality_Possible_snow/ice_Description"] == "No")
+            & (raw[P + "VI_Quality_Possible_shadow_Description"] == "No")
+            & ~raw[P + "VI_Quality_VI_Usefulness_Description"].str.contains("not useful|Lowest|faulty", case=False))
+
+
+@pytest.mark.parametrize("pid,pt", [("Fergana", FERGANA_CITY), ("Samarkand", SAMARKAND_CITY)])
+def test_real_ndvi_no_reliability_layer_scaled_values_and_qa_matches_nasa_columns(pid, pt):
+    raw = pd.read_csv(REAL_NDVI).query("ID == @pid")
+    assert not any("pixel_reliability" in c for c in raw.columns)                      # the real download has none
+    d = appeears.parse_ndvi(REAL_NDVI, *pt)
+    assert len(d) == len(raw) and (d["qa"] == "VI_Quality bits").all()
+    truth = _ndvi_truth(raw.sort_values("Date")).to_numpy()
+    assert (d["ndvi"].notna().to_numpy() == truth).all()                               # QA agrees with NASA's decoded flags
+    assert d["ndvi"].max() <= 0.5 and d["ndvi"].max() > 0.05                           # delivered scaled: not 0.00003, not 3000
+    assert d["ndvi"].notna().sum() < len(d)                                            # cloudy/mixed pixels were removed
+
+
+def test_real_ndvi_point_tolerance_is_strict():
+    with pytest.raises(ValueError, match="no point within"):                           # demo field 40.43,71.70 is ~9 km from this town pixel
+        appeears.parse_ndvi(REAL_NDVI, 40.43, 71.70)
+    assert len(appeears.parse_ndvi(REAL_NDVI, 40.3842 + 0.004, 71.7843)) == 43         # within ~0.4 km still matches
+
+
+def test_real_smap_qa_matches_nasa_recommended_quality_description():
+    raw = pd.read_csv(REAL_SMAP)
+    d = appeears.parse_smap(REAL_SMAP, *NUKUS_CITY)
+    r = raw.query("ID == 'Nukus'").sort_values("Date")
+    truth = (r[SP + "retrieval_qual_flag_Recommended_Quality_Description"].str.contains("has recommended")
+             & (r[SP + "soil_moisture"] != -9999)).to_numpy()
+    assert (d["soil_moisture"].notna().to_numpy() == truth).all() and truth.sum() > 0
+    assert 0 < d["soil_moisture"].max() < 0.6
+
+
+def test_real_smap_point_with_no_recommended_quality_retrievals_fails_cleanly(tmp_path, monkeypatch):
+    raw = pd.read_csv(REAL_SMAP).query("ID == 'Fergana'")
+    assert (raw[SP + "soil_moisture"] != -9999).sum() > 50                              # valid values exist ...
+    assert not raw[SP + "retrieval_qual_flag_Recommended_Quality_Description"].str.contains("has recommended").any()   # ... none is recommended
+    (tmp_path / "x-SPL3SMP-E-006-results.csv").write_bytes(REAL_SMAP.read_bytes())
+    monkeypatch.setattr(appeears, "RAW_DIR", tmp_path / "raw")                          # loader also scans RAW_DIR.parent = tmp_path
+    r = appeears.load_smap(*FERGANA_CITY)
+    assert not r.ok and "rejected by QA" in r.message
+
+
+def test_ndvi_requires_both_qa_layers_when_both_present(tmp_path):
+    raw = pd.read_csv(REAL_NDVI).query("ID == 'Samarkand'").copy()
+    raw["MOD13Q1_061__250m_16_days_pixel_reliability"] = 0
+    raw.loc[raw.index[:5], "MOD13Q1_061__250m_16_days_pixel_reliability"] = 3          # cloudy by reliability layer only
+    f = tmp_path / "both.csv"; raw.to_csv(f, index=False)
+    d = appeears.parse_ndvi(f, *SAMARKAND_CITY)
+    only_bits = appeears.parse_ndvi(REAL_NDVI, *SAMARKAND_CITY)
+    assert d["qa"].iloc[0] == "VI_Quality bits + pixel_reliability"
+    assert d["ndvi"].notna().sum() <= only_bits["ndvi"].notna().sum()
+    assert d["ndvi"].iloc[:5].isna().all()

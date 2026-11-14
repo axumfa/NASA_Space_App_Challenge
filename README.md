@@ -38,11 +38,12 @@ Command-line reports (no UI): `scripts/field_report.py fergana`, `scripts/rotati
   task for both demo fields (MOD13Q1.061 NDVI + pixel reliability; SPL3SMP_E.006 AM soil moisture + retrieval quality flag;
   2015-04-01 to today), polls until it is done and saves the `*-results.csv` files into `data/raw/`. Credentials are used only for
   the login request and never printed. (`verify`, `submit`, `status`, `download` run the steps separately.)
-- **Or by hand**: put AppEEARS point-sample CSVs from the web interface in `data/raw/`; their names must contain
-  `MOD13Q1` (MOD13Q1.061, layers `250m_16_days_NDVI` and `pixel_reliability`) or `SPL3SMP` (SPL3SMP_E, AM/PM soil moisture
-  and retrieval-quality flags). The quality layers are applied before use (see `docs/methodology.md`). If a file is missing
-  or its columns do not match, the app still runs and lists it as an information gap. The parser was written against the
-  documented layout and tested on a **synthetic fixture only**; check it on your first real file.
+- **Or by hand**: put the AppEEARS point-sample `*-results.csv` files from the web interface in `data/raw/` (`data/` is scanned too).
+  File names must contain `MOD13Q1` (MOD13Q1.061; `NDVI` plus `VI_Quality` and/or `pixel_reliability`) or `SPL3SMP`
+  (SPL3SMP_E.006; AM soil moisture and `retrieval_qual_flag`). **The point must be the field itself**: NDVI is matched within
+  ~1 km and SMAP within ~6 km, so a town-centre point (an urban pixel with low, flat NDVI) is never silently used for a farm.
+  Quality layers are applied before use (see `docs/methodology.md`). If a file is missing, too far, or every observation fails QA,
+  the app still runs and lists the reason as an information gap. The parser is tested on subsets of a real AppEEARS download.
 - **Soil**: SoilGrids REST is tried first (10 s timeout). If it returns nothing, fill `data/manual/soil_<field>.json`
   (values read by hand from the SoilGrids web map, 0–30 cm); the source is then shown as "SoilGrids web map, read manually".
 

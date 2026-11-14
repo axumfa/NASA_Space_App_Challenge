@@ -19,6 +19,7 @@ from .scoring import (DailyClimate, Weights, classify_by_demand, irrigation_dema
 
 
 NDVI_BARE_THRESHOLD = 0.2   # configurable: NDVI below this = bare soil
+MIN_YEARS_ANOMALY = 4       # a calendar-month z-score needs several years of the same month
 
 
 @dataclass
@@ -70,20 +71,30 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
     gaps = ["Soil: not used in the scores (shown for information only; see the Soil section for its status)."]
+    def span_years(df: pd.DataFrame) -> float:
+        return (df.index.max() - df.index.min()).days / 365.25
+
     if ndvi.ok:
         sources.append(ndvi)
+        nd_years = span_years(ndvi.data)
         curve = F.ndvi_seasonal_curve(ndvi.data["ndvi"])
         wins = F.bare_windows_from_ndvi(curve, NDVI_BARE_THRESHOLD)
         ob = F.observed_bare_days_per_year(ndvi.data["ndvi"], NDVI_BARE_THRESHOLD)
         obs = float(ob.median()) if len(ob) else None
         gaps.append(f"Satellite NDVI ({ndvi.meta['n_valid']}/{ndvi.meta['n_total']} observations pass quality checks, "
-                    f"{ndvi.date_range}) is shown and compared with the crop calendar; the scores still use the calendar.")
+                    f"{ndvi.date_range}) is shown and compared with the crop calendar; the scores still use the calendar."
+                    + (f" It covers only {nd_years:.1f} years, so the seasonal curve is a rough picture, not a climatology." if nd_years < 5 else ""))
     else:
         gaps.append(f"Vegetation (MODIS NDVI) not loaded: bare periods come from crop calendars, not satellite. ({ndvi.message})")
     if smap.ok:
         sources.append(smap)
-        sm_anom = F.soil_moisture_anomaly(smap.data.rename(columns={"soil_moisture": "SMAP"}), "SMAP")
-        gaps.append(f"SMAP soil moisture ({smap.date_range}) is shown for information; the scores do not use it.")
+        sm_years = span_years(smap.data)
+        if sm_years >= MIN_YEARS_ANOMALY:
+            sm_anom = F.soil_moisture_anomaly(smap.data.rename(columns={"soil_moisture": "SMAP"}), "SMAP")
+            gaps.append(f"SMAP soil moisture ({smap.date_range}) is shown for information; the scores do not use it.")
+        else:
+            gaps.append(f"SMAP soil moisture loaded ({smap.date_range}) but it covers only {sm_years:.1f} years: a wetter/drier-than-normal "
+                        f"anomaly needs at least {MIN_YEARS_ANOMALY} years, so none is shown.")
     else:
         gaps.append(f"SMAP soil moisture not loaded: root-zone wetness from NASA POWER (model, ~50 km) is shown instead. ({smap.message})")
     gaps += [

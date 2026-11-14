@@ -5,11 +5,13 @@ Expected products (AppEEARS "point sample" CSV output):
   SPL3SMP_E.006 9 km daily soil moisture, layers ..._AM_soil_moisture(+_qual_flag) and ..._PM_soil_moisture_pm(+_qual_flag_pm)
 Column names are matched by regular expression (they differ slightly between AppEEARS versions). If the
 required columns are missing, a ValueError lists the columns found. A file may hold several points; the
-row group nearest to the requested lat/lon (within MAX_DEG) is used.
+row group nearest to the requested lat/lon (within the product's tolerance) is used.
 
 QA applied before any value is used:
-  NDVI  : pixel_reliability must be 0 (good) or 1 (marginal); 2 (snow/ice), 3 (cloudy), -1 (no data) rejected;
-          fill -3000 rejected; scale factor 0.0001.
+  NDVI  : every QA layer present must pass: pixel_reliability 0 (good) or 1 (marginal); VI_Quality bits decoded as
+          MODLAND QA <= 1 (not cloudy / not produced), no mixed
+          clouds, no possible snow/ice, no possible shadow, usefulness code <= 11. Values are used as delivered if they
+          are already scaled (AppEEARS CSVs are), else multiplied by 0.0001; valid NDVI range is -0.2..1.
   SMAP  : retrieval_qual_flag bit 0 must be 0 (recommended quality); fill -9999 rejected; AM and PM averaged.
 """
 from __future__ import annotations
@@ -23,7 +25,8 @@ import pandas as pd
 from ..config import RAW_DIR
 from .base import FetchResult
 
-MAX_DEG = 0.1
+NDVI_MAX_DEG = 0.01    # ~1 km: a 250 m pixel must be the field, not a town 9 km away
+SMAP_MAX_DEG = 0.06    # ~one 9 km pixel half-width
 NDVI_SCALE = 0.0001
 NDVI_FILL = -3000
 SMAP_FILL = -9999
@@ -40,27 +43,45 @@ def _find_col(cols: list[str], pattern: str, required: bool = True) -> str | Non
     return None
 
 
-def _select_point(df: pd.DataFrame, lat: float, lon: float) -> pd.DataFrame:
+def _select_point(df: pd.DataFrame, lat: float, lon: float, max_deg: float) -> pd.DataFrame:
     lat_c, lon_c = _find_col(list(df.columns), r"^latitude$"), _find_col(list(df.columns), r"^longitude$")
     d = np.hypot(df[lat_c] - lat, df[lon_c] - lon)
-    if d.min() > MAX_DEG:
-        raise ValueError(f"no point within {MAX_DEG} deg of ({lat}, {lon}); nearest is {d.min():.2f} deg away")
+    if d.min() > max_deg:
+        raise ValueError(f"no point within {max_deg} deg of ({lat}, {lon}); nearest is {d.min():.3f} deg away")
     best = df.loc[d.idxmin(), [lat_c, lon_c]]
     return df[(df[lat_c] == best[lat_c]) & (df[lon_c] == best[lon_c])]
 
 
+def _vi_quality_ok(q: np.ndarray) -> np.ndarray:
+    """MOD13Q1 VI_Quality bit fields -> True where the NDVI may be used (bit layout checked against NASA's decoded columns)."""
+    q = np.nan_to_num(q, nan=65535).astype(np.int64)
+    modland, useful = q & 3, (q >> 2) & 15
+    mixed_clouds, snow, shadow = (q >> 10) & 1, (q >> 14) & 1, (q >> 15) & 1
+    return (modland <= 1) & (useful <= 11) & (mixed_clouds == 0) & (snow == 0) & (shadow == 0)
+
+
 def parse_ndvi(path: Path, lat: float, lon: float, accept: tuple[int, ...] = NDVI_ACCEPT_RELIABILITY) -> pd.DataFrame:
-    """Return a frame indexed by date with `ndvi` (QA-filtered, NaN where rejected) and `ndvi_raw_ok`."""
+    """Return a frame indexed by date with `ndvi` (QA-filtered, NaN where rejected) and `qa` (which rule was used)."""
     raw = pd.read_csv(path)
-    df = _select_point(raw, lat, lon)
+    df = _select_point(raw, lat, lon, NDVI_MAX_DEG)
     cols = list(df.columns)
-    nd = _find_col(cols, r"250m_16_days_NDVI$")
-    rel = _find_col(cols, r"250m_16_days_pixel_reliability$")
-    out = pd.DataFrame({"ndvi": df[nd].astype(float).values * NDVI_SCALE,
-                        "reliability": df[rel].astype(float).values},
+    vals = df[_find_col(cols, r"250m_16_days_NDVI$")].astype(float).to_numpy()
+    finite = vals[np.isfinite(vals)]
+    scaled = finite.size == 0 or np.abs(finite).max() <= 1.5         # AppEEARS CSVs deliver scaled NDVI; raw MODIS ints reach 10000
+    ndvi = vals if scaled else vals * NDVI_SCALE
+    in_range = (ndvi >= -0.2) & (ndvi <= 1.0)
+    rel = _find_col(cols, r"250m_16_days_pixel_reliability$", required=False)
+    vq = _find_col(cols, r"250m_16_days_VI_Quality$", required=False)
+    if rel is None and vq is None:
+        raise ValueError(f"neither pixel_reliability nor VI_Quality column found; columns are: {cols}")
+    ok, used = np.ones(len(df), bool), []
+    if vq is not None:
+        ok &= _vi_quality_ok(df[vq].astype(float).to_numpy()); used.append("VI_Quality bits")
+    if rel is not None:
+        ok &= df[rel].astype(float).isin(accept).to_numpy(); used.append("pixel_reliability")
+    qa = " + ".join(used)
+    out = pd.DataFrame({"ndvi": np.where(ok & in_range, ndvi, np.nan), "qa": qa},
                        index=pd.to_datetime(df[_find_col(cols, r"^date$")]).values)
-    ok = out["reliability"].isin(accept) & (df[nd].values != NDVI_FILL) & df[nd].between(-2000, 10000).values
-    out.loc[~ok.values if hasattr(ok, "values") else ~ok, "ndvi"] = np.nan
     out.index.name = "date"
     return out.sort_index()
 
@@ -68,7 +89,7 @@ def parse_ndvi(path: Path, lat: float, lon: float, accept: tuple[int, ...] = NDV
 def parse_smap(path: Path, lat: float, lon: float) -> pd.DataFrame:
     """Return a frame indexed by date with `soil_moisture` (m3/m3, QA-filtered, AM/PM mean)."""
     raw = pd.read_csv(path)
-    df = _select_point(raw, lat, lon)
+    df = _select_point(raw, lat, lon, SMAP_MAX_DEG)
     cols = list(df.columns)
     parts = []
     for sm_pat, q_pat in ((r"_AM_soil_moisture$", r"AM_retrieval_qual_flag$|retrieval_qual_flag$"),
@@ -90,7 +111,9 @@ def parse_smap(path: Path, lat: float, lon: float) -> pd.DataFrame:
 
 
 def _files(pattern: str) -> list[Path]:
-    return sorted(Path(RAW_DIR).glob(f"*{pattern}*.csv")) if Path(RAW_DIR).exists() else []
+    """AppEEARS CSVs in data/raw/ and (where bundles are often unzipped by hand) data/."""
+    dirs = [Path(RAW_DIR), Path(RAW_DIR).parent]
+    return sorted({f for d in dirs if d.exists() for f in d.glob(f"*{pattern}*.csv")})
 
 
 def _load(source: str, patterns: list[str], parser, lat: float, lon: float, res: str) -> FetchResult:

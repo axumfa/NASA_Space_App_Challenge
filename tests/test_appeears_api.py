@@ -15,7 +15,7 @@ def test_task_payload_covers_both_fields_products_and_dates():
     assert {c["id"] for c in p["coordinates"]} == set(DEMO_FIELDS)
     assert all(c["latitude"] == DEMO_FIELDS[c["id"]].lat for c in p["coordinates"])
     got = {(x["product"], x["layer"]) for x in p["layers"]}
-    assert ("MOD13Q1.061", "_250m_16_days_pixel_reliability") in got
+    assert ("MOD13Q1.061", "_250m_16_days_pixel_reliability") in got and ("MOD13Q1.061", "_250m_16_days_VI_Quality") in got
     assert ("SPL3SMP_E.006", "Soil_Moisture_Retrieval_Data_AM_retrieval_qual_flag") in got
     assert not any(pv == "SPL3SMP_E.005" for pv, _ in got)        # that version does not exist in AppEEARS
 

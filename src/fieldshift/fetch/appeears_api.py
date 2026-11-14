@@ -20,7 +20,7 @@ from ..config import DEMO_FIELDS, RAW_DIR, ROOT
 BASE = "https://appeears.earthdatacloud.nasa.gov/api"
 # Verified against the live product list: MOD13Q1.061 exists; SPL3SMP_E.005 does NOT (404), .006 is current.
 LAYERS: dict[str, list[str]] = {
-    "MOD13Q1.061": ["_250m_16_days_NDVI", "_250m_16_days_pixel_reliability"],
+    "MOD13Q1.061": ["_250m_16_days_NDVI", "_250m_16_days_VI_Quality", "_250m_16_days_pixel_reliability"],
     "SPL3SMP_E.006": ["Soil_Moisture_Retrieval_Data_AM_soil_moisture", "Soil_Moisture_Retrieval_Data_AM_retrieval_qual_flag"],
 }
 START = "2015-04-01"
