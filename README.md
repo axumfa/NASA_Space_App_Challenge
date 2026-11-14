@@ -124,3 +124,7 @@ available 40…100%).
 - **AI tools used:** the code, tests and documentation were written with Claude Code (Anthropic's Claude Sonnet 5.5)
   under the developer's direction; the developer reviews the results. Crop parameters marked approximate were drafted by the AI from
   general knowledge and partly checked against FAO tables as described in `docs/methodology.md`.
+
+## Map
+
+The field view has an interactive map: satellite / street / terrain basemaps and four NASA GIBS layers (NDVI, rainfall rate, land surface temperature, surface soil moisture) with legend, source and observation date. Use the layers button (top right of the map); click the map to move the field. The layers need internet access in the browser; the rest of the app does not. Details and provider notes: `docs/methodology.md`, section 12.

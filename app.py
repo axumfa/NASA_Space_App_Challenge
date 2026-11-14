@@ -16,6 +16,8 @@ from fieldshift.crops import load_crops
 from fieldshift.explain import explain, is_arid, summary_box
 from fieldshift.fetch.soil import fetch_soil
 from fieldshift import i18n, ui
+from fieldshift import mapview
+from fieldshift.fetch import gibs
 from fieldshift.i18n import GLOSSARY, LANGS, crop_name, tr
 from fieldshift.pipeline import build_context, choose, run
 from fieldshift.rotations import schedule
@@ -76,6 +78,11 @@ def get_pool(lat: float, lon: float, rain_pct: int, temp_c: float, current: tupl
 def get_display(lat: float, lon: float, rain_pct: int, temp_c: float, current: tuple[str, ...], supply: float,
                 weights: tuple[float, ...], force: tuple[tuple[str, ...], ...]):
     return choose(get_pool(lat, lon, rain_pct, temp_c, current, supply), Weights(*weights), n=4, force=force)
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_gibs_layers():
+    return gibs.load_layers()
 
 
 @st.cache_data(show_spinner=False)
@@ -238,19 +245,23 @@ if view == "field":
     with c1:
         with st.container(border=True, key="panel_map"):
             try:
-                import folium
                 from streamlit_folium import st_folium
-                m = folium.Map(location=[lat, lon], zoom_start=7, tiles="OpenStreetMap")
-                folium.CircleMarker([lat, lon], radius=9, color="#234E35", weight=2, fill=True, fill_color="#2F6B45", fill_opacity=0.9,
-                                    tooltip=t("f.marker")).add_to(m)
+                with st.spinner(t("map.loading")):
+                    layers = get_gibs_layers()
+                m = mapview.build_map(lat, lon, layers, S.lang, tooltip=f"{t('map.marker')}: {lat:.2f}, {lon:.2f}")
                 out = st_folium(m, height=345, width=None, returned_objects=["last_clicked"], key="map")
                 if out and out.get("last_clicked"):
                     lc = out["last_clicked"]
                     if abs(lc["lat"] - lat) > 1e-3 or abs(lc["lng"] - lon) > 1e-3:
                         S.lat, S.lon, S.field_choice = round(lc["lat"], 2), round(lc["lng"], 2), OWN   # plain state: pick() syncs the widget
                         st.rerun()
-                st.caption(t("f.mapcap"))
-            except Exception:  # noqa: BLE001
+                st.caption(t("map.help"))
+                st.markdown(ui.layer_line(t("map.layers_h"), mapview.layer_status(layers, S.lang)), unsafe_allow_html=True)
+                if any(l.stale for l in layers.values()):
+                    st.caption(t("map.stale_note"))
+            except Exception:  # noqa: BLE001  - the map must never take the dashboard down; plain map as a fallback
+                import traceback
+                traceback.print_exc()
                 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
     with c2:
         def rng(series, unit="", fmt=None):

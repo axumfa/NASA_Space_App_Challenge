@@ -66,6 +66,9 @@ section[data-testid="stSidebar"][aria-expanded="true"]{min-width:340px; max-widt
 .st-key-langbox label[data-testid="stRadioOption"][data-selected="true"]{background:#fff; border-color:var(--fs-border); box-shadow:0 1px 1px rgba(0,0,0,.04);}
 .st-key-langbox label[data-testid="stRadioOption"][data-selected="true"] p{color:var(--fs-ink);}
 .st-key-langbox [data-testid="stWidgetLabel"]{display:none;}
+.fs-lyrs{display:flex; flex-wrap:wrap; gap:.25rem .9rem; font-size:.78rem; color:var(--fs-muted); margin:.15rem 0 .2rem;}
+.fs-lyrs .h{text-transform:uppercase; letter-spacing:.06em; font-weight:650; font-size:.7rem;}
+.fs-lyr b{color:var(--fs-ink); font-weight:600;} .fs-lyr.off{color:#8A5313;}
 .fs-rule{height:1px; background:var(--fs-border); margin:.5rem 0 .9rem;}
 .fs-notice{font-size:.82rem; color:var(--fs-muted); display:flex; gap:.5rem; align-items:center; margin:.1rem 0 .6rem;}
 .fs-notice i{width:7px; height:7px; border-radius:50%; background:var(--fs-amber); display:inline-block; flex:none;}
@@ -101,7 +104,7 @@ section[data-testid="stSidebar"][aria-expanded="true"]{min-width:340px; max-widt
 
 /* ---------- KPI tiles ---------- */
 .fs-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;}
-.fs-kpis.c3{grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:minmax(190px,1fr);}
+.fs-kpis.c3{grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:minmax(212px,1fr);}
 .fs-kpi{background:var(--fs-surface); border:1px solid var(--fs-border); border-radius:10px; padding:.8rem .95rem .75rem;}
 .fs-kpi .n{font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; color:var(--fs-muted); font-weight:650;}
 .fs-kpi .v{font-size:1.75rem; font-weight:680; letter-spacing:-0.02em; line-height:1.15; margin:.15rem 0 .05rem;}
@@ -206,6 +209,12 @@ def data_status(title: str, rows: list[tuple[str, str, str, str]], note: str = "
 def rotation_preview(crops: list[str]) -> None:
     st.markdown('<div class="fs-rotprev">' + '<span class="a">→</span>'.join(f'<span class="c">{esc(c)}</span>' for c in crops) + "</div>",
                 unsafe_allow_html=True)
+
+
+def layer_line(title: str, items: list[tuple[str, str, str, bool]]) -> str:
+    """One quiet line under the map: each NASA layer with its observation date, or 'unavailable' in amber."""
+    parts = "".join(f'<span class="fs-lyr{"" if ok else " off"}" title="{esc(tip)}"><b>{esc(n)}</b> {esc(txt)}</span>' for n, txt, tip, ok in items)
+    return f'<div class="fs-lyrs"><span class="h">{esc(title)}</span>{parts}</div>'
 
 
 def group_label(text: str) -> None:
