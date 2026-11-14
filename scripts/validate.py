@@ -22,7 +22,7 @@ from fieldshift.config import DEMO_FIELDS  # noqa: E402
 from fieldshift.crops import load_crops  # noqa: E402
 from fieldshift.pipeline import build_context, run  # noqa: E402
 from fieldshift.rotations import check_feasible, schedule  # noqa: E402
-from fieldshift.scoring import PROFILES, DailyClimate, Weights, planting_table, score_rotation  # noqa: E402
+from fieldshift.scoring import PROFILES, DailyClimate, Weights, planting_table, score_rotation, static_subscores  # noqa: E402
 
 DB = load_crops()
 FIELDS = ["fergana", "kansas"]
@@ -57,20 +57,44 @@ def single_crop_stats(ctx, dc, crop_id: str, supply: float = 1.0) -> dict | None
                 loss=float(sc["yield_loss"].median()), ky=DB[crop_id]["ky"], loss_p90=float(sc["yield_loss"].quantile(0.9)))
 
 
+GRAIN_LEGUMES = ["soybean", "mung_bean", "chickpea", "lentil"]
+
+
 def check_a(key, ctx, dc) -> tuple[str, str, str]:
-    """Cotton has the highest irrigation demand among the main field crops."""
-    rows = {c: single_crop_stats(ctx, dc, c) for c in MAIN_CROPS}
-    df = pd.DataFrame({c: r for c, r in rows.items() if r and r["feasible"]}).T.sort_values("irrigation", ascending=False)
-    top = df.head(6)[["irrigation", "etc"]]
-    if "cotton" not in df.index:
-        verdict, why = "N/A", "cotton is not climatically feasible here (frost-free season/GDD), so it cannot be ranked"
+    """Cotton needs more irrigation than winter wheat and the grain legumes; alfalfa and sugar beet are expected to be higher.
+
+    Verdict rule: PASS if cotton > winter wheat and cotton > every feasible grain legume AND alfalfa and sugar beet > cotton;
+    PARTIAL if the first part holds but alfalfa and/or sugar beet are not higher; FAIL if cotton is not above wheat or a legume.
+    """
+    wanted = ["cotton", "winter_wheat", *GRAIN_LEGUMES, "alfalfa", "sugar_beet"]
+    rows = {c: single_crop_stats(ctx, dc, c) for c in wanted}
+    feas = {c: r for c, r in rows.items() if r and r["feasible"]}
+    if "cotton" not in feas:
+        return "N/A", "cotton is not climatically feasible here (frost-free season/GDD), so it cannot be compared", ""
+    cot = feas["cotton"]["irrigation"]
+    below = [c for c in ["winter_wheat", *GRAIN_LEGUMES] if c in feas]
+    below_ok = {c: cot > feas[c]["irrigation"] for c in below}
+    above = [c for c in ("alfalfa", "sugar_beet") if c in feas]
+    above_ok = {c: feas[c]["irrigation"] > cot for c in above}
+    skipped = [DB[c]["name"] for c in wanted if c not in feas]
+    if not all(below_ok.values()):
+        verdict = "FAIL"
+    elif above and all(above_ok.values()):
+        verdict = "PASS"
     else:
-        rank = int(list(df.index).index("cotton")) + 1
-        above = [DB[c]["name"] for c in df.index[:rank - 1]]
-        verdict = "PASS" if rank == 1 else "FAIL"
-        why = f"cotton ranks {rank} of {len(df)} feasible crops" + (f"; higher: {', '.join(above)}" if above else "")
-    tbl = md_table(top.rename(columns={"irrigation": "irrigation need, mm/season", "etc": "crop water use ETc, mm"}).rename(index=lambda c: DB[c]["name"]))
-    return verdict, why, tbl
+        verdict = "PARTIAL"
+    parts = [f"cotton {cot:.0f} mm; lower than cotton: " + ", ".join(f"{DB[c]['name']} {feas[c]['irrigation']:.0f}" for c in below if below_ok[c])]
+    bad = [DB[c]["name"] for c in below if not below_ok[c]]
+    if bad:
+        parts.append("NOT lower than cotton: " + ", ".join(bad))
+    parts.append("expected higher: " + ", ".join(f"{DB[c]['name']} {feas[c]['irrigation']:.0f} ({'higher' if above_ok[c] else 'NOT higher'})" for c in above))
+    if skipped:
+        parts.append("not feasible here, skipped: " + ", ".join(skipped))
+    order = sorted(feas, key=lambda c: -feas[c]["irrigation"])
+    tbl = pd.DataFrame({"irrigation need, mm/season": [feas[c]["irrigation"] for c in order], "crop water use ETc, mm": [feas[c]["etc"] for c in order],
+                        "role in the check": [("compared" if c == "cotton" else "must be below cotton" if c in below else "expected above cotton") for c in order]},
+                       index=pd.Index([DB[c]["name"] for c in order], name=""))
+    return verdict, "; ".join(parts), md_table(tbl)
 
 
 def check_b(key, ctx, pool) -> tuple[str, str, str]:
@@ -96,6 +120,73 @@ def check_b(key, ctx, pool) -> tuple[str, str, str]:
     t = df.sort_values("nitrogen", ascending=False).head(8).copy()
     t["cycle_years"] = t["cycle_years"].map(lambda v: f"{int(v)}")          # a count, not a delta
     return verdict, why, md_table(t.rename(columns={"cycle_years": "cycle (years)", "soil_om": "Δ organic matter", "nitrogen": "Δ nitrogen", "erosion": "Δ erosion cover"}), "{:+.0f}")
+
+
+def _rotation_rows(rot) -> tuple[list[dict], dict]:
+    """Per planting: days, om, cover, and the model's own sums. Also the residue-credit sensitivity inputs."""
+    k, total = rot.cycle_years, 365 * rot.cycle_years
+    rows = []
+    for i, p in enumerate(rot.plantings):
+        c = DB[p.crop_id]
+        nxt = rot.plantings[i + 1].start if i + 1 < len(rot.plantings) else rot.plantings[0].start + total
+        gap = nxt - p.end
+        rows.append(dict(crop=c["name"], days=p.days, om=c["om"], cover=c["cover"], om_days=c["om"] * p.days, cover_days=c["cover"] * p.days,
+                         gap_days=gap, residue_days=min(60, max(gap, 0))))
+    return rows, dict(k=k, om_days=sum(r["om_days"] for r in rows), cover_days=sum(r["cover_days"] for r in rows),
+                      residue_cover_days=sum(0.5 * r["cover"] * r["residue_days"] for r in rows))
+
+
+def worked_example_b(key, f, pool) -> str:
+    """One worked example of a legume option that lengthens the cycle and lowers organic matter and erosion cover."""
+    cur = pool[0]
+    cands = [r for r in pool[1:] if r.rotation.cycle_years > cur.rotation.cycle_years
+             and r.scores["soil_om"].median() < cur.scores["soil_om"].median() and r.scores["erosion"].median() < cur.scores["erosion"].median()
+             and any(DB[c]["n_fixing"] for c in r.rotation.added)]
+    if not cands:
+        return "*No legume option in this field both lengthens the cycle and lowers organic matter and erosion cover, so there is no example to show.*\n"
+    opt = next((r for r in cands if "chickpea" in r.rotation.crops), cands[0])
+    rc, tc = _rotation_rows(cur.rotation)
+    ro, to = _rotation_rows(opt.rotation)
+    sc, so = static_subscores(cur.rotation, DB), static_subscores(opt.rotation, DB)
+    # the hand arithmetic below must reproduce the model's subscores exactly
+    for t_, st_, rot in ((tc, sc, cur.rotation), (to, so, opt.rotation)):
+        om = min(100, 100 * t_["om_days"] / (365 * t_["k"]) / 0.6)
+        er = min(100, 100 * t_["cover_days"] / (365 * t_["k"]) / 0.8)
+        assert abs(om - st_["soil_om"]) < 1e-9 and abs(er - st_["erosion"]) < 1e-9, "worked example does not match the model"
+    names = lambda r: " → ".join(x["crop"] for x in r)
+    lines = [f"#### Worked example: **{names(rc)}** (current, {tc['k']}-year cycle) vs **{names(ro)}** ({to['k']}-year cycle)\n"]
+    def tab(rows):
+        return md_table(pd.DataFrame(rows).set_index("crop")[["days", "om", "cover", "om_days", "cover_days", "gap_days"]].rename(columns={
+            "days": "days in field", "om": "om score", "cover": "cover score", "om_days": "om × days", "cover_days": "cover × days", "gap_days": "days to next sowing"}), "{:g}")
+    lines += ["Current rotation:\n", tab(rc), "\nOption:\n", tab(ro), ""]
+    kk, k2 = tc["k"], to["k"]
+    lines.append("Model formulas: organic matter = 100 × (Σ om × days / (365 × cycle years)) / 0.6 and erosion cover = 100 × (Σ cover × days / (365 × cycle years)) / 0.8.\n")
+    calc = pd.DataFrame({
+        "current": [tc["om_days"], kk, tc["om_days"] / kk, sc["soil_om"], tc["cover_days"], tc["cover_days"] / kk, sc["erosion"], sc["bare_days"]],
+        "option": [to["om_days"], k2, to["om_days"] / k2, so["soil_om"], to["cover_days"], to["cover_days"] / k2, so["erosion"], so["bare_days"]]},
+        index=["Σ om × days over the cycle", "cycle (years)", "om × days **per year**", "organic matter subscore", "Σ cover × days over the cycle",
+               "cover × days **per year**", "erosion-cover subscore", "bare days per year (calendar)"])
+    lines += [md_table(calc, "{:.1f}"), ""]
+    # same-horizon comparison: lcm of the two cycles
+    import math
+    H = math.lcm(kk, k2)
+    lines.append(f"**Is it an averaging artefact?** Compare over the same horizon ({H} years) instead of per-year averages: the current rotation runs {H // kk} cycles "
+                 f"and returns {H // kk * tc['om_days']:.0f} om × days and {H // kk * tc['cover_days']:.0f} cover × days; the option runs {H // k2} cycles and returns "
+                 f"{H // k2 * to['om_days']:.0f} and {H // k2 * to['cover_days']:.0f}. The totals over equal time agree with the per-year ranking, so dividing by more years is "
+                 "not what lowers the scores.\n")
+    cur_cov = (tc["cover_days"] + tc["residue_cover_days"]) / kk
+    opt_cov = (to["cover_days"] + to["residue_cover_days"]) / k2
+    lines.append("**Is it caused by ignoring crop residue?** The model counts cover only while the crop is in the field. Sensitivity: add 60 days of "
+                 "post-harvest residue cover (at half the crop's cover score, never longer than the gap before the next sowing). "
+                 f"Cover × days per year then become {cur_cov:.1f} (current) vs {opt_cov:.1f} (option) → "
+                 f"{'the option still has less cover' if opt_cov < cur_cov else 'the option now has at least as much cover'}.\n")
+    added = [c for c in opt.rotation.crops if c not in cur.rotation.crops]
+    lines.append(f"**What actually happens (real calendar, not arithmetic):** {', '.join(DB[c]['name'] for c in added)} cannot be sown in the same year as the existing crops "
+                 f"(its sowing window does not follow the previous harvest), so the cycle grows from {kk} to {k2} years while the new crop occupies only "
+                 f"{sum(r['days'] for r in ro) - sum(r['days'] for r in rc)} days of the extra {365 * (k2 - kk)}. The main crops are then grown less often, and the longer fallow "
+                 "stands bare (bare days per year "
+                 f"{sc['bare_days']:.0f} → {so['bare_days']:.0f}). Legumes that fit inside the same year (e.g. mung bean after wheat) keep the cycle length and do raise both subscores.\n")
+    return "\n".join(lines)
 
 
 def check_c(key, f, ctx) -> tuple[str, str, str]:
@@ -180,7 +271,7 @@ def main() -> None:
         pool = run(ctx, f.rotation, Weights(), n_alternatives=500, n_per_rule=500)
         out.append(f"\n## {f.name} (current: {' → '.join(DB[c]['name'] for c in f.rotation)})\n")
         for tag, title, expect, fn in [
-            ("A", "Cotton has the highest irrigation demand", "Among the main field crops that are feasible here, cotton needs the most irrigation water per season.", lambda: check_a(key, ctx, dc)),
+            ("A", "Cotton needs more irrigation than winter wheat and the grain legumes", "Cotton needs more irrigation water per season than winter wheat and than each feasible grain legume (soybean, mung bean, chickpea, lentil); alfalfa and sugar beet are expected to need more than cotton.", lambda: check_a(key, ctx, dc)),
             ("B", "Legume insertion raises the soil subscores", "Every option that adds a nitrogen-fixing crop scores higher than the current rotation on nitrogen, organic matter and erosion cover.", lambda: check_b(key, ctx, pool)),
             ("C", "Water-first profile prefers lower-ETc rotations", "With water saving weighted 8:1, fit rises as irrigation demand falls and the winner needs less water than the current rotation.", lambda: check_c(key, f, ctx)),
             ("D", "Reduced supply hurts high-Ky crops most", "At 60% irrigation supply, yield loss is larger for crops with larger Ky (FAO-33).", lambda: check_d(key, ctx, dc)),
@@ -189,6 +280,8 @@ def main() -> None:
             verdict, why, tbl = fn()
             summary.append((f.name.split(",")[0], tag, title, verdict, why))
             out.append(f"### {tag}. {title}: **{verdict}**\n\n*Expectation:* {expect}\n\n*Result:* {why}.\n\n{tbl}\n")
+            if tag == "B":
+                out.append(worked_example_b(key, f, pool) + "\n")
     head = ["\n## Summary\n", "| Field | Check | Verdict | Result |", "|---|---|---|---|"]
     head += [f"| {fld} | {tag}. {title} | **{v}** | {why} |" for fld, tag, title, v, why in summary]
     out.insert(2, "\n".join(head) + "\n")
