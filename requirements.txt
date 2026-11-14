@@ -2,8 +2,6 @@ numpy
 pandas
 xarray
 requests
-scikit-learn
-scipy
 python-dotenv
 streamlit
 plotly
