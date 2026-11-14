@@ -245,6 +245,43 @@ def bare_windows_from_ndvi(curve: pd.DataFrame, threshold: float = 0.2, min_days
     return [(s, l) for s, l in wins if l >= min_days]
 
 
+def observed_bare_summary(ndvi: pd.Series, threshold: float = 0.2, max_gap_days: int = 24) -> dict | None:
+    """Bare days from the satellite, counting only days that have a quality-passed observation within `max_gap_days`.
+
+    Observations that fail QA (snow, cloud, shadow) are removed; the NDVI of the days between the remaining ones is linearly
+    interpolated, but a day whose nearest good observation is further than `max_gap_days` away is **not observable** and is
+    never counted as bare or as not bare. Years with fewer than 12 good observations are skipped.
+    A calendar month in which fewer than half of all composites pass QA (median over the record) is also **not observable**: the few
+    clear days left are a biased sample (snow-covered and cloudy dates are exactly the ones removed), so a count of 0 there would
+    mean "not seen", not "not bare".
+    Returns the median per year of bare days (observable days only) and of not-observable days, the calendar months that are poorly
+    observed, and for each month the share of composites that pass QA; None if no year qualifies.
+    """
+    pass_rate = ndvi.notna().groupby(ndvi.index.month).mean()
+    poor = [int(m) for m, v in pass_rate.items() if v < 0.5]
+    d = ndvi.dropna()
+    obs_days = d.index.values.astype("datetime64[D]")
+    bare, unobs, share = {}, {}, {}
+    for y, g in d.groupby(d.index.year):
+        if len(g) < 12:
+            continue
+        days = pd.date_range(f"{y}-01-01", f"{y}-12-31")
+        daily = g.reindex(g.index.union(days)).interpolate("time", limit_area="inside").reindex(days)
+        dd = days.values.astype("datetime64[D]")
+        i = np.searchsorted(obs_days, dd)
+        left = np.where(i > 0, np.abs((dd - obs_days[np.clip(i - 1, 0, len(obs_days) - 1)]).astype(int)), 10**6)
+        right = np.where(i < len(obs_days), np.abs((obs_days[np.clip(i, 0, len(obs_days) - 1)] - dd).astype(int)), 10**6)
+        observable = (np.minimum(left, right) <= max_gap_days) & ~days.month.isin(poor)
+        bare[y] = int(((daily.values < threshold) & observable).sum())
+        unobs[y] = int((~observable).sum())
+        share[y] = pd.Series(observable, index=days).groupby(days.month).mean()
+    if not bare:
+        return None
+    sh = pd.DataFrame(share).median(axis=1)
+    return {"bare_days": float(np.median(list(bare.values()))), "unobservable_days": float(np.median(list(unobs.values()))),
+            "observable_share_by_month": sh, "poor_months": poor, "pass_rate_by_month": pass_rate, "years": sorted(bare)}
+
+
 def observed_bare_days_per_year(ndvi: pd.Series, threshold: float = 0.2) -> pd.Series:
     """Per year: days with linearly interpolated NDVI below threshold (years with <12 valid obs dropped)."""
     out = {}

@@ -41,7 +41,10 @@ class FieldContext:
     smap: FetchResult | None = None
     ndvi_curve: pd.DataFrame | None = None
     ndvi_bare_windows: list = field(default_factory=list)
-    observed_bare_days: float | None = None
+    observed_bare_days: float | None = None           # bare days a year on days with a clear observation only
+    observed_unobservable_days: float | None = None   # days a year with no quality-passed observation nearby (snow, cloud)
+    unobservable_months: list = field(default_factory=list)   # calendar months where fewer than half the composites pass QA
+    ndvi_curve_min: float | None = None               # lowest value of the seasonal median NDVI curve
     smap_anomaly: pd.DataFrame | None = None
     root_wetness: pd.DataFrame | None = None     # POWER GWETROOT summary, always available
 
@@ -83,6 +86,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
             ndvi = FetchResult.failed("MODIS NDVI", Msg("g.ndvi_notcrop", peak=peak, thr=NDVI_CROP_MIN_PEAK))
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
+    unobs, unobs_months, curve_min = None, [], None
     root_w = F.root_wetness_summary(daily)
     gaps: list = [Msg("g.soil")]
     def span_years(df: pd.DataFrame) -> float:
@@ -93,8 +97,11 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         nd_years = span_years(ndvi.data)
         curve = F.ndvi_seasonal_curve(ndvi.data["ndvi"])
         wins = F.bare_windows_from_ndvi(curve, NDVI_BARE_THRESHOLD)
-        ob = F.observed_bare_days_per_year(ndvi.data["ndvi"], NDVI_BARE_THRESHOLD)
-        obs = float(ob.median()) if len(ob) else None
+        ob = F.observed_bare_summary(ndvi.data["ndvi"], NDVI_BARE_THRESHOLD)
+        obs = ob["bare_days"] if ob else None
+        unobs = ob["unobservable_days"] if ob else None
+        unobs_months = ob["poor_months"] if ob else []
+        curve_min = float(curve["median"].min())
         gaps.append(Msg("g.ndvi_short" if nd_years < 5 else "g.ndvi_ok", nv=ndvi.meta["n_valid"], nt=ndvi.meta["n_total"],
                         rng=ndvi.date_range, yrs=nd_years))
     else:
@@ -115,7 +122,8 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     miss = {k: v for k, v in F.completeness(daily).items() if v > 0.01}
     if miss:
         gaps.append(Msg("g.power_gaps", cols=", ".join(miss)))
-    return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, sm_anom, root_w)
+    return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, unobs, unobs_months,
+                        curve_min, sm_anom, root_w)
 
 
 _NOPOINT = re.compile(r"(?P<file>[^;]+?): no point within (?P<d>[\d.]+) deg of \((?P<lat>[^,]+), (?P<lon>[^)]+)\); nearest is (?P<near>[\d.]+) deg away")

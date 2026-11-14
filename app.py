@@ -328,9 +328,14 @@ if view == "field":
         with st.container(border=True, key="panel_ndvi"):
             st.plotly_chart(viz.fig_ndvi(ctx.ndvi_curve, ctx.ndvi_bare_windows, 0.2, S.lang), width="stretch")
             if ctx.observed_bare_days is not None:
-                st.write(t("f.ndvi_text", obs=ctx.observed_bare_days, cal=cur.rotation.bare_days_per_year()))
-    else:
-        st.caption(t("f.ndvi_missing"))
+                cal_bare = cur.rotation.bare_days_per_year()
+                txt = t("f.ndvi_text", obs=ctx.observed_bare_days, cal=cal_bare)
+                if (ctx.observed_unobservable_days or 0) >= 15:
+                    months = ", ".join(i18n.MONTHS[S.lang][m - 1] for m in ctx.unobservable_months) or t("f.ndvi_anytime")
+                    txt += t("f.ndvi_unobs", unobs=ctx.observed_unobservable_days, months=months)
+                stays_green = ctx.observed_bare_days < cal_bare / 4 and ctx.ndvi_curve_min is not None and ctx.ndvi_curve_min >= 0.2
+                txt += t("f.ndvi_green", low=ctx.ndvi_curve_min, thr=0.2) if stays_green else (t("f.ndvi_diff") if abs(ctx.observed_bare_days - cal_bare) > 15 else "")
+                st.write(txt)
     tbl = planting_table(cur.rotation, DB, DailyClimate(d))
     rows = []
     for i, p in enumerate(cur.rotation.plantings):

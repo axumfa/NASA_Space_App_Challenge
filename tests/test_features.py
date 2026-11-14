@@ -97,3 +97,38 @@ def test_root_wetness_summary_months_and_latest_year():
     rw = F.root_wetness_summary(df)
     assert list(rw.index) == list(range(1, 13)) and rw.attrs["latest_year"] == 2021
     assert rw["latest"].to_numpy() == pytest.approx(0.7) and (rw["latest_z"] > 0).all() and (rw["p10"] <= rw["median"]).all()
+
+
+# ---------------------------------------------------------------- satellite bare days: not observable vs not bare
+def _years(winter_ok: bool, trough: float, years=(2019, 2020, 2021)):
+    """16-day composites: green April-May, low June trough, otherwise 0.45; winter either observed or rejected (NaN) like snow dates."""
+    import numpy as np
+    import pandas as pd
+    parts = []
+    for y in years:
+        idx = pd.date_range(f"{y}-01-01", f"{y}-12-31", freq="16D")
+        v = np.where((idx.month >= 4) & (idx.month <= 5), 0.7, 0.45)
+        v = np.where(idx.month == 6, trough, v)
+        s = pd.Series(v, index=idx)
+        if not winter_ok:
+            s[(idx.month <= 2) | (idx.month == 12)] = np.nan
+        parts.append(s)
+    return pd.concat(parts)
+
+
+def test_rejected_winter_is_not_observable_never_zero_bare_days():
+    r = F.observed_bare_summary(_years(False, trough=0.15), 0.2)
+    assert {12, 1, 2} <= set(r["poor_months"])
+    assert r["unobservable_days"] >= 31 + 28 + 31 - 5                      # winter days are reported as not observable
+    assert r["bare_days"] > 0                                               # the observed June trough (0.15 < 0.2) is still counted
+
+
+def test_green_pixel_with_clear_winter_has_no_bare_days_and_nothing_unobservable():
+    r = F.observed_bare_summary(_years(True, trough=0.35), 0.2)
+    assert r["bare_days"] == 0 and r["poor_months"] == [] and r["unobservable_days"] < 20
+
+
+def test_too_few_observations_gives_no_verdict():
+    import pandas as pd
+    s = pd.Series([0.5] * 5, index=pd.date_range("2022-03-01", periods=5, freq="16D"))
+    assert F.observed_bare_summary(s, 0.2) is None

@@ -67,7 +67,7 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
     # ---- evidence (numbers)
     e.evidence.append(Msg("x.ev_cal", new=bare_new, now=bare_now, years=r.cycle_years))
     if r.rule == "current" and ctx.observed_bare_days is not None:
-        e.evidence.append(Msg("x.ev_sat", obs=ctx.observed_bare_days, now=bare_now))
+        e.evidence.append(Msg("x.ev_sat", obs=ctx.observed_bare_days, now=bare_now, unobs=ctx.observed_unobservable_days or 0.0))
     e.evidence.append(Msg("x.ev_clim", y0=ctx.annual.index.min(), y1=ctx.annual.index.max(), frost=frost_med, last=last, first=first,
                           heat=heat_med, rain=ann["precip"].median(), et0=ann["et0"].median()))
     t, ct = s["fit"], cs["fit"]

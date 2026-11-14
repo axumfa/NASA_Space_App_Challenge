@@ -5,7 +5,7 @@ All Uzbek text (Latin script) was written by the AI assistant and has **not** be
 To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uzbek_review.py` regenerates this file.
 
 
-## 1. Strings I am unsure about (56)
+## 1. Strings I am unsure about (57)
 
 | key | English | Uzbek | why unsure |
 |---|---|---|---|
@@ -24,6 +24,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `ap.t_opt` | optimal temperature | optimal harorat | parameter names in the 'approximate' list |
 | `ap.water_need_mm` | seasonal water need | mavsumiy suv ehtiyoji | parameter names in the 'approximate' list |
 | `ex.gaps` | Information gaps | Ma'lumot bo'shliqlari | 'bo'shliqlar' for information gaps |
+| `f.ndvi_green` |  Even at its lowest, the typical satellite greenness stays at **{low:.2f}** (bare soil is below {thr:.1f}). A 250 m pixel can stay green after harvest because of a second crop, stubble, weeds or mixed fields; check locally. |  Eng past nuqtada ham odatdagi sun'iy yo'ldosh yashilligi **{low:.2f}** darajasida qoladi (ochiq tuproq {thr:.1f} dan past). 250 m piksel hosildan keyin ikkinchi ekin, o'simlik qoldiqlari, begona o'tlar yoki aralash dalalar tufayli yashil qolishi mumkin; joyida tekshiring. | 'o'simlik qoldiqlari' for stubble (crop residue); a local word such as 'poxol' may be better |
 | `f.trend` | **Trend {y0}–{y1}:** temperature {dt:+.2f} °C per decade ({tclear} trend); rain {dp:+.0f} mm per decade ({pclear} trend). | **Yo'nalish {y0}–{y1}:** harorat o'n yilda {dt:+.2f} °C ({tclear}); yog'in o'n yilda {dp:+.0f} mm ({pclear}). | 'trend' as 'yo'nalish' |
 | `field.kansas` | Central Kansas, USA | Markaziy Kanzas, AQSH | 'Kanzas' spelling; 'AQSH' for USA |
 | `g.rice` | Rice is a common crop in Karakalpakstan and is not modelled (it is not in the crop list), so rotations that include rice cannot be compared here. | Qoraqalpog'istonda sholi keng tarqalgan ekin, lekin u modellashtirilmagan (ekinlar ro'yxatida yo'q), shuning uchun sholi kiritilgan almashlab ekishlarni bu yerda solishtirib bo'lmaydi. | 'Qoraqalpog'iston' spelling; 'sholi' for rice |
@@ -91,7 +92,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `melon` | Melon | Qovun |  |
 | `sugar_beet` | Sugar beet | Qand lavlagi |  |
 
-## 3. All other strings (410), please still skim
+## 3. All other strings (413), please still skim
 
 | key | English | Uzbek |
 |---|---|---|
@@ -165,7 +166,9 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `f.bare_h` | Bare soil and vulnerable seasons for what you grow now | Hozir ekadigan ekinlaringiz uchun ochiq tuproq va zaif mavsumlar |
 | `f.bare_text` | Your field is bare about **{days:.0f} days a year** according to the crop calendar{wins}. | Ekin taqvimiga ko'ra dalangiz yiliga taxminan **{days:.0f} kun** ochiq qoladi{wins}. |
 | `f.bare_win` | {start} for {n} days | {start} dan {n} kun |
-| `f.ndvi_text` | Satellite view: the field is below the bare-soil greenness level about **{obs:.0f} days a year** (the crop calendar above says {cal:.0f}). Differences usually mean sowing dates, weeds or cloud gaps differ from the typical calendar. | Sun'iy yo'ldosh ma'lumoti: dala yiliga taxminan **{obs:.0f} kun** ochiq tuproq yashillik darajasidan past (yuqoridagi ekin taqvimi bo'yicha {cal:.0f}). Farq odatda ekish sanalari, begona o'tlar yoki bulutli kunlar odatdagi taqvimdan farq qilishini bildiradi. |
+| `f.ndvi_text` | Satellite view: on days with a clear observation, the field is below the bare-soil greenness level about **{obs:.0f} days a year** (the crop calendar above says {cal:.0f}). | Sun'iy yo'ldosh ma'lumoti: aniq kuzatuv bo'lgan kunlarda dala yiliga taxminan **{obs:.0f} kun** ochiq tuproq yashillik darajasidan past (yuqoridagi ekin taqvimi bo'yicha {cal:.0f}). |
+| `f.ndvi_diff` |  Differences usually mean sowing dates, weeds or cloud gaps differ from the typical calendar. |  Farq odatda ekish sanalari, begona o'tlar yoki bulutli kunlar odatdagi taqvimdan farq qilishini bildiradi. |
+| `f.ndvi_unobs` |  About **{unobs:.0f} days a year** ({months}) have no clear observation (snow or cloud), so the satellite cannot confirm the bare period then. |  Yiliga taxminan **{unobs:.0f} kun** ({months}) aniq kuzatuv yo'q (qor yoki bulut), shuning uchun sun'iy yo'ldosh o'sha paytdagi ochiq davrni tasdiqlay olmaydi. |
 | `f.ndvi_missing` | Satellite vegetation (MODIS NDVI) is not loaded for this field, so bare periods come from typical sowing and harvest dates, not from observed greenness. Put the AppEEARS CSV in data/raw/ to add it. | Bu dala uchun sun'iy yo'ldosh o'simlik ma'lumoti (MODIS NDVI) yuklanmagan, shuning uchun ochiq davrlar kuzatilgan yashillikdan emas, odatdagi ekish va yig'im-terim sanalaridan olingan. Qo'shish uchun AppEEARS CSV faylini data/raw/ papkasiga joylang. |
 | `f.smap_missing` | Satellite soil moisture (SMAP) is not usable for this field, so this is NASA POWER's model estimate of root-zone wetness (~50 km grid), not a satellite measurement. See the information gaps for the reason. | Bu dala uchun sun'iy yo'ldosh tuproq namligi (SMAP) yaroqli emas, shuning uchun bu NASA POWER'ning ildiz qatlami namligi bo'yicha model baholashi (~50 km katak), sun'iy yo'ldosh o'lchovi emas. Sababi ma'lumot bo'shliqlarida ko'rsatilgan. |
 | `f.vuln` | **When your current crops are most vulnerable** (typical year, from the daily weather record): | **Hozirgi ekinlaringiz qachon eng zaif** (odatdagi yil, kunlik ob-havo yozuvidan): |
@@ -320,7 +323,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `x.why_perennial` | {detail}: a deep-rooted perennial legume that builds organic matter, fixes nitrogen and covers the soil. | {detail}: chuqur ildizli ko'p yillik dukkakli ekin; organik modda to'playdi, azot to'playdi va tuproqni qoplaydi. |
 | `x.why_winter` | {detail}: a winter crop that uses the cool, wetter months and changes the crop family sequence. | {detail}: salqin va namroq oylardan foydalanadigan kuzgi ekin; ekin oilalari ketma-ketligini o'zgartiradi. |
 | `x.ev_cal` | Calendar: field is bare about {new:.0f} days/year in this rotation (current: {now:.0f}); cycle length {years} year(s). | Taqvim: bu almashlab ekishda dala yiliga taxminan {new:.0f} kun yalang (hozirgi: {now:.0f}); tsikl uzunligi {years} yil. |
-| `x.ev_sat` | Satellite check (MODIS NDVI below 0.2): about {obs:.0f} bare days/year observed, against {now:.0f} from the crop calendar. | Sun'iy yo'ldosh tekshiruvi (MODIS NDVI 0,2 dan past): yiliga taxminan {obs:.0f} yalang kun kuzatilgan, ekin taqvimida esa {now:.0f}. |
+| `x.ev_sat` | Satellite check (MODIS NDVI below 0.2, counting only days with a clear observation): about {obs:.0f} bare days/year, against {now:.0f} from the crop calendar; about {unobs:.0f} days/year have no clear observation. | Sun'iy yo'ldosh tekshiruvi (MODIS NDVI 0,2 dan past, faqat aniq kuzatuv bo'lgan kunlar hisobga olinadi): yiliga taxminan {obs:.0f} yalang kun, ekin taqvimida esa {now:.0f}; yiliga taxminan {unobs:.0f} kunda aniq kuzatuv yo'q. |
 | `x.ev_clim` | Climate at the field ({y0}–{y1}, NASA POWER): median {frost:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), {heat:.0f} days/year with Tmax ≥ 35 °C, rainfall {rain:.0f} mm vs reference ET0 {et0:.0f} mm. | Dalaning iqlimi ({y0}–{y1}, NASA POWER): yiliga o'rtacha {frost:.0f} sovuq kun (oxirgi bahorgi sovuq ~{last:.0f}-kun, birinchi kuzgi sovuq ~{first:.0f}-kun), yiliga {heat:.0f} kun Tmax ≥ 35 °C, yog'in {rain:.0f} mm, taqqoslash uchun ET0 {et0:.0f} mm. |
 | `x.ev_fit` | {label}: {med:.0f} (typical range {p10:.0f}–{p90:.0f}); dry years {dry:.0f}, normal {normal:.0f}, wet {wet:.0f}. Current rotation: {cur:.0f}. This is a relative score among the options shown, not an absolute grade. | {label}: {med:.0f} (odatiy oraliq {p10:.0f}–{p90:.0f}); quruq yillarda {dry:.0f}, me'yoriy yillarda {normal:.0f}, nam yillarda {wet:.0f}. Hozirgi almashlab ekish: {cur:.0f}. Bu ko'rsatilgan variantlar orasidagi nisbiy ball, mutlaq baho emas. |
 | `x.ev_irr` | Estimated irrigation need: {irr:.0f} mm/year{cmp}; dry years {dry:.0f}, wet years {wet:.0f}. | Taxminiy sug'orish ehtiyoji: yiliga {irr:.0f} mm{cmp}; quruq yillarda {dry:.0f}, nam yillarda {wet:.0f}. |
@@ -505,6 +508,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `map.marker` | Selected field | Tanlangan dala |
 | `g.ndvi_notcrop` | the NDVI at this point peaks at only {peak:.2f} in a typical year (below {thr:.1f}), so the pixel is not clearly cropland (bare ground, town edge or water) and is not used | bu nuqtadagi NDVI odatdagi yilda atigi {peak:.2f} gacha ko'tariladi ({thr:.1f} dan past), shuning uchun piksel aniq ekin maydoni emas (yalang yer, shahar chekkasi yoki suv) va ishlatilmaydi |
 | `g.joined` | {items} | {items} |
+| `f.ndvi_anytime` | scattered through the year | yil davomida tarqoq |
 
 ## 4. What is NOT translated (stays English in Uzbek mode)
 

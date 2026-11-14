@@ -80,6 +80,7 @@ Also computed: **pest-cycle break** = 100 × (1 − share of cyclic neighbours f
 - **Point matching:** the CSV may hold several points; NDVI needs one within 0.01° (~1 km) of the field and SMAP within 0.06° (~6 km).
 - **Cropland check:** the NDVI of a point is used only if the median of its yearly maxima (years with at least 12 good observations) reaches 0.6. Real downloads: the first Fergana demo point peaked at 0.29 (not cropland, so it was replaced by the 213 ha farmland candidate at 0.81); a 56 ha candidate reached only 0.56.
 - **Scale detection:** one fill value (−3000) in a column must not decide whether NDVI is raw or already scaled (a real Karakalpakstan file did exactly that and made the series read ~0; fixed, with a regression test).
+- **Bare days from the satellite:** only days with a quality-passed observation within 24 days are counted; a month in which fewer than half of the composites pass QA (snow, cloud) is reported as *not observable*, not as 0 bare days. See `docs/satellite_bare_days.md` for the Fergana diagnosis (the satellite stays green after the spring crop in every year; the calendar assumes bare ground).
 - **Short records:** a seasonal NDVI curve from fewer than 5 years is labelled a rough picture; a soil-moisture anomaly needs ≥ 4 years
   of the same calendar month, otherwise none is shown. Observed bare days need a year with at least 12 good observations.
 - The column names are matched by pattern; if required columns are missing, an error lists the real ones and the gap is reported.
