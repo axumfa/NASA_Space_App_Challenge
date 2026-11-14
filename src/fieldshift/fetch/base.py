@@ -22,10 +22,11 @@ class FetchResult:
     date_range: str = ""
     message: str = ""
     meta: dict[str, Any] = field(default_factory=dict)
+    reasons: list = field(default_factory=list)   # file-free, translatable reasons for a failure (i18n.Msg); `message` keeps file names for logs
 
     @classmethod
-    def failed(cls, source: str, message: str) -> "FetchResult":
-        return cls(source=source, data=pd.DataFrame(), ok=False, message=message)
+    def failed(cls, source: str, message: str, reasons: list | None = None) -> "FetchResult":
+        return cls(source=source, data=pd.DataFrame(), ok=False, message=message, reasons=list(reasons or []))
 
 
 def cache_key(source: str, lat: float, lon: float, *parts: str) -> Path:

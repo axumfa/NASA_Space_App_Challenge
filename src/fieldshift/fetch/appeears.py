@@ -16,6 +16,7 @@ QA applied before any value is used:
 """
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
@@ -23,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from ..config import DEMO_CACHE_DIR, RAW_DIR
+from ..i18n import Msg
 from .base import FetchResult
 
 NDVI_MAX_DEG = 0.01    # ~1 km: a 250 m pixel must be the field, not a town 9 km away
@@ -32,6 +34,17 @@ NDVI_FILL = -3000
 SMAP_FILL = -9999
 QUAL_FILL = 65534      # uint16 fill of retrieval_qual_flag (verified in the AppEEARS layer list)
 NDVI_ACCEPT_RELIABILITY = (0, 1)
+
+
+log = logging.getLogger("fieldshift.appeears")
+
+
+class LoadReason(ValueError):
+    """A known, translatable reason a file cannot be used. str() is the English text; `msg` is the file-free Msg for the UI."""
+
+    def __init__(self, text: str, msg: Msg):
+        super().__init__(text)
+        self.msg = msg
 
 
 def _find_col(cols: list[str], pattern: str, required: bool = True) -> str | None:
@@ -47,7 +60,8 @@ def _select_point(df: pd.DataFrame, lat: float, lon: float, max_deg: float) -> p
     lat_c, lon_c = _find_col(list(df.columns), r"^latitude$"), _find_col(list(df.columns), r"^longitude$")
     d = np.hypot(df[lat_c] - lat, df[lon_c] - lon)
     if d.min() > max_deg:
-        raise ValueError(f"no point within {max_deg} deg of ({lat}, {lon}); nearest is {d.min():.3f} deg away")
+        raise LoadReason(f"no point within {max_deg} deg of ({lat}, {lon}); nearest is {d.min():.3f} deg away",
+                         Msg("g.nopoint", d=max_deg, lat=lat, lon=lon, near=f"{d.min():.3f}"))
     best = df.loc[d.idxmin(), [lat_c, lon_c]]
     return df[(df[lat_c] == best[lat_c]) & (df[lon_c] == best[lon_c])]
 
@@ -119,20 +133,30 @@ def _files(pattern: str) -> list[Path]:
 def _load(source: str, patterns: list[str], parser, lat: float, lon: float, res: str) -> FetchResult:
     files = [f for p in patterns for f in _files(p)]
     if not files:
-        return FetchResult.failed(source, f"no file matching {patterns} in data/raw/ (download from AppEEARS)")
-    errors = []
+        return FetchResult.failed(source, f"no file matching {patterns} in data/raw/ (download from AppEEARS)", [Msg("g.r_nofile")])
+    errors, reasons = [], []
     for f in files:
         try:
             df = parser(f, lat, lon)
             n_ok = int(df.iloc[:, 0].notna().sum())
             if n_ok == 0:
-                raise ValueError("all observations rejected by QA")
-            return FetchResult(source, df, True, res, f"{df.index.min():%Y-%m-%d} to {df.index.max():%Y-%m-%d}",
+                raise LoadReason("all observations rejected by QA", Msg("g.r_rejected"))
+            return FetchResult(source, df, True, res, f"{df.index.min():%Y-%m-%d} – {df.index.max():%Y-%m-%d}",
                                f"{f.name}: {n_ok}/{len(df)} observations pass QA",
                                {"file": f.name, "n_total": len(df), "n_valid": n_ok})
         except Exception as e:  # noqa: BLE001
+            log.warning("%s: %s", f.name, e)                       # file names stay in the log (and in `message`), never in the UI
             errors.append(f"{f.name}: {e}")
-    return FetchResult.failed(source, "; ".join(errors)[:400])
+            m = e.msg if isinstance(e, LoadReason) else Msg("g.r_unreadable")
+            if m.key == "g.nopoint":                                # several files: only the nearest point is worth reporting
+                old = next((x for x in reasons if x.key == "g.nopoint"), None)
+                if old is None:
+                    reasons.append(m)
+                elif float(m.params["near"]) < float(old.params["near"]):
+                    reasons[reasons.index(old)] = m
+            elif not any(str(m) == str(x) for x in reasons):
+                reasons.append(m)
+    return FetchResult.failed(source, "; ".join(errors)[:400], reasons)
 
 
 def load_ndvi(lat: float, lon: float) -> FetchResult:

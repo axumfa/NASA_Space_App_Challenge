@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime as dt
-import re
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -105,7 +104,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         gaps.append(Msg("g.ndvi_short" if nd_years < 5 else "g.ndvi_ok", nv=ndvi.meta["n_valid"], nt=ndvi.meta["n_total"],
                         rng=ndvi.date_range, yrs=nd_years))
     else:
-        gaps.append(Msg("g.ndvi_na", detail=_detail(ndvi.message)))
+        gaps.append(Msg("g.ndvi_na", detail=_detail(ndvi)))
     if smap.ok:
         sources.append(smap)
         sm_years = span_years(smap.data)
@@ -115,7 +114,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         else:
             gaps.append(Msg("g.smap_short", rng=smap.date_range, yrs=sm_years, minyrs=MIN_YEARS_ANOMALY))
     else:
-        gaps.append(Msg("g.smap_na", detail=_detail(smap.message)))
+        gaps.append(Msg("g.smap_na", detail=_detail(smap)))
     gaps += [Msg(k) for k in ("g.srtm", "g.irr_salt", "g.et0", "g.classes", "g.temps", "g.params")]
     if fld is not None:
         gaps.extend(fld.gap_notes)                 # field-specific notes (e.g. a common local crop that is not modelled)
@@ -126,9 +125,6 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
                         curve_min, sm_anom, root_w)
 
 
-_NOPOINT = re.compile(r"(?P<file>[^;]+?): no point within (?P<d>[\d.]+) deg of \((?P<lat>[^,]+), (?P<lon>[^)]+)\); nearest is (?P<near>[\d.]+) deg away")
-
-
 def ndvi_cropland_peak(ndvi: pd.Series) -> float | None:
     """Median over years of the yearly maximum NDVI (years with enough good observations); None if fewer than 2 such years."""
     d = ndvi.dropna()
@@ -137,14 +133,15 @@ def ndvi_cropland_peak(ndvi: pd.Series) -> float | None:
     return float(peaks.median()) if len(peaks) >= 2 else None
 
 
-def _detail(message):
-    """Known fetch messages (one per file searched) become translatable; anything else stays as the (technical) English text."""
-    if isinstance(message, Msg):
-        return message
-    found = [Msg("g.nopoint", **m.groupdict()) for m in _NOPOINT.finditer(message or "")]
-    if not found:
-        return message
-    return found[0] if len(found) == 1 else Msg("g.joined", items=found)
+def _detail(res: FetchResult):
+    """Translatable, file-free reason(s) a source failed (one Msg, or several joined); the raw message with file names stays in logs."""
+    msg = res.message
+    if isinstance(msg, Msg):
+        return msg
+    reasons = res.reasons
+    if reasons:
+        return reasons[0] if len(reasons) == 1 else Msg("g.joined", items=reasons)
+    return msg
 
 
 def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = None,

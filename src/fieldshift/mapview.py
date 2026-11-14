@@ -99,7 +99,7 @@ def resources(local: bool) -> tuple[list, list]:
 
 def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = "en", zoom: int = 7, tooltip: str = "",
               local_assets: bool = False) -> folium.Map:
-    m = folium.Map(location=[lat, lon], zoom_start=zoom, tiles=None, control_scale=True, max_zoom=13, prefer_canvas=True)
+    m = folium.Map(location=[lat, lon], zoom_start=zoom, tiles=None, control_scale=False, zoom_control=False, max_zoom=13, prefer_canvas=True)
     m.default_js, m.default_css = resources(local_assets)
     m.get_root().header.add_child(folium.Element(CSS))
 
@@ -129,7 +129,7 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
     lc = folium.LayerControl(collapsed=True, position="topright")
     lc.add_to(m)
 
-    text = {k: tr(f"map.{k}", lang) for k in ("loading", "loaded", "tile_error", "source", "date", "stale")}
+    text = {k: tr(f"map.{k}", lang) for k in ("loading", "loaded", "tile_error", "source", "date", "stale", "zoom_in", "zoom_out")}
     js = f"""
 (function() {{
   var map = {m.get_name()};
@@ -141,6 +141,8 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
   var resolve = function(o) {{ var r = {{}}; Object.keys(o).forEach(function(k) {{ r[k] = window[o[k]]; }}); return r; }};
   var B = resolve(bases), D = resolve(data);
   window.__fs = {{B: B, D: D, map: map}};
+  L.control.zoom({{position: 'topleft', zoomInTitle: T.zoom_in, zoomOutTitle: T.zoom_out}}).addTo(map);
+  L.control.scale({{imperial: false}}).addTo(map);
   var panel = L.control({{position: 'bottomleft'}});
   panel.onAdd = function() {{ this._d = L.DomUtil.create('div', 'fs-maplegend'); this._d.style.display = 'none'; return this._d; }};
   panel.addTo(map);

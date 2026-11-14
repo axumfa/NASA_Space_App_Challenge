@@ -33,6 +33,12 @@ OWN = "My own location"          # option value (not displayed as is)
 ui.inject_css()
 
 
+def pchart(fig, **kw):
+    """Plotly chart; the toolbar's tooltips are English-only in plotly.js, so it is hidden in Uzbek mode (drag to zoom still works)."""
+    kw.setdefault("width", "stretch")
+    st.plotly_chart(fig, config={"displayModeBar": S.get("lang", "en") == "en"}, **kw)
+
+
 def t(key: str, **kw) -> str:
     return tr(key, S.lang, **kw)
 
@@ -126,7 +132,7 @@ with h1:
 with h2:
     # A keyed radio styled as tabs (not st.tabs): st.tabs jumps back to the first tab on every rerun, e.g. when a what-if slider moves.
     with st.container(key="nav"):
-        view, _ = pick(st.radio, "View", VIEWS, "view", lambda v: t(f"view.{v}"), horizontal=True, label_visibility="collapsed")
+        view, _ = pick(st.radio, t("ui.view_label"), VIEWS, "view", lambda v: t(f"view.{v}"), horizontal=True, label_visibility="collapsed")
 with h3:
     with st.container(key="langbox"):
         st.radio(t("ui.lang"), list(LANGS.values()), key="lang_label", horizontal=True, label_visibility="collapsed")
@@ -307,26 +313,26 @@ if view == "field":
     heat = (d["T2M_MAX"] >= 35).groupby(d.index.month).sum() / ann.shape[0]
     ca, cb = st.columns(2)
     with ca, st.container(border=True, key="panel_wb"):
-        st.plotly_chart(viz.fig_water_balance(clim, S.lang), width="stretch")
+        pchart(viz.fig_water_balance(clim, S.lang), width="stretch")
     with cb, st.container(border=True, key="panel_temp"):
-        st.plotly_chart(viz.fig_temperature(clim, S.lang), width="stretch")
+        pchart(viz.fig_temperature(clim, S.lang), width="stretch")
     cc, cd = st.columns(2)
     with cc, st.container(border=True, key="panel_frost"):
-        st.plotly_chart(viz.fig_frost(wk, S.lang), width="stretch")
+        pchart(viz.fig_frost(wk, S.lang), width="stretch")
     with cd, st.container(border=True, key="panel_heat"):
-        st.plotly_chart(viz.fig_heat(heat, lang=S.lang), width="stretch")
+        pchart(viz.fig_heat(heat, lang=S.lang), width="stretch")
 
     display, tied = load_display()
     cur = display[0]
     ui.section(t("ui.sec_season"), t("f.bare_h"))
     with st.container(border=True, key="panel_cal"):
-        st.plotly_chart(viz.fig_calendar(cur.rotation, lang=S.lang), width="stretch")
+        pchart(viz.fig_calendar(cur.rotation, lang=S.lang), width="stretch")
         bw = cur.rotation.bare_windows()
         wins = (": " + ", ".join(t("f.bare_win", start=viz.doy_to_date(s % 365 + 1, S.lang), n=n) for s, n in bw)) if bw else ""
         st.write(t("f.bare_text", days=cur.rotation.bare_days_per_year(), wins=wins))
     if ctx.ndvi_curve is not None:
         with st.container(border=True, key="panel_ndvi"):
-            st.plotly_chart(viz.fig_ndvi(ctx.ndvi_curve, ctx.ndvi_bare_windows, 0.2, S.lang), width="stretch")
+            pchart(viz.fig_ndvi(ctx.ndvi_curve, ctx.ndvi_bare_windows, 0.2, S.lang), width="stretch")
             if ctx.observed_bare_days is not None:
                 cal_bare = cur.rotation.bare_days_per_year()
                 txt = t("f.ndvi_text", obs=ctx.observed_bare_days, cal=cal_bare)
@@ -350,9 +356,9 @@ if view == "field":
     sa, sb_ = st.columns(2)
     with sa, st.container(border=True, key="panel_sm"):
         if ctx.smap_anomaly is not None:
-            st.plotly_chart(viz.fig_soil_anomaly(ctx.smap_anomaly, S.lang), width="stretch")
+            pchart(viz.fig_soil_anomaly(ctx.smap_anomaly, S.lang), width="stretch")
         else:
-            st.plotly_chart(viz.fig_root_wetness(ctx.root_wetness, S.lang), width="stretch")
+            pchart(viz.fig_root_wetness(ctx.root_wetness, S.lang), width="stretch")
             st.caption(t("f.smap_missing"))
     with sb_, st.container(border=True, key="panel_soil"):
         st.markdown(f"**{t('f.soil')}**")
@@ -360,8 +366,14 @@ if view == "field":
             r = soil_recs[0]
             def soil_label(key: str) -> str:
                 return t(f"soil.{key}") if f"soil.{key}" in i18n.S else key
-            ui.kpi_grid([ui.kpi(soil_label(kk), f"{vv:.1f}" if isinstance(vv, float) else str(vv), "", "") for kk, vv in r.items()])
-            st.caption(soil_src)
+            TEX = {"clay": "clay", "sandy": "sandy", "silty (loam)": "silty", "clay loam": "clay_loam", "loam": "loam"}
+            def soil_value(kk, vv) -> str:
+                if isinstance(vv, float):
+                    return f"{vv:.1f}"
+                return t(f"soil.tex.{TEX[vv]}") if kk == "texture" and vv in TEX else str(vv)
+            ui.kpi_grid([ui.kpi(soil_label(kk), soil_value(kk, vv), "", "") for kk, vv in r.items()])
+            src_key = "soil.src_manual" if "manual" in soil_src.lower() else "soil.src_rest"
+            st.caption(f"{t('f.soil')}: {t(src_key)}")
         else:
             st.info(t("f.soil_na"))
     with st.expander(t("f.gaps")):
@@ -423,7 +435,7 @@ if view == "options":
     ], t("ui.tbl_metric"), top=best_fit, top_tag=t("ui.best_fit"))
     st.caption(t("ui.best_note"))
     with st.container(border=True, key="panel_fit"):
-        st.plotly_chart(viz.fig_fit_by_year_type(display, S.lang), width="stretch")
+        pchart(viz.fig_fit_by_year_type(display, S.lang), width="stretch")
 
     ui.section(t("ui.sec_cards"))
     ci = cur.summary
@@ -457,8 +469,8 @@ if view == "options":
                         f'<div class="fs-line">{t("o.yield", m=yl["median"] * 100, p=yl["p90"] * 100)}</div>'
                         f'<div class="fs-side-h" style="margin-top:.8rem">{t("ui.heat_h")}</div>' + heat_lines, unsafe_allow_html=True)
             st.caption(t("o.heat_cap"))
-            st.plotly_chart(viz.fig_radar(r, cur, viz.color_for(i), S.lang), width="stretch", key=f"radar{i}")
-            for key, items in (("ex.why", e.why), ("ex.evidence", e.evidence), ("ex.benefits", e.benefits + [t("ex.tradeoff", t=x) for x in e.tradeoffs]),
+            pchart(viz.fig_radar(r, cur, viz.color_for(i), S.lang), width="stretch", key=f"radar{i}")
+            for key, items in (("ex.why", e.why), ("ex.evidence", e.evidence), ("ex.benefits", e.benefits + [t("ex.tradeoff", t=i18n.render(x, S.lang)) for x in e.tradeoffs]),
                                ("ex.gaps", e.gaps), ("ex.risks", e.risks)):
                 with st.expander(t(key), expanded=(key == "ex.why")):
                     for it in items:

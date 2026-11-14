@@ -221,7 +221,7 @@ add("o.caption", "A relative score from 0 to 100 that compares the options shown
     "Siz belgilagan ustuvorliklar asosida bu yerda ko'rsatilgan variantlarni solishtiradigan 0 dan 100 gacha nisbiy ball. Bu baho yoki hosil bashorati emas. Haqiqiy birliklar (suv mm, kunlar, hosil xavfi %) har bir kartochkada ko'rsatilgan.")
 add("o.ties", "These options do not differ meaningfully on: {list}. That priority does not change the ranking.", "Bu variantlar quyidagi bo'yicha sezilarli farq qilmaydi: {list}. Bu ustuvorlik tartibni o'zgartirmaydi.")
 add("o.current", "Your current rotation", "Hozirgi almashlab ekishingiz")
-add("o.fit_cap", "{short} · typical range {lo:.0f}–{hi:.0f} · dry {d:.0f} / normal {n:.0f} / wet {w:.0f}", "{short} · odatdagi oraliq {lo:.0f}–{hi:.0f} · quruq {d:.0f} / o'rtacha {n:.0f} / nam {w:.0f}")
+add("o.fit_cap", "{short} · typical range {lo:.0f}–{hi:.0f} · dry {d:.0f} / normal {n:.0f} / wet {w:.0f}", "{short} · odatdagi oraliq {lo:.0f}–{hi:.0f} · qurg'oqchil {d:.0f} / me'yoriy {n:.0f} / seryog'in {w:.0f}")
 add("o.irr", "Irrigation need: <b>{irr:.0f} mm/yr</b>{pct}", "Sug'orish ehtiyoji: <b>{irr:.0f} mm/yil</b>{pct}")
 add("o.vs_now", " ({pct:+.0f}% vs now)", " (hozirgiga nisbatan {pct:+.0f}%)")
 add("o.bare", "Bare soil: <b>{d:.0f} days/yr</b>", "Ochiq tuproq: <b>yiliga {d:.0f} kun</b>")
@@ -268,7 +268,7 @@ GLOSSARY = [
     ("yar", "Yield at risk", "How much of a normal harvest may be lost because the crop gets less water than it needs (FAO yield-response factors). It is 0 when irrigation water is plentiful. Heat is shown separately, as a count of very hot days.",
      "Hosil xavfi", "Ekin kerakli suvdan kamroq olgani sababli oddiy hosilning qancha qismi yo'qolishi mumkin (FAO hosil-javob koeffitsientlari). Sug'orish suvi yetarli bo'lsa, 0 bo'ladi. Issiqlik alohida — juda issiq kunlar soni sifatida ko'rsatiladi."),
     ("dnw", "Dry / normal / wet year", "Years sorted into thirds by how much irrigation water crops needed: dry = highest need.",
-     "Quruq / o'rtacha / nam yil", "Yillar ekinlar qancha sug'orish suvi talab qilganiga qarab uchga bo'lingan: quruq = eng ko'p talab."),
+     "Qurg'oqchil / me'yoriy / seryog'in yil", "Yillar ekinlar qancha sug'orish suvi talab qilganiga qarab uchga bo'lingan: qurg'oqchil = eng ko'p talab."),
     ("fit", "Fit to your priorities", "A relative 0–100 comparison among the options shown, based on the sliders. It changes when you change the options or sliders.",
      "Ustuvorliklarga moslik", "Ko'rsatilgan variantlar orasida slayderlarga asoslangan nisbiy 0–100 solishtirish. Variantlar yoki slayderlarni o'zgartirsangiz, u ham o'zgaradi."),
 ]
@@ -304,7 +304,7 @@ add("g.versus_text", "• Climate values come from a ~50 km model/satellite blen
     "• Iqlim qiymatlari dalangizdagi ob-havo stansiyasidan emas, ~50 km li model/sun'iy yo'ldosh aralashmasidan olingan. Sug'oriladigan yerlarda u haqiqatdagidan issiqroq va quruqroq chiqishga moyil.\n"
     "• Sug'orish ehtiyoji va ET0 o'lchanmagan, hisoblangan (FAO-56 Penman–Monteith).\n"
     "• Ekin qiymatlari (suv sarfi, issiqlik chegaralari, azot hisobi) mintaqaviy taxminlar; mahalliy maslahatchilar bilan tekshiring.\n"
-    "• Daryo yoki kanallardan suv yetkazib berish kuzatilmaydi; suv yetishmasligini sinash uchun sug'orish suvi slayderidan foydalaning.",
+    "• Daryo yoki kanallardan suv yetkazib berish hisobga olinmaydi; suv yetishmasligini sinash uchun sug'orish suvi slayderidan foydalaning.",
     unsure="technical bullets: check terms")
 add("footer", "Decision support only. Validate with local agronomists. Data: NASA POWER, ISRIC SoilGrids. Method notes: docs/methodology.md.",
     "Faqat qaror qabul qilishga yordam. Mahalliy agronomlar bilan tasdiqlang. Ma'lumotlar: NASA POWER, ISRIC SoilGrids. Usul izohlari: docs/methodology.md.")
@@ -323,9 +323,9 @@ add("viz.cal_title", "Crop calendar: green = crop in the field, red = bare soil"
 add("viz.current", "Current", "Hozirgi")
 add("viz.this", "This option", "Shu variant")
 add("viz.fit_title", "{short} by type of year (bars = typical, whiskers = 10th–90th percentile)", "{short}, yil turi bo'yicha (ustun = odatdagi, chiziq = 10–90-protsentil)", unsure="'protsentil'")
-add("viz.dry", "Dry years (high water need)", "Quruq yillar (suv talabi yuqori)")
-add("viz.normal", "Normal years", "O'rtacha yillar")
-add("viz.wet", "Wet years (low water need)", "Nam yillar (suv talabi past)")
+add("viz.dry", "Dry years (high water need)", "Qurg'oqchil yillar (suv talabi yuqori)")
+add("viz.normal", "Normal years", "Me'yoriy yillar")
+add("viz.wet", "Wet years (low water need)", "Seryog'in yillar (suv talabi past)")
 add("viz.rel", "relative score", "nisbiy ball")
 add("viz.ndvi_title", "Satellite greenness through the year (red = typically bare)", "Yil davomida sun'iy yo'ldosh yashilligi (qizil = odatda ochiq)")
 add("viz.ndvi_y", "NDVI (0 bare – 0.8 dense crop)", "NDVI (0 ochiq – 0,8 zich ekin)")
@@ -396,7 +396,7 @@ add("g.irr_salt", "Irrigation water availability and soil salinity are unknown f
 add("g.et0", "ET0 is computed from NASA POWER (MERRA-2) variables; it can differ from station-based ET0.",
     "ET0 NASA POWER (MERRA-2) ko'rsatkichlaridan hisoblanadi; meteostansiya asosidagi ET0 dan farq qilishi mumkin.")
 add("g.classes", "Dry/normal/wet classes use irrigation demand (crop water need minus effective rain); actual water supply (rivers, snowmelt, canals) is not observed - use the irrigation-supply slider.",
-    "Quruq/me'yoriy/nam yil sinflari sug'orish talabiga (ekinning suv ehtiyoji minus samarali yog'in) asoslanadi; haqiqiy suv ta'minoti (daryolar, qor erishi, kanallar) kuzatilmaydi - sug'orish suvi ta'minoti slayderidan foydalaning.")
+    "Qurg'oqchil/me'yoriy/seryog'in yil sinflari sug'orish talabiga (ekinning suv ehtiyoji minus samarali yog'in) asoslanadi; haqiqiy suv ta'minoti (daryolar, qor erishi, kanallar) hisobga olinmaydi - sug'orish suvi ta'minoti slayderidan foydalaning.")
 add("g.temps", "Temperatures come from ~50 km reanalysis (MERRA-2) that runs hot over irrigated land, so hot-day counts and ET0 are likely overstated.",
     "Harorat ~50 km li qayta tahlildan (MERRA-2) olinadi; u sug'oriladigan yerlarda issiqroq chiqadi, shuning uchun issiq kunlar soni va ET0 oshirib ko'rsatilgan bo'lishi mumkin.")
 add("g.params", "Crop parameters are approximate regional values, not field trials.",
@@ -404,8 +404,8 @@ add("g.params", "Crop parameters are approximate regional values, not field tria
 add("g.power_gaps", "POWER has gaps in: {cols}.", "POWER ma'lumotlarida quyidagilar bo'yicha bo'shliqlar bor: {cols}.")
 add("g.nosat", "no satellite NDVI/SMAP point has been requested for this preset field",
     "bu tayyor dala uchun sun'iy yo'ldosh NDVI/SMAP nuqtasi so'ralmagan")
-add("g.nopoint", "{file}: no point within {d} deg of ({lat}, {lon}); nearest is {near} deg away",
-    "{file}: ({lat}, {lon}) nuqtadan {d} daraja ichida nuqta yo'q; eng yaqini {near} daraja uzoqda")
+add("g.nopoint", "no point within {d} deg of ({lat}, {lon}); nearest is {near} deg away",
+    "({lat}, {lon}) nuqtadan {d} daraja ichida nuqta yo'q; eng yaqini {near} daraja uzoqda")
 add("g.rice", "Rice is a common crop in Karakalpakstan and is not modelled (it is not in the crop list), so rotations that include rice cannot be compared here.",
     "Qoraqalpog'istonda sholi keng tarqalgan ekin, lekin u modellashtirilmagan (ekinlar ro'yxatida yo'q), shuning uchun sholi kiritilgan almashlab ekishlarni bu yerda solishtirib bo'lmaydi.",
     unsure="'Qoraqalpog'iston' spelling; 'sholi' for rice")
@@ -453,9 +453,9 @@ add("x.ev_sat", "Satellite check (MODIS NDVI below 0.2, counting only days with 
 add("x.ev_clim", "Climate at the field ({y0}–{y1}, NASA POWER): median {frost:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), {heat:.0f} days/year with Tmax ≥ 35 °C, rainfall {rain:.0f} mm vs reference ET0 {et0:.0f} mm.",
     "Dalaning iqlimi ({y0}–{y1}, NASA POWER): yiliga o'rtacha {frost:.0f} sovuq kun (oxirgi bahorgi sovuq ~{last:.0f}-kun, birinchi kuzgi sovuq ~{first:.0f}-kun), yiliga {heat:.0f} kun Tmax ≥ 35 °C, yog'in {rain:.0f} mm, taqqoslash uchun ET0 {et0:.0f} mm.")
 add("x.ev_fit", "{label}: {med:.0f} (typical range {p10:.0f}–{p90:.0f}); dry years {dry:.0f}, normal {normal:.0f}, wet {wet:.0f}. Current rotation: {cur:.0f}. This is a relative score among the options shown, not an absolute grade.",
-    "{label}: {med:.0f} (odatiy oraliq {p10:.0f}–{p90:.0f}); quruq yillarda {dry:.0f}, me'yoriy yillarda {normal:.0f}, nam yillarda {wet:.0f}. Hozirgi almashlab ekish: {cur:.0f}. Bu ko'rsatilgan variantlar orasidagi nisbiy ball, mutlaq baho emas.")
+    "{label}: {med:.0f} (odatiy oraliq {p10:.0f}–{p90:.0f}); qurg'oqchil yillarda {dry:.0f}, me'yoriy yillarda {normal:.0f}, seryog'in yillarda {wet:.0f}. Hozirgi almashlab ekish: {cur:.0f}. Bu ko'rsatilgan variantlar orasidagi nisbiy ball, mutlaq baho emas.")
 add("x.ev_irr", "Estimated irrigation need: {irr:.0f} mm/year{cmp}; dry years {dry:.0f}, wet years {wet:.0f}.",
-    "Taxminiy sug'orish ehtiyoji: yiliga {irr:.0f} mm{cmp}; quruq yillarda {dry:.0f}, nam yillarda {wet:.0f}.")
+    "Taxminiy sug'orish ehtiyoji: yiliga {irr:.0f} mm{cmp}; qurg'oqchil yillarda {dry:.0f}, seryog'in yillarda {wet:.0f}.")
 add("x.ev_irr_cmp", " ({pct:+.0f}% vs current {cur:.0f} mm)", " (hozirgisiga nisbatan {pct:+.0f}%, hozirgi {cur:.0f} mm)")
 add("x.ev_n", "Nitrogen credit from legumes: about {n:.0f} kg N/ha per year (approximate).",
     "Dukkakli ekinlardan azot hissasi: yiliga taxminan {n:.0f} kg N/ga (taxminiy).")
@@ -569,7 +569,7 @@ add("ui.tbl_irr", "Irrigation need (mm/yr)", "Sug'orish ehtiyoji (mm/yil)")
 add("ui.tbl_bare", "Bare soil (days/yr)", "Ochiq tuproq (kun/yil)")
 add("ui.tbl_n", "Nitrogen from legumes (kg N/ha/yr)", "Dukkakli ekinlardan azot (kg N/ga/yil)")
 add("ui.tbl_yield", "Yield at risk from water shortage, typical / bad year", "Suv yetishmasligidan hosil xavfi, odatda / yomon yil")
-add("ui.tbl_dry", "Fit in dry / normal / wet years", "Quruq / me'yoriy / nam yillarda moslik")
+add("ui.tbl_dry", "Fit in dry / normal / wet years", "Qurg'oqchil / me'yoriy / seryog'in yillarda moslik")
 add("ui.tbl_best", "Best of the options shown on this measure", "Ko'rsatilgan variantlar orasida shu ko'rsatkich bo'yicha eng yaxshisi")
 add("ui.notice", "Decision support: it supports, and does not replace, your judgment and that of a local agronomist.",
     "Qarorlarni qo'llab-quvvatlash: u sizning va mahalliy agronomning fikrini qo'llab-quvvatlaydi, o'rnini bosmaydi.")
@@ -679,3 +679,18 @@ add("g.ndvi_notcrop", "the NDVI at this point peaks at only {peak:.2f} in a typi
     "bu nuqtadagi NDVI odatdagi yilda atigi {peak:.2f} gacha ko'tariladi ({thr:.1f} dan past), shuning uchun piksel aniq ekin maydoni emas (yalang yer, shahar chekkasi yoki suv) va ishlatilmaydi")
 add("g.joined", "{items}", "{items}")
 add("f.ndvi_anytime", "scattered through the year", "yil davomida tarqoq")
+add("g.r_rejected", "all observations rejected by QA", "barcha kuzatuvlar sifat tekshiruvidan o'tmadi")
+add("g.r_nofile", "no satellite file found (download it from AppEEARS)", "sun'iy yo'ldosh fayli topilmadi (AppEEARS'dan yuklab oling)")
+add("g.r_unreadable", "the satellite file could not be read", "sun'iy yo'ldosh faylini o'qib bo'lmadi")
+
+# soil texture classes, soil source label, widget labels
+add("soil.tex.clay", "clay", "gil", unsure="soil texture class names (USDA-style) in Uzbek: gil / qumloq / qumoq / changli qumoq / gilli qumoq")
+add("soil.tex.sandy", "sandy", "qumloq", unsure="'sandy' (sand >= 70%): 'qumloq'")
+add("soil.tex.silty", "silty loam", "changli qumoq", unsure="'silty (loam)': 'changli qumoq'")
+add("soil.tex.clay_loam", "clay loam", "gilli qumoq", unsure="'clay loam': 'gilli qumoq'")
+add("soil.tex.loam", "loam", "qumoq", unsure="'loam': 'qumoq' (Uzbek soil science uses light/medium/heavy qumoq)")
+add("soil.src_rest", "SoilGrids (REST service)", "SoilGrids (REST xizmati)")
+add("soil.src_manual", "SoilGrids web map, read manually", "SoilGrids veb-xaritasi, qo'lda o'qilgan")
+add("ui.view_label", "View", "Ko'rinish")
+add("map.zoom_in", "Zoom in", "Yaqinlashtirish")
+add("map.zoom_out", "Zoom out", "Uzoqlashtirish")
