@@ -5,7 +5,7 @@ All Uzbek text (Latin script) was written by the AI assistant and has **not** be
 To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uzbek_review.py` regenerates this file.
 
 
-## 1. Strings I am unsure about (51)
+## 1. Strings I am unsure about (53)
 
 | key | English | Uzbek | why unsure |
 |---|---|---|---|
@@ -59,6 +59,8 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `soil.clay_pct` | clay % | gil % | soil texture terms: gil/qum/chang |
 | `soil.texture` | texture | tuproq turi | texture class names are not translated |
 | `sum.tradeoff` | **Main trade-off:** {tradeoff}. | **Asosiy kamchilik:** {tradeoff}. | 'trade-off' rendered as 'kamchilik' (drawback) |
+| `ui.kpi_et0` | Reference ET0 | Namlanish talabi (ET0) | 'namlanish talabi' for ET0 |
+| `ui.sidebar_what` | Test a scenario | Stsenariyni sinab ko'ring | 'Stsenariy' for scenario |
 | `viz.fit_title` | {short} by type of year (bars = typical, whiskers = 10th–90th percentile) | {short}, yil turi bo'yicha (ustun = odatdagi, chiziq = 10–90-protsentil) | 'protsentil' |
 
 ## 2. Crop names
@@ -86,7 +88,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `melon` | Melon | Qovun |  |
 | `sugar_beet` | Sugar beet | Qand lavlagi |  |
 
-## 3. All other strings (265), please still skim
+## 3. All other strings (336), please still skim
 
 | key | English | Uzbek |
 |---|---|---|
@@ -138,9 +140,9 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `spin.climate` | Getting NASA climate data for this field… | Bu dala uchun NASA iqlim ma'lumotlari olinmoqda… |
 | `spin.pool` | Comparing rotation options… | Almashlab ekish variantlari solishtirilmoqda… |
 | `whatif.active` | What-if active: rainfall {rain:+d}%, temperature +{temp:.1f} °C, irrigation water {supply:.0f}%. | «Agar shunday bo'lsa» rejimi yoqilgan: yog'ingarchilik {rain:+d}%, harorat +{temp:.1f} °C, sug'orish suvi {supply:.0f}%. |
-| `view.field` | 📍 Your field | 📍 Sizning dalangiz |
-| `view.options` | 🔀 Rotation options | 🔀 Almashlab ekish variantlari |
-| `view.glossary` | 📖 Glossary & data | 📖 Lug'at va ma'lumotlar |
+| `view.field` | Your field | Sizning dalangiz |
+| `view.options` | Rotation options | Almashlab ekish variantlari |
+| `view.glossary` | Glossary & data | Lug'at va ma'lumotlar |
 | `field.fergana` | Fergana Valley, Uzbekistan | Farg'ona vodiysi, O'zbekiston |
 | `field.karakalpakstan` | Karakalpakstan farmland (near Nukus), Uzbekistan | Qoraqalpog'iston ekin maydoni (Nukus yaqinida), O'zbekiston |
 | `field.bukhara` | Bukhara region farmland, Uzbekistan | Buxoro viloyati ekin maydoni, O'zbekiston |
@@ -182,12 +184,12 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `o.ties` | These options do not differ meaningfully on: {list}. That priority does not change the ranking. | Bu variantlar quyidagi bo'yicha sezilarli farq qilmaydi: {list}. Bu ustuvorlik tartibni o'zgartirmaydi. |
 | `o.current` | Your current rotation | Hozirgi almashlab ekishingiz |
 | `o.fit_cap` | {short} · typical range {lo:.0f}–{hi:.0f} · dry {d:.0f} / normal {n:.0f} / wet {w:.0f} | {short} · odatdagi oraliq {lo:.0f}–{hi:.0f} · quruq {d:.0f} / o'rtacha {n:.0f} / nam {w:.0f} |
-| `o.irr` | 💧 Irrigation need: <b>{irr:.0f} mm/yr</b>{pct} | 💧 Sug'orish ehtiyoji: <b>{irr:.0f} mm/yil</b>{pct} |
+| `o.irr` | Irrigation need: <b>{irr:.0f} mm/yr</b>{pct} | Sug'orish ehtiyoji: <b>{irr:.0f} mm/yil</b>{pct} |
 | `o.vs_now` |  ({pct:+.0f}% vs now) |  (hozirgiga nisbatan {pct:+.0f}%) |
-| `o.bare` | 🟤 Bare soil: <b>{d:.0f} days/yr</b> | 🟤 Ochiq tuproq: <b>yiliga {d:.0f} kun</b> |
-| `o.nitrogen` | 🌱 Nitrogen from legumes: <b>{n:.0f} kg N/ha/yr</b> | 🌱 Dukkakli ekinlardan azot: <b>yiliga {n:.0f} kg N/ga</b> |
-| `o.yield` | ⚠️ Yield at risk from water shortage: <b>{m:.0f}%</b> typical, <b>{p:.0f}%</b> in a bad year (1 in 10) | ⚠️ Suv yetishmasligidan hosil xavfi: odatda <b>{m:.0f}%</b>, yomon yilda (10 yilda 1) <b>{p:.0f}%</b> |
-| `o.heat` | 🔥 {crop}: <b>{n:.0f}</b> days above {thr:.0f} °C in season (bad year: {p:.0f}) | 🔥 {crop}: mavsumda {thr:.0f} °C dan yuqori <b>{n:.0f}</b> kun (yomon yilda: {p:.0f}) |
+| `o.bare` | Bare soil: <b>{d:.0f} days/yr</b> | Ochiq tuproq: <b>yiliga {d:.0f} kun</b> |
+| `o.nitrogen` | Nitrogen from legumes: <b>{n:.0f} kg N/ha/yr</b> | Dukkakli ekinlardan azot: <b>yiliga {n:.0f} kg N/ga</b> |
+| `o.yield` | Yield at risk from water shortage: <b>{m:.0f}%</b> typical, <b>{p:.0f}%</b> in a bad year (1 in 10) | Suv yetishmasligidan hosil xavfi: odatda <b>{m:.0f}%</b>, yomon yilda (10 yilda 1) <b>{p:.0f}%</b> |
+| `o.heat` | {crop}: <b>{n:.0f}</b> days above {thr:.0f} °C in season (bad year: {p:.0f}) | {crop}: mavsumda {thr:.0f} °C dan yuqori <b>{n:.0f}</b> kun (yomon yilda: {p:.0f}) |
 | `o.heat_cap` | Heat exposure is a count of hot days, not a yield forecast. Temperatures come from ~50 km reanalysis that runs hot over irrigated land. | Issiqlik ta'siri — issiq kunlar soni, hosil bashorati emas. Haroratlar ~50 km li qayta tahlildan olingan va sug'oriladigan yerlarda issiqroq chiqadi. |
 | `o.radar_cap` | Shaded radar = this option, dotted = your current rotation. Each axis compares options with each other (outer edge = best of those shown). | Bo'yalgan radar = shu variant, nuqtali = hozirgi almashlab ekishingiz. Har bir o'q variantlarni bir-biri bilan solishtiradi (tashqi chekka = ko'rsatilganlar ichida eng yaxshisi). |
 | `ex.why` | Why this option | Nima uchun bu variant |
@@ -355,6 +357,77 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `mk.potato` | High value but high cost, storage and price risk. | Qiymati yuqori, lekin xarajat, saqlash va narx xavfi ham yuqori. |
 | `mk.melon` | High value local/regional demand; labour intensive; perishable. | Mahalliy/mintaqaviy talab yuqori; ko'p mehnat talab qiladi; tez buziladi. |
 | `mk.sugar_beet` | Needs a sugar factory within reach; contract-based. | Yaqin atrofda shakar zavodi kerak; shartnoma asosida. |
+| `ui.tagline` | Crop-rotation decision support | Almashlab ekish bo'yicha qarorlarni qo'llab-quvvatlash |
+| `ui.nasa` | Built on NASA Earth observation data | NASA Yer kuzatuvi ma'lumotlari asosida |
+| `ui.lang` | Language / Til | Language / Til |
+| `ui.field_label` | Field | Dala |
+| `ui.field_help` | Type to search the demo and regional fields, or choose “My own location” and enter coordinates. | Tayyor va mintaqaviy dalalarni qidirish uchun yozing yoki “O'z joylashuvim”ni tanlab koordinatalarni kiriting. |
+| `ui.selected` | Selected field | Tanlangan dala |
+| `ui.grows` | Grows now | Hozir ekiladi |
+| `ui.cta` | Compare rotation options | Almashlab ekish variantlarini solishtirish |
+| `ui.hero` | See how a different crop rotation could change water use, soil and income on this field, using NASA climate and satellite data. | NASA iqlim va sun'iy yo'ldosh ma'lumotlari yordamida boshqa almashlab ekish shu dalada suv sarfi, tuproq va daromadni qanday o'zgartirishi mumkinligini ko'ring. |
+| `ui.chip_power` | NASA POWER climate {rng} | NASA POWER iqlimi {rng} |
+| `ui.chip_ndvi_on` | MODIS NDVI loaded | MODIS NDVI yuklangan |
+| `ui.chip_ndvi_off` | MODIS NDVI not loaded | MODIS NDVI yuklanmagan |
+| `ui.chip_smap_on` | SMAP soil moisture loaded | SMAP tuproq namligi yuklangan |
+| `ui.chip_smap_off` | SMAP not usable here | SMAP bu yerda yaroqsiz |
+| `ui.chip_soil_on` | SoilGrids soil data | SoilGrids tuproq ma'lumotlari |
+| `ui.chip_soil_off` | Soil data unavailable | Tuproq ma'lumotlari mavjud emas |
+| `ui.sidebar_rot` | Your rotation | Sizning almashlab ekishingiz |
+| `ui.sidebar_prio` | Your priorities | Sizning ustuvorliklaringiz |
+| `ui.sec_overview` | Climate at this field | Dalaning iqlimi |
+| `ui.sec_overview_sub` | Typical year, from the daily NASA POWER record. Ranges show the 10th–90th percentile across years. | Odatdagi yil, NASA POWER kunlik yozuvidan. Oraliqlar yillar bo'yicha 10–90-protsentilni ko'rsatadi. |
+| `ui.sec_history` | Climate history | Iqlim tarixi |
+| `ui.sec_season` | Your current rotation through the year | Hozirgi almashlab ekishingiz yil davomida |
+| `ui.sec_soil` | Soil and soil moisture | Tuproq va tuproq namligi |
+| `ui.sec_compare` | Rotation options at a glance | Almashlab ekish variantlari bir qarashda |
+| `ui.sec_cards` | Each option in detail | Har bir variant batafsil |
+| `ui.kpi_rain` | Rainfall | Yog'in |
+| `ui.kpi_rain_d` | Total precipitation in a typical year. | Odatdagi yildagi umumiy yog'in miqdori. |
+| `ui.kpi_range` | Range {lo:.0f}–{hi:.0f} {unit} | Oraliq {lo:.0f}–{hi:.0f} {unit} |
+| `ui.kpi_et0_d` | Water a well-watered reference crop loses to the air in a year (FAO-56). | Yaxshi sug'orilgan standart ekin yil davomida havoga yo'qotadigan suv (FAO-56). |
+| `ui.kpi_et0_gap` | Exceeds rainfall by {gap:.0f} mm; rain covers {pct:.0f}% of it | Yog'indan {gap:.0f} mm ko'p; yog'in uning {pct:.0f}% ini qoplaydi |
+| `ui.kpi_et0_ok` | Rainfall exceeds ET0 by {gap:.0f} mm | Yog'in ET0 dan {gap:.0f} mm ko'p |
+| `ui.kpi_last` | Last spring frost | Oxirgi bahorgi qirov |
+| `ui.kpi_last_d` | Typical last day with a minimum at or below 0 °C. | Eng past harorat 0 °C va undan past bo'lgan odatdagi oxirgi kun. |
+| `ui.kpi_first` | First autumn frost | Birinchi kuzgi qirov |
+| `ui.kpi_first_d` | Typical first day with a minimum at or below 0 °C. | Eng past harorat 0 °C va undan past bo'lgan odatdagi birinchi kun. |
+| `ui.kpi_dates` | Usually between {a} and {b} | Odatda {a} va {b} oralig'ida |
+| `ui.kpi_frost` | Frost days | Qirovli kunlar |
+| `ui.kpi_frost_d` | Days per year with a minimum at or below 0 °C. | Yilda eng past harorat 0 °C va undan past bo'lgan kunlar. |
+| `ui.kpi_hot` | Very hot days | Juda issiq kunlar |
+| `ui.kpi_hot_d` | Days per year with a maximum of 35 °C or more. | Yilda eng yuqori harorat 35 °C va undan yuqori bo'lgan kunlar. |
+| `ui.kpi_hot_ctx` | Range {lo:.0f}–{hi:.0f}; likely overstated (reanalysis runs hot) | Oraliq {lo:.0f}–{hi:.0f}; ehtimol oshirilgan (qayta tahlil issiqroq chiqaradi) |
+| `ui.kpi_temp` | Mean temperature | O'rtacha harorat |
+| `ui.kpi_temp_d` | Average daily air temperature over the year. | Yil davomidagi o'rtacha kunlik havo harorati. |
+| `ui.kpi_temp_ctx` | {dt:+.2f} °C per decade ({clear} trend) | O'n yilda {dt:+.2f} °C ({clear}) |
+| `ui.unit_days` | days/yr | kun/yil |
+| `ui.unit_mm` | mm/yr | mm/yil |
+| `ui.unit_c` | °C | °C |
+| `ui.tbl_metric` | Measure | Ko'rsatkich |
+| `ui.tbl_fit` | Fit to your priorities (0–100) | Ustuvorliklarga moslik (0–100) |
+| `ui.tbl_irr` | Irrigation need (mm/yr) | Sug'orish ehtiyoji (mm/yil) |
+| `ui.tbl_bare` | Bare soil (days/yr) | Ochiq tuproq (kun/yil) |
+| `ui.tbl_n` | Nitrogen from legumes (kg N/ha/yr) | Dukkakli ekinlardan azot (kg N/ga/yil) |
+| `ui.tbl_yield` | Yield at risk from water shortage, typical / bad year | Suv yetishmasligidan hosil xavfi, odatda / yomon yil |
+| `ui.tbl_dry` | Fit in dry / normal / wet years | Quruq / me'yoriy / nam yillarda moslik |
+| `ui.tbl_best` | Best of the options shown on this measure | Ko'rsatilgan variantlar orasida shu ko'rsatkich bo'yicha eng yaxshisi |
+| `ui.notice` | Decision support: it supports, and does not replace, your judgment and that of a local agronomist. | Qarorlarni qo'llab-quvvatlash: u sizning va mahalliy agronomning fikrini qo'llab-quvvatlaydi, o'rnini bosmaydi. |
+| `ui.chart_temp` | Temperature through the year | Yil davomida harorat |
+| `ui.t_max` | Daily maximum | Kunlik maksimum |
+| `ui.t_mean` | Daily mean | Kunlik o'rtacha |
+| `ui.t_min` | Daily minimum | Kunlik minimum |
+| `ui.t_y` | Temperature (°C) | Harorat (°C) |
+| `ui.chart_frost` | Frost risk by week | Haftalar bo'yicha qirov xavfi |
+| `ui.chart_heat` | Very hot days by month | Oylar bo'yicha juda issiq kunlar |
+| `ui.kpi_free` | Frost-free period | Qirovsiz davr |
+| `ui.kpi_free_d` | Days between the last spring and the first autumn frost in a typical year. | Odatdagi yilda oxirgi bahorgi va birinchi kuzgi qirov orasidagi kunlar. |
+| `ui.kpi_free_ctx` | Range {lo:.0f}–{hi:.0f} days | Oraliq {lo:.0f}–{hi:.0f} kun |
+| `ui.opt_n` | Option {n} | {n}-variant |
+| `ui.heat_h` | Heat exposure | Issiqqa duchor bo'lish |
+| `ui.best_note` | Shaded cells mark the best value among the options shown for that measure; unshaded rows are tied. | Rangli kataklar ko'rsatilgan variantlar orasida shu ko'rsatkich bo'yicha eng yaxshi qiymatni bildiradi; rangsiz qatorlarda farq yo'q. |
+| `ui.back` | Back to your field | Dalaga qaytish |
+| `col.hot2` | Hot days in season (above the crop's heat threshold) | Mavsumdagi issiq kunlar (ekinning issiqlik chegarasidan yuqori) |
 
 ## 4. What is NOT translated (stays English in Uzbek mode)
 

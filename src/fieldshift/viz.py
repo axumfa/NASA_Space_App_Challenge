@@ -10,11 +10,22 @@ from .i18n import MONTHS as MONTHS_L
 from .i18n import crop_name, tr
 from .scoring import PRIORITIES
 
-C = {"rain": "#2b7bba", "et0": "#e07b00", "frost": "#5b8bd6", "heat": "#d64545", "current": "#7a6a53",
-     "alt": ["#2e8b57", "#1b9aaa", "#8e6bbf", "#c28f2c"], "bare": "rgba(214,69,69,0.18)", "ink": "#2b2b2b"}
+# Field Shift palette: forest / sage / olive on warm off-white, muted data colours (one hue per meaning).
+C = {"rain": "#3F78A5", "et0": "#B9731F", "frost": "#7C9BB8", "heat": "#B04A35", "current": "#8A8470",
+     "alt": ["#2F6B45", "#B9731F", "#3F78A5", "#7A5C8E"], "bare": "rgba(176,74,53,0.12)", "ink": "#232623",
+     "muted": "#6B6F66", "grid": "#ECE8DC", "forest": "#2F6B45", "sage": "#8FA68A", "olive": "#6B7248"}
+FONT = "Inter, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+TEMPLATE = go.layout.Template(layout=dict(
+    font=dict(family=FONT, size=13, color=C["ink"]),
+    title=dict(font=dict(size=15, color=C["ink"]), x=0, xanchor="left", y=0.97, yanchor="top"),
+    xaxis=dict(showgrid=False, zeroline=False, linecolor=C["grid"], ticks="outside", tickcolor=C["grid"], title=dict(font=dict(size=12, color=C["muted"]))),
+    yaxis=dict(gridcolor=C["grid"], zeroline=False, linecolor="rgba(0,0,0,0)", title=dict(font=dict(size=12, color=C["muted"]))),
+    hoverlabel=dict(bgcolor="#FFFFFF", bordercolor=C["grid"], font=dict(family=FONT, size=12, color=C["ink"])),
+    colorway=C["alt"]))
 MONTHS = MONTHS_L["en"]
-LAYOUT = dict(font=dict(size=15, color=C["ink"]), margin=dict(l=10, r=10, t=50, b=10),
-              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=-0.2))
+LAYOUT = dict(template=TEMPLATE, margin=dict(l=10, r=10, t=56, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+              legend=dict(orientation="h", y=-0.18, x=0, font=dict(size=12)))
+H = 340
 LABEL = {"water_saving": "Water saving", "soil_om": "Soil organic matter", "nitrogen": "Nitrogen fixing",
          "erosion": "Erosion reduction", "forage": "Forage value", "income": "Market / income"}
 
@@ -39,8 +50,36 @@ def fig_water_balance(clim: pd.DataFrame, lang: str = "en") -> go.Figure:
     m = MONTHS_L[lang]
     f = go.Figure()
     f.add_bar(x=m, y=clim["PRECTOTCORR"], name=tr("viz.wb_rain", lang), marker_color=C["rain"])
-    f.add_scatter(x=m, y=clim["ET0"], name=tr("viz.wb_et0", lang), mode="lines+markers", line=dict(color=C["et0"], width=4))
-    f.update_layout(title=tr("viz.wb_title", lang), yaxis_title=tr("viz.wb_y", lang), **LAYOUT)
+    f.add_scatter(x=m, y=clim["ET0"], name=tr("viz.wb_et0", lang), mode="lines+markers", line=dict(color=C["et0"], width=3))
+    f.update_layout(title=tr("viz.wb_title", lang), yaxis_title=tr("viz.wb_y", lang), height=H, **LAYOUT)
+    return f
+
+
+def fig_temperature(clim: pd.DataFrame, lang: str = "en") -> go.Figure:
+    m = MONTHS_L[lang]
+    f = go.Figure()
+    f.add_scatter(x=m, y=clim["T2M_MAX"], name=tr("ui.t_max", lang), mode="lines+markers", line=dict(color=C["heat"], width=2.5), marker=dict(size=6))
+    f.add_scatter(x=m, y=clim["T2M"], name=tr("ui.t_mean", lang), mode="lines", line=dict(color=C["olive"], width=2.5, dash="dot"))
+    f.add_scatter(x=m, y=clim["T2M_MIN"], name=tr("ui.t_min", lang), mode="lines+markers", line=dict(color=C["frost"], width=2.5), marker=dict(size=6))
+    f.add_hline(y=0, line_color=C["grid"], line_width=1.5)
+    f.update_layout(title=tr("ui.chart_temp", lang), yaxis_title=tr("ui.t_y", lang), height=H, **LAYOUT)
+    return f
+
+
+def fig_frost(week_prob: pd.Series, lang: str = "en") -> go.Figure:
+    wk = week_prob.reindex(range(1, 53), fill_value=0)
+    f = go.Figure(go.Bar(x=wk.index, y=wk.values * 100, marker_color=C["frost"], hovertemplate="%{y:.0f}%<extra></extra>"))
+    f.update_xaxes(title_text=tr("viz.week", lang))
+    f.update_yaxes(title_text=tr("viz.pct_years", lang), range=[0, 100])
+    f.update_layout(title=tr("ui.chart_frost", lang), height=H, **LAYOUT)
+    return f
+
+
+def fig_heat(heat_by_month: pd.Series, heat_thr: float = 35.0, lang: str = "en") -> go.Figure:
+    f = go.Figure(go.Bar(x=MONTHS_L[lang], y=heat_by_month.reindex(range(1, 13), fill_value=0).values, marker_color=C["heat"],
+                         hovertemplate="%{y:.1f}<extra></extra>"))
+    f.update_yaxes(title_text=tr("viz.days", lang))
+    f.update_layout(title=f'{tr("ui.chart_heat", lang)} (≥ {heat_thr:.0f} °C)', height=H, **LAYOUT)
     return f
 
 
@@ -129,7 +168,7 @@ def fig_ndvi(curve: pd.DataFrame, windows: list, threshold: float, lang: str = "
     f.add_scatter(x=curve["doy"], y=curve["median"], mode="lines+markers", line=dict(color="#2e8b57", width=4), name=tr("viz.ndvi_med", lang))
     f.add_hline(y=threshold, line_dash="dot", line_color=C["heat"], annotation_text=tr("viz.ndvi_line", lang))
     f.update_xaxes(tickvals=[mm * 30.4 + 15 for mm in range(12)], ticktext=m, range=[0, 366])
-    f.update_layout(title=tr("viz.ndvi_title", lang), yaxis_title=tr("viz.ndvi_y", lang), **LAYOUT)
+    f.update_layout(title=tr("viz.ndvi_title", lang), yaxis_title=tr("viz.ndvi_y", lang), height=H, **LAYOUT)
     return f
 
 
@@ -137,7 +176,7 @@ def fig_soil_anomaly(z: pd.DataFrame, lang: str = "en") -> go.Figure:
     mm = MONTHS_L[lang]
     avg = z["z"].groupby(level="month").mean()
     f = go.Figure(go.Bar(x=[mm[i - 1] for i in avg.index], y=avg.values, marker_color=[C["heat"] if v < 0 else C["rain"] for v in avg.values]))
-    f.update_layout(title=tr("viz.sm_title", lang), yaxis_title=tr("viz.sm_y", lang), **LAYOUT)
+    f.update_layout(title=tr("viz.sm_title", lang), yaxis_title=tr("viz.sm_y", lang), height=H, **LAYOUT)
     return f
 
 
@@ -150,5 +189,5 @@ def fig_root_wetness(rw: pd.DataFrame, lang: str = "en") -> go.Figure:
     f.add_scatter(x=m, y=rw["median"], mode="lines", line=dict(color=C["rain"], width=3), name=tr("viz.rw_med", lang))
     f.add_scatter(x=m, y=rw["latest"], mode="lines+markers", line=dict(color=C["et0"], width=3),
                   name=f"{rw.attrs.get('latest_year', 'latest')}")
-    f.update_layout(title=tr("viz.rw_title", lang), yaxis=dict(title=tr("viz.rw_y", lang), range=[0, 1]), **LAYOUT)
+    f.update_layout(title=tr("viz.rw_title", lang), yaxis=dict(title=tr("viz.rw_y", lang), range=[0, 1]), height=H, **LAYOUT)
     return f
