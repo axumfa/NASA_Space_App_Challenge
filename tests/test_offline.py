@@ -20,10 +20,13 @@ def test_demo_fields_load_from_committed_cache_without_network(tmp_path, monkeyp
     def no_network(*a, **k):
         raise AssertionError("network was used")
     monkeypatch.setattr(requests, "get", no_network)
+    monkeypatch.setattr(soil, "MANUAL_DIR", tmp_path)            # ignore any hand-filled soil files
     for f in DEMO_FIELDS.values():
         ctx = build_context(f.lat, f.lon)                       # raises if POWER had to be downloaded
         assert ctx.annual.index.min() == 2001 and ctx.annual.index.max() == DEMO_END_YEAR
-    assert soil.fetch_soil(38.50, -98.50, "kansas").ok          # SoilGrids REST value stored in the demo cache
+    for key, f in DEMO_FIELDS.items():                          # SoilGrids REST values stored in the demo cache
+        r = soil.fetch_soil(f.lat, f.lon, key)
+        assert r.ok and "texture" in r.data.columns, key
 
 
 def test_filled_manual_soil_file_overrides_cache(tmp_path, monkeypatch):

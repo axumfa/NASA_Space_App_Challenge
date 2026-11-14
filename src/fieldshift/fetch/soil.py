@@ -21,7 +21,7 @@ DEPTHS = {"0-5cm": 5, "5-15cm": 10, "15-30cm": 15}      # label -> thickness (cm
 D_FACTOR = {"clay": 10, "sand": 10, "silt": 10, "soc": 10, "phh2o": 10, "bdod": 100}
 OUT_NAME = {"clay": "clay_pct", "sand": "sand_pct", "silt": "silt_pct", "soc": "soc_g_kg",
             "phh2o": "phh2o", "bdod": "bdod_kg_dm3"}
-TIMEOUT_S = 10
+TIMEOUT_S = 20   # the full 6-property query took 6-10 s in tests; 10 s timed out intermittently
 
 
 def _weighted(values: dict[str, float]) -> float:

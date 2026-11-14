@@ -9,7 +9,7 @@ options and shows its uncertainty, and it does not replace a farmer's or agronom
 | Source | Used for | Status |
 |---|---|---|
 | NASA POWER daily (MERRA-2 / CERES-SYN), ~0.5° grid, 2001–last full year | all climate features, ET0, frost, heat, year classes | **required**, cached on disk |
-| ISRIC SoilGrids (REST, 10 s timeout) → manual JSON read from the SoilGrids web map | soil texture, organic carbon, pH (shown, **not in the scores**) | optional; REST works for some points and returns nothing for others |
+| ISRIC SoilGrids (REST, 10 s timeout) → manual JSON read from the SoilGrids web map | soil texture, organic carbon, pH (shown, **not in the scores**) | optional; REST returns nothing for masked (urban, water) pixels and takes 6–10 s per point, so the demo values are cached; the Fergana demo point sits on farmland just outside the urban mask |
 | MODIS MOD13Q1.061 NDVI via AppEEARS CSV in `data/raw/` | observed greenness and bare-soil windows (shown and compared, **not in the scores**) | optional; parser tested on a synthetic fixture only |
 | SMAP SPL3SMP_E via AppEEARS CSV in `data/raw/` | soil-moisture anomaly (shown) | optional; same caveat |
 | GPM IMERG, SRTM slope | – | **not implemented** |

@@ -22,7 +22,10 @@ class Field:
 
 
 DEMO_FIELDS: dict[str, Field] = {
-    "fergana": Field("fergana", "Fergana Valley, Uzbekistan", 40.40, 71.78,
+    # Moved 7.5 km west of Fergana city (40.40, 71.78): that point is inside the urban mask where SoilGrids returns no
+    # data. 40.43, 71.70 is valley-floor farmland (OSM: farmland/grass within 800 m) in the SAME POWER grid cell,
+    # so the climate series is identical to the old point.
+    "fergana": Field("fergana", "Fergana Valley, Uzbekistan", 40.43, 71.70,
                      ("winter_wheat", "cotton"), "UZ"),
     "kansas": Field("kansas", "Central Kansas, USA", 38.50, -98.50,
                     ("maize", "soybean"), "US"),

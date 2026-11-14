@@ -1,6 +1,6 @@
 """Phase 1 CLI: fetch POWER for a demo field (or lat/lon) and print key features.
 
-Usage: python scripts/field_report.py fergana | kansas | --lat 40.4 --lon 71.78
+Usage: python scripts/field_report.py fergana | kansas | --lat 40.43 --lon 71.70
 """
 from __future__ import annotations
 

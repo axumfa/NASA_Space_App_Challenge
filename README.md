@@ -8,8 +8,9 @@ current rotation with rule-generated alternatives**: why each was suggested, the
 information gaps and risks that need a local expert. It **supports and does not replace** the judgment of farmers
 and agronomists.
 
-Default demo fields: **Fergana Valley, Uzbekistan** (winter wheat → cotton; water scarcity) and **central Kansas, USA**
-(maize → soybean).
+Default demo fields: **Fergana Valley, Uzbekistan** (40.43°N, 71.70°E; winter wheat → cotton; water scarcity) and **central Kansas, USA**
+(38.50°N, 98.50°W; maize → soybean). The Fergana point is farmland about 7 km west of Fergana city: the city centre itself is inside
+the urban mask where SoilGrids returns no data. Both points sit in the same NASA POWER grid cell, so the climate is the same.
 
 ## Quick start
 
