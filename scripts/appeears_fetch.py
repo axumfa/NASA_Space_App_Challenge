@@ -4,6 +4,7 @@
   submit    log in (credentials from .env, never printed), submit the task, remember its id
   status    show the remembered task's status
   download  download the finished task's CSVs into data/raw/
+  wait      poll the REMEMBERED task until done, then download (never submits)
   run       submit (unless a task is remembered) -> poll until done -> download
 """
 from __future__ import annotations
@@ -19,7 +20,7 @@ from fieldshift.fetch import appeears_api as A  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["verify", "submit", "status", "download", "run"])
+    ap.add_argument("cmd", choices=["verify", "submit", "status", "download", "wait", "run"])
     ap.add_argument("--poll-seconds", type=int, default=60)
     a = ap.parse_args()
     if a.cmd == "verify":
@@ -47,9 +48,9 @@ def main() -> int:
             return 1
         if a.cmd == "status":
             print(client.status(task_id))
-        if a.cmd in ("run",):
+        if a.cmd in ("run", "wait"):
             print("final status:", client.wait(task_id, a.poll_seconds), flush=True)
-        if a.cmd in ("download", "run"):
+        if a.cmd in ("download", "run", "wait"):
             files = client.download(task_id)
             print("saved:", [f.name for f in files] or "nothing (task not finished?)")
     finally:

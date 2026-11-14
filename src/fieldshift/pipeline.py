@@ -39,6 +39,7 @@ class FieldContext:
     ndvi_bare_windows: list = field(default_factory=list)
     observed_bare_days: float | None = None
     smap_anomaly: pd.DataFrame | None = None
+    root_wetness: pd.DataFrame | None = None     # POWER GWETROOT summary, always available
 
 
 @dataclass
@@ -70,6 +71,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     ndvi, smap = load_ndvi(lat, lon), load_smap(lat, lon)
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
+    root_w = F.root_wetness_summary(daily)
     gaps = ["Soil: not used in the scores (shown for information only; see the Soil section for its status)."]
     def span_years(df: pd.DataFrame) -> float:
         return (df.index.max() - df.index.min()).days / 365.25
@@ -94,9 +96,10 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
             gaps.append(f"SMAP soil moisture ({smap.date_range}) is shown for information; the scores do not use it.")
         else:
             gaps.append(f"SMAP soil moisture loaded ({smap.date_range}) but it covers only {sm_years:.1f} years: a wetter/drier-than-normal "
-                        f"anomaly needs at least {MIN_YEARS_ANOMALY} years, so none is shown.")
+                        f"anomaly needs at least {MIN_YEARS_ANOMALY} years, so none is shown; NASA POWER root-zone wetness (GWETROOT, model-based, ~50 km) is shown instead.")
     else:
-        gaps.append(f"SMAP soil moisture not loaded: root-zone wetness from NASA POWER (model, ~50 km) is shown instead. ({smap.message})")
+        gaps.append(f"SMAP soil moisture is not usable for this field ({smap.message}); NASA POWER root-zone wetness "
+                    f"(GWETROOT, a model estimate on a ~50 km grid, not a satellite measurement) is shown instead.")
     gaps += [
         "Slope/erosion terrain (SRTM) not loaded: erosion score uses crop cover only.",
         "Irrigation water availability and soil salinity are unknown for this field.",
@@ -109,7 +112,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     miss = {k: v for k, v in F.completeness(daily).items() if v > 0.01}
     if miss:
         gaps.append(f"POWER has gaps in: {', '.join(miss)}.")
-    return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, sm_anom)
+    return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, sm_anom, root_w)
 
 
 def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = None,

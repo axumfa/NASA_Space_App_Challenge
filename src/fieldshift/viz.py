@@ -129,3 +129,16 @@ def fig_soil_anomaly(z: pd.DataFrame) -> go.Figure:
     f = go.Figure(go.Bar(x=[MONTHS[i - 1] for i in m.index], y=m.values, marker_color=[C["heat"] if v < 0 else C["rain"] for v in m.values]))
     f.update_layout(title="Satellite soil moisture: wetter (+) or drier (−) than normal, average by month", yaxis_title="z-score", **LAYOUT)
     return f
+
+
+def fig_root_wetness(rw: pd.DataFrame) -> go.Figure:
+    f = go.Figure()
+    f.add_scatter(x=MONTHS, y=rw["p90"], mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip")
+    f.add_scatter(x=MONTHS, y=rw["p10"], mode="lines", line=dict(width=0), fill="tonexty",
+                  fillcolor="rgba(43,123,186,0.22)", name="typical range (10–90% of years)")
+    f.add_scatter(x=MONTHS, y=rw["median"], mode="lines", line=dict(color=C["rain"], width=3), name="median year")
+    f.add_scatter(x=MONTHS, y=rw["latest"], mode="lines+markers", line=dict(color=C["et0"], width=3),
+                  name=f"{rw.attrs.get('latest_year', 'latest')}")
+    f.update_layout(title="Root-zone soil wetness (NASA POWER model): 0 = dry, 1 = saturated",
+                    yaxis=dict(title="wetness", range=[0, 1]), **LAYOUT)
+    return f

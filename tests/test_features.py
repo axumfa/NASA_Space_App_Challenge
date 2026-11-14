@@ -89,3 +89,11 @@ def test_cache_keys_distinct_for_decimal_lon_and_different_requests(tmp_path, mo
     assert len({a, b, c}) == 3 and a.name.endswith(".json") and "71.78" in a.name
     base.write_json_cache(base.cache_key("power", 40.4, 71.78, "2001", "2025", "T2M"), {"x": 1})
     assert base.read_json_cache(base.cache_key("power", 40.4, 71.78, "2001", "2010", "T2M")) is None
+
+
+def test_root_wetness_summary_months_and_latest_year():
+    idx = pd.date_range("2018-01-01", "2021-12-31")
+    df = pd.DataFrame({"GWETROOT": np.where(idx.year == 2021, 0.7, 0.4) + 0.0 * np.arange(len(idx))}, index=idx)
+    rw = F.root_wetness_summary(df)
+    assert list(rw.index) == list(range(1, 13)) and rw.attrs["latest_year"] == 2021
+    assert rw["latest"].to_numpy() == pytest.approx(0.7) and (rw["latest_z"] > 0).all() and (rw["p10"] <= rw["median"]).all()

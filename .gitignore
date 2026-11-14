@@ -6,3 +6,14 @@ data/cache/*
 !data/cache/.gitkeep
 .pytest_cache/
 data/raw/.appeears_task.json
+
+# AppEEARS bundles: the request JSON contains the account's email address. Never commit these.
+data/uzbekistan-crop-presets*
+data/uzbekistan-crop-presets/
+data/README.md
+data/*-request.json
+data/*-granule-list.txt
+data/*-metadata.xml
+data/raw/*-request.json
+data/raw/*-granule-list.txt
+data/raw/*-metadata.xml

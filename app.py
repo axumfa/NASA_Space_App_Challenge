@@ -203,6 +203,10 @@ if view == VIEWS[0]:
                    "Put the AppEEARS CSV in data/raw/ to add it.")
     if ctx.smap_anomaly is not None:
         st.plotly_chart(viz.fig_soil_anomaly(ctx.smap_anomaly), width="stretch")
+    else:
+        st.plotly_chart(viz.fig_root_wetness(ctx.root_wetness), width="stretch")
+        st.caption("Satellite soil moisture (SMAP) is not usable for this field, so this is NASA POWER's model estimate of root-zone wetness "
+                   "(~50 km grid), not a satellite measurement. See the information gaps for the reason.")
     tbl = planting_table(cur.rotation, DB, DailyClimate(d))
     rows = []
     for i, p in enumerate(cur.rotation.plantings):

@@ -255,3 +255,18 @@ def observed_bare_days_per_year(ndvi: pd.Series, threshold: float = 0.2) -> pd.S
         daily = g.reindex(g.index.union(days)).interpolate("time", limit_area="inside").reindex(days)
         out[y] = int((daily < threshold).sum())   # days outside the first/last observation stay NaN, not counted
     return pd.Series(out, name="observed_bare_days")
+
+
+def root_wetness_summary(df: pd.DataFrame, col: str = "GWETROOT") -> pd.DataFrame:
+    """Monthly root-zone wetness (0 dry .. 1 saturated, NASA POWER model) for the soil-moisture chart.
+
+    Columns per calendar month: median, p10, p90 over all years, `latest` (the last complete year) and its z-score.
+    """
+    m = soil_moisture_anomaly(df, col)
+    g = m[col].groupby(level="month")
+    out = pd.DataFrame({"median": g.median(), "p10": g.quantile(.1), "p90": g.quantile(.9)})
+    last = m.index.get_level_values("year").max()
+    latest = m.xs(last, level="year")
+    out["latest"], out["latest_z"] = latest[col], latest["z"]
+    out.attrs["latest_year"] = int(last)
+    return out
