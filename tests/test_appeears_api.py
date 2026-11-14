@@ -48,7 +48,7 @@ class _Resp:
     def raise_for_status(self):
         if self.status_code >= 400:
             import requests
-            raise requests.HTTPError(f"HTTP {self.status_code}")
+            raise requests.HTTPError(f"HTTP {self.status_code}", response=self)   # like the real library
 
 
 class _ScriptedHTTP:
@@ -141,3 +141,20 @@ def test_oversized_download_refused(tmp_path):
     c = _client([_Resp(200, {"files": [{"file_id": "1", "file_name": "x-MOD13Q1-061-results.csv", "file_size": 10**9}]})])
     with pytest.raises(RuntimeError, match="unexpectedly large"):
         c.download("task", tmp_path)
+
+
+def test_404_is_terminal_not_retried_and_wait_reports_not_found():
+    c = _client([_Resp(404)])
+    with pytest.raises(A.TaskNotFound):
+        c.status("104d5725-f16a")
+    assert len(c.http.calls) == 1                                       # no backoff retries for a vanished task
+    lines = []
+    c = _client([_Resp(200, {"status": "pending"}), _Resp(404)])
+    assert c.wait("104d5725-f16a", every=0, log=lines.append) == "not_found" and any("no longer exists" in m for m in lines)
+
+
+def test_poll_failure_log_includes_http_code():
+    lines = []
+    c = _client([_Resp(400), _Resp(200, {"status": "done"})])
+    assert c.wait("t", every=0, log=lines.append) == "done"
+    assert any("HTTP 400" in m for m in lines)

@@ -32,6 +32,10 @@ class CredentialsMissing(RuntimeError):
     pass
 
 
+class TaskNotFound(RuntimeError):
+    """HTTP 404 for the task: it was deleted or purged (not a transient error, so never retried)."""
+
+
 @dataclass(frozen=True)
 class Credentials:
     username: str = field(repr=False)
@@ -151,6 +155,8 @@ class Client:
 
     def status(self, task_id: str) -> str:
         r = self._request("GET", f"{BASE}/task/{task_id}")
+        if r.status_code == 404:
+            raise TaskNotFound(f"task {task_id[:8]}… no longer exists on this account (deleted or purged)")
         r.raise_for_status()
         return r.json().get("status", "unknown")
 
@@ -165,9 +171,13 @@ class Client:
                 log(f"{dt.datetime.now():%H:%M:%S} status={st} (relogins so far: {self.relogins})")
                 if st in ("done", "error", "expired"):
                     return st
+            except TaskNotFound as e:
+                log(f"{dt.datetime.now():%H:%M:%S} {e}")
+                return "not_found"
             except (requests.RequestException, RuntimeError, KeyError, ValueError) as e:
                 failures += 1
-                log(f"{dt.datetime.now():%H:%M:%S} poll failed ({type(e).__name__}); consecutive failures: {failures}/{max_failures}")
+                code = getattr(getattr(e, "response", None), "status_code", None)
+                log(f"{dt.datetime.now():%H:%M:%S} poll failed ({type(e).__name__}{f', HTTP {code}' if code else ''}); consecutive failures: {failures}/{max_failures}")
                 if failures >= max_failures:
                     raise
             if time.time() - t0 > timeout_s:

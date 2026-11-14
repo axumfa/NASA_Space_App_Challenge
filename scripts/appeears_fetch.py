@@ -48,9 +48,18 @@ def main() -> int:
             print("no remembered task; run `submit` first")
             return 1
         if a.cmd == "status":
-            print(client.status(task_id))
+            try:
+                print(client.status(task_id))
+            except A.TaskNotFound as e:
+                print(f"{e}. Nothing was submitted.")
+                return 3
         if a.cmd in ("run", "wait"):
-            print("final status:", client.wait(task_id, a.poll_seconds, log=lambda m: print(m, flush=True)), flush=True)
+            final = client.wait(task_id, a.poll_seconds, log=lambda m: print(m, flush=True))
+            print("final status:", final, flush=True)
+            if final == "not_found":
+                print("The remembered task no longer exists. Nothing was submitted. To request the data again run "
+                      "`scripts/appeears_fetch.py submit` (this creates a NEW task), or use the AppEEARS website.")
+                return 3
         if a.cmd in ("download", "run", "wait"):
             files = client.download(task_id)
             print("saved:", [f.name for f in files] or "nothing (task not finished?)")
