@@ -515,7 +515,7 @@
    ],
    "t_max": 40,
    "frost_kill_c": 0,
-   "heat_thr_c": 38,
+   "heat_thr_c": 40,
    "water_need_mm": 300,
    "drought_tol": 0.6,
    "salinity_tol": 0.3,

@@ -60,4 +60,4 @@ def apply(results: list, weights: Weights) -> dict[str, bool]:
 def summarize_cols(sc: pd.DataFrame) -> list[str]:
     return ["fit", "total_abs", *PRIORITIES, *[f"norm_{m}" for m in PRIORITIES], "suitability", "pest_break",
             "irrigation_mm_per_year", "irrigation_demand_mm", "heat_days", "frost_days", "yield_loss",
-            "yield_at_risk", "n_kg", "bare_days"]
+            *[c for c in sc.columns if c.startswith("heat_days_")], "n_kg", "bare_days"]

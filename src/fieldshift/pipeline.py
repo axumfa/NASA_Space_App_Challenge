@@ -64,8 +64,7 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         "ET0 is computed from NASA POWER (MERRA-2) variables; it can differ from station-based ET0.",
         "Dry/normal/wet classes use irrigation demand (crop water need minus effective rain); actual "
         "water supply (rivers, snowmelt, canals) is not observed - use the irrigation-supply slider.",
-        "Reanalysis (MERRA-2) over irrigated land tends to run hot and dry (it does not see irrigation), "
-        "which can overstate ET0 and heat days.",
+        "Temperatures come from ~50 km reanalysis (MERRA-2) that runs hot over irrigated land, so hot-day counts and ET0 are likely overstated.",
         "Crop parameters are approximate regional values, not field trials.",
     ]
     miss = {k: v for k, v in F.completeness(daily).items() if v > 0.01}

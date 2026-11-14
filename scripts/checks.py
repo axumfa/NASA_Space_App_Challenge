@@ -74,9 +74,9 @@ def check2() -> None:
     for s in (1.0, 0.8, 0.6):
         res = run(ctx, f.rotation, pinned=(MUNG,), irrigation_supply=s)
         print(f"\n-- supply {s:.1f}")
-        print(f"{'rotation':46s} {'score':>5s} {'p10-p90':>8s} {'dry/norm/wet':>13s} {'irr mm':>6s} {'yield at risk med/p90':>18s}")
+        print(f"{'rotation':46s} {'score':>5s} {'p10-p90':>8s} {'dry/norm/wet':>13s} {'irr mm':>6s} {'water yield-at-risk med/p90':>18s}")
         for r in res:
-            t, yl = r.summary["fit"], r.summary["yield_at_risk"]
+            t, yl = r.summary["fit"], r.summary["yield_loss"]
             print(f"{short(r)[:45]:46s} {t['median']:5.0f} {t['p10']:3.0f}-{t['p90']:<4.0f} "
                   f"{t['median_dry']:4.0f}/{t['median_normal']:3.0f}/{t['median_wet']:3.0f} "
                   f"{r.summary['irrigation_mm_per_year']['median']:6.0f} {yl['median']*100:8.0f}%/{yl['p90']*100:.0f}%")

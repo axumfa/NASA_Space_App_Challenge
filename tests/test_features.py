@@ -78,3 +78,14 @@ def test_add_et0_uses_fao56_eq19_for_actual_vapour_pressure():
     expected = F.et0_penman_monteith(38.0, 22.0, 27.0, 0.5 * es, 2.0, 500, 40.0, idx.day_of_year.values)
     got = F.add_et0(df, 40.0, 500)["ET0"].values
     assert got == pytest.approx(expected)
+
+
+def test_cache_keys_distinct_for_decimal_lon_and_different_requests(tmp_path, monkeypatch):
+    from fieldshift.fetch import base
+    monkeypatch.setattr(base, "CACHE_DIR", tmp_path)
+    a = base._json_path(base.cache_key("power", 40.4, 71.78, "2001", "2025", "T2M"))
+    b = base._json_path(base.cache_key("power", 40.4, 71.78, "2001", "2010", "T2M"))
+    c = base._json_path(base.cache_key("power", 40.4, 71.98, "2001", "2025", "T2M"))
+    assert len({a, b, c}) == 3 and a.name.endswith(".json") and "71.78" in a.name
+    base.write_json_cache(base.cache_key("power", 40.4, 71.78, "2001", "2025", "T2M"), {"x": 1})
+    assert base.read_json_cache(base.cache_key("power", 40.4, 71.78, "2001", "2010", "T2M")) is None

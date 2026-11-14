@@ -228,13 +228,17 @@ with tab2:
             st.caption(f"{FIT_SHORT} · typical range {fit['p10']:.0f}–{fit['p90']:.0f} · dry {fit['median_dry']:.0f} / normal {fit['median_normal']:.0f} / wet {fit['median_wet']:.0f}")
             irr, cirr = s["irrigation_demand_mm"]["median"], ci["irrigation_demand_mm"]["median"]
             pct = f" ({100 * (irr - cirr) / cirr:+.0f}% vs now)" if i and cirr else ""
-            yr, yl = s["yield_at_risk"], s["yield_loss"]
+            yl = s["yield_loss"]
+            heat_lines = "".join(
+                f'<div class="metric-row">🔥 {DB[pl.crop_id]["name"]}: <b>{s[f"heat_days_{j}"]["median"]:.0f}</b> days above '
+                f'{DB[pl.crop_id]["heat_thr_c"]:.0f} °C in season (bad year: {s[f"heat_days_{j}"]["p90"]:.0f})</div>'
+                for j, pl in enumerate(r.rotation.plantings) if DB[pl.crop_id]["season"] != "cover")
             st.markdown(f'<div class="metric-row">💧 Irrigation need: <b>{irr:.0f} mm/yr</b>{pct}</div>'
                         f'<div class="metric-row">🟤 Bare soil: <b>{r.rotation.bare_days_per_year():.0f} days/yr</b></div>'
                         f'<div class="metric-row">🌱 Nitrogen from legumes: <b>{s["n_kg"]["median"]:.0f} kg N/ha/yr</b></div>'
-                        f'<div class="metric-row">⚠️ Yield at risk: <b>{yr["median"]*100:.0f}%</b> typical, <b>{yr["p90"]*100:.0f}%</b> in a bad year (1 in 10)</div>',
-                        unsafe_allow_html=True)
-            st.caption(f"of which water shortage: {yl['median']*100:.0f}% / {yl['p90']*100:.0f}%; the rest is a rough heat and frost estimate.")
+                        f'<div class="metric-row">⚠️ Yield at risk from water shortage: <b>{yl["median"]*100:.0f}%</b> typical, '
+                        f'<b>{yl["p90"]*100:.0f}%</b> in a bad year (1 in 10)</div>' + heat_lines, unsafe_allow_html=True)
+            st.caption("Heat exposure is a count of hot days, not a yield forecast. Temperatures come from ~50 km reanalysis that runs hot over irrigated land.")
             st.plotly_chart(viz.fig_radar(r, cur, viz.color_for(i)), width="stretch", key=f"radar{i}")
             for title, items in (("Why this option", e.why), ("Evidence (numbers)", e.evidence), ("Benefits", e.benefits + [f"Trade-off: {t}" for t in e.tradeoffs]),
                                  ("Information gaps", e.gaps), ("Risks to check with a local expert", e.risks)):
@@ -255,7 +259,7 @@ with tab3:
         "Frost risk": "Chance that the night minimum drops to 0 °C or lower. Late spring and early autumn frosts can kill young or ripening crops.",
         "Heat stress": "Days when the daytime high goes above a crop's tolerance (for example 35–38 °C). Flowers and grain can fail.",
         "Growing degree days": "A running total of useful warmth. A crop needs a certain amount to reach maturity.",
-        "Yield at risk": "How much of a normal harvest may be lost because of water shortage, heat or frost. Water part uses FAO yield-response factors; heat and frost part is a rough estimate.",
+        "Yield at risk": "How much of a normal harvest may be lost because the crop gets less water than it needs (FAO yield-response factors). It is 0 when irrigation water is plentiful. Heat is shown separately, as a count of very hot days.",
         "Dry / normal / wet year": "Years sorted into thirds by how much irrigation water crops needed: dry = highest need.",
         "Fit to your priorities": "A relative 0–100 comparison among the options shown, based on the sliders. It changes when you change the options or sliders.",
     }

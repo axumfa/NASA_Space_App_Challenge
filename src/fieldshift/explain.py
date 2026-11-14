@@ -81,9 +81,15 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
                       f"; dry years {irr['median_dry']:.0f}, wet years {irr['median_wet']:.0f}.")
     if s["n_kg"]["median"] > 0:
         e.evidence.append(f"Nitrogen credit from legumes: about {s['n_kg']['median']:.0f} kg N/ha per year (approximate).")
-    yr = s["yield_at_risk"]
-    e.evidence.append(f"Yield at risk (water shortage, heat, frost): {yr['median']*100:.0f}% typical, "
-                      f"{yr['p90']*100:.0f}% in the worst 1 year in 10.")
+    yl = s["yield_loss"]
+    e.evidence.append(f"Yield at risk from water shortage (FAO yield-response): {yl['median']*100:.0f}% typical, "
+                      f"{yl['p90']*100:.0f}% in the worst 1 year in 10 (irrigation supply set to the slider value).")
+    for i, pl in enumerate(r.plantings):
+        c = db[pl.crop_id]
+        hd = s[f"heat_days_{i}"]
+        if c["gdd_req"] > 0 or hd["median"] > 0:
+            e.evidence.append(f"Heat exposure, {c['name']}: {hd['median']:.0f} days above {c['heat_thr_c']:.0f} °C in season "
+                              f"(worst 1 in 10: {hd['p90']:.0f}); not converted to yield loss.")
     e.evidence.append(f"Climate fit {s['suitability']['median']:.0f}/100; pest-cycle break {s['pest_break']['median']:.0f}/100.")
 
     # ---- benefits / trade-offs vs current
@@ -124,9 +130,5 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
         if cid not in cur.crops:
             e.risks.append(f"New crop {c['name']}: confirm seed availability, machinery, and local agronomy advice.")
         e.risks.append(f"Market ({c['name']}): {c['market_note']}")
-    hd = s["heat_days"]["median"]
-    if hd >= 10:
-        e.risks.append(f"Heat: about {hd:.0f} crop-season days/year exceed the heat threshold of at least one crop here "
-                       f"(dry years {s['heat_days']['median_dry']:.0f}, wet {s['heat_days']['median_wet']:.0f}); review sowing dates and varieties.")
     e.risks.append("Irrigation water supply and timing were not modelled; confirm with your water-user association.")
     return e

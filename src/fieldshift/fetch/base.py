@@ -34,8 +34,13 @@ def cache_key(source: str, lat: float, lon: float, *parts: str) -> Path:
     return CACHE_DIR / f"{source}_{lat:.2f}_{lon:.2f}_{h}"
 
 
+def _json_path(path: Path) -> Path:
+    """Append .json (with_suffix would eat '.78_<hash>' from a name containing a decimal longitude)."""
+    return path.with_name(path.name + ".json")
+
+
 def read_json_cache(path: Path) -> Any | None:
-    p = path.with_suffix(".json")
+    p = _json_path(path)
     if p.exists():
         return json.loads(p.read_text())
     return None
@@ -43,4 +48,4 @@ def read_json_cache(path: Path) -> Any | None:
 
 def write_json_cache(path: Path, obj: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.with_suffix(".json").write_text(json.dumps(obj))
+    _json_path(path).write_text(json.dumps(obj))
