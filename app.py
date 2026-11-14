@@ -181,7 +181,16 @@ with tab1:
     bw = cur.rotation.bare_windows()
     st.write(f"Your field is bare about **{cur.rotation.bare_days_per_year():.0f} days a year** according to the crop calendar"
              + (": " + ", ".join(f"{viz.doy_to_date(s % 365 + 1)} for {n} days" for s, n in bw) if bw else "") + ".")
-    st.caption("Satellite vegetation (MODIS NDVI) is not used yet, so bare periods come from typical sowing and harvest dates, not from observed greenness.")
+    if ctx.ndvi_curve is not None:
+        st.plotly_chart(viz.fig_ndvi(ctx.ndvi_curve, ctx.ndvi_bare_windows, 0.2), width="stretch")
+        if ctx.observed_bare_days is not None:
+            st.write(f"Satellite view: the field is below the bare-soil greenness level about **{ctx.observed_bare_days:.0f} days a year**"
+                     f" (the crop calendar above says {cur.rotation.bare_days_per_year():.0f}). Differences usually mean sowing dates, weeds or cloud gaps differ from the typical calendar.")
+    else:
+        st.caption("Satellite vegetation (MODIS NDVI) is not loaded for this field, so bare periods come from typical sowing and harvest dates, not from observed greenness. "
+                   "Put the AppEEARS CSV in data/raw/ to add it.")
+    if ctx.smap_anomaly is not None:
+        st.plotly_chart(viz.fig_soil_anomaly(ctx.smap_anomaly), width="stretch")
     tbl = planting_table(cur.rotation, DB, DailyClimate(d))
     rows = []
     for i, p in enumerate(cur.rotation.plantings):
@@ -254,7 +263,7 @@ with tab3:
         "Evapotranspiration (ET0)": "Water that leaves the field as vapour: from the soil and through plant leaves. ET0 is how much a well-watered reference grass would lose on a given day. Crops use a share of it (the 'crop coefficient', Kc).",
         "Water balance": "Rain minus ET0 for a month. Negative means the air can take more water than rain provides, so plants need irrigation or stored soil water.",
         "Irrigation need": "Crop water use over the season minus the rain that actually reaches the roots. Shown in mm; 100 mm = 1,000 m³ per hectare.",
-        "NDVI": "A 'greenness' number from satellites (0 = bare, 0.8 = dense crop). Low values show when the field is bare. (Not yet loaded in this version.)",
+        "NDVI": "A 'greenness' number from satellites (0 = bare, 0.8 = dense crop). Low values show when the field is bare.",
         "Soil-moisture anomaly": "How much wetter or drier the soil is than normal for the time of year. Negative = drier than usual.",
         "Frost risk": "Chance that the night minimum drops to 0 °C or lower. Late spring and early autumn frosts can kill young or ripening crops.",
         "Heat stress": "Days when the daytime high goes above a crop's tolerance (for example 35–38 °C). Flowers and grain can fail.",
@@ -270,8 +279,10 @@ with tab3:
     srcs = pd.DataFrame([
         ["NASA POWER (MERRA-2, CERES-SYN)", "Daily temperature, rain, humidity, wind, sunshine, soil wetness", "~50 km grid, daily", "2001–2025", "Used"],
         ["ISRIC SoilGrids", "Soil texture, organic carbon, pH", "250 m", "static", "Used only if reachable or entered by hand"],
-        ["MODIS NDVI (MOD13Q1)", "Greenness, bare-soil periods", "250 m, 16-day", "–", "Not yet loaded"],
-        ["SMAP soil moisture", "Soil moisture anomaly", "~9 km", "–", "Not yet loaded; POWER soil wetness used instead"],
+        ["MODIS NDVI (MOD13Q1)", "Greenness, bare-soil periods", "250 m, 16-day", ctx.ndvi.date_range if ctx.ndvi and ctx.ndvi.ok else "–",
+         "Used for display and comparison" if ctx.ndvi and ctx.ndvi.ok else "Not loaded for this field"],
+        ["SMAP soil moisture", "Soil moisture anomaly", "~9 km", ctx.smap.date_range if ctx.smap and ctx.smap.ok else "–",
+         "Used for display" if ctx.smap and ctx.smap.ok else "Not loaded; POWER soil wetness is the model-based stand-in"],
         ["GPM IMERG / SRTM", "Rain cross-check; slope", "10 km / 30 m", "–", "Not yet loaded"],
     ], columns=["Source", "What for", "Resolution", "Period", "Status"])
     st.dataframe(srcs, hide_index=True, width="stretch")

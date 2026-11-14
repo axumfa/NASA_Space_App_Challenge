@@ -106,3 +106,26 @@ def fig_fit_by_year_type(display: list) -> go.Figure:
     f.update_layout(title=f"{FIT_SHORT} by type of year (bars = typical, whiskers = 10th–90th percentile)",
                     yaxis=dict(title="relative score", range=[0, 105]), barmode="group", height=380, **LAYOUT)
     return f
+
+
+def fig_ndvi(curve: pd.DataFrame, windows: list, threshold: float) -> go.Figure:
+    f = go.Figure()
+    for st_, n in windows:
+        f.add_vrect(x0=st_, x1=min(st_ + n, 366), fillcolor=C["bare"], line_width=0, layer="below")
+        if st_ + n > 366:
+            f.add_vrect(x0=0, x1=st_ + n - 366, fillcolor=C["bare"], line_width=0, layer="below")
+    f.add_scatter(x=curve["doy"], y=curve["p75"], mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip")
+    f.add_scatter(x=curve["doy"], y=curve["p25"], mode="lines", line=dict(width=0), fill="tonexty",
+                  fillcolor="rgba(46,139,87,0.25)", name="typical spread (25–75%)")
+    f.add_scatter(x=curve["doy"], y=curve["median"], mode="lines+markers", line=dict(color="#2e8b57", width=4), name="greenness (NDVI), median year")
+    f.add_hline(y=threshold, line_dash="dot", line_color=C["heat"], annotation_text="bare soil below this")
+    f.update_xaxes(tickvals=[m * 30.4 + 15 for m in range(12)], ticktext=MONTHS, range=[0, 366])
+    f.update_layout(title="Satellite greenness through the year (red = typically bare)", yaxis_title="NDVI (0 bare – 0.8 dense crop)", **LAYOUT)
+    return f
+
+
+def fig_soil_anomaly(z: pd.DataFrame) -> go.Figure:
+    m = z["z"].groupby(level="month").mean()
+    f = go.Figure(go.Bar(x=[MONTHS[i - 1] for i in m.index], y=m.values, marker_color=[C["heat"] if v < 0 else C["rain"] for v in m.values]))
+    f.update_layout(title="Satellite soil moisture: wetter (+) or drier (−) than normal, average by month", yaxis_title="z-score", **LAYOUT)
+    return f

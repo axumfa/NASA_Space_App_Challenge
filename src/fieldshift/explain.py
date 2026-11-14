@@ -67,6 +67,9 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
     # ---- evidence (numbers)
     e.evidence.append(f"Calendar: field is bare about {bare_new:.0f} days/year in this rotation "
                       f"(current: {bare_now:.0f}); cycle length {r.cycle_years} year(s).")
+    if r.rule == "current" and ctx.observed_bare_days is not None:
+        e.evidence.append(f"Satellite check (MODIS NDVI below 0.2): about {ctx.observed_bare_days:.0f} bare days/year observed, "
+                          f"against {bare_now:.0f} from the crop calendar.")
     e.evidence.append(f"Climate at the field ({ctx.annual.index.min()}–{ctx.annual.index.max()}, NASA POWER): "
                       f"median {frost_med:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), "
                       f"{heat_med:.0f} days/year with Tmax ≥ 35 °C, rainfall {ann['precip'].median():.0f} mm vs reference ET0 {ann['et0'].median():.0f} mm.")
