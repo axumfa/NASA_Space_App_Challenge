@@ -135,10 +135,12 @@ cur = display[0]
 if rain_pct or temp_c or supply < 1:
     st.info(f"What-if active: rainfall {rain_pct:+d}%, temperature +{temp_c:.1f} °C, irrigation water {supply*100:.0f}%.")
 
-tab1, tab2, tab3 = st.tabs(["📍 Your field", "🔀 Rotation options", "📖 Glossary & data"])
+VIEWS = ["📍 Your field", "🔀 Rotation options", "📖 Glossary & data"]
+# A keyed radio (not st.tabs): st.tabs jumps back to the first tab on every rerun, e.g. when a what-if slider moves.
+view = st.radio("View", VIEWS, horizontal=True, key="view", label_visibility="collapsed")
 
 # ------------------------------------------------------------------ tab 1
-with tab1:
+if view == VIEWS[0]:
     d, ann = ctx.daily, ctx.annual
     clim = F.monthly_climatology(d)
     c1, c2 = st.columns([1, 1])
@@ -213,7 +215,7 @@ with tab1:
             st.write("• " + g)
 
 # ------------------------------------------------------------------ tab 2
-with tab2:
+if view == VIEWS[1]:
     st.subheader(FIT_LABEL)
     st.caption("A relative score from 0 to 100 that compares the options shown here, using the priorities you set. "
                "It is not a grade or a yield forecast. Real units (mm of water, days, % yield at risk) are shown on every card.")
@@ -257,7 +259,7 @@ with tab2:
     st.caption("Shaded radar = this option, dotted = your current rotation. Each axis compares options with each other (outer edge = best of those shown).")
 
 # ------------------------------------------------------------------ tab 3
-with tab3:
+if view == VIEWS[2]:
     st.subheader("What the words mean")
     gl = {
         "Evapotranspiration (ET0)": "Water that leaves the field as vapour: from the soil and through plant leaves. ET0 is how much a well-watered reference grass would lose on a given day. Crops use a share of it (the 'crop coefficient', Kc).",

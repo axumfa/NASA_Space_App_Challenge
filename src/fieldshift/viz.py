@@ -77,7 +77,7 @@ def fig_calendar(rotation, title: str = "Crop calendar: green = crop in the fiel
 
 def fig_radar(res, current, color: str) -> go.Figure:
     keys = [m for m in PRIORITIES]
-    short = {"water_saving": "Water", "soil_om": "Organic matter", "nitrogen": "Nitrogen", "erosion": "Erosion", "forage": "Forage", "income": "Income"}
+    short = {"water_saving": "Water", "soil_om": "Soil humus", "nitrogen": "Nitrogen", "erosion": "Erosion", "forage": "Forage", "income": "Income"}
     labels = [short[m] for m in keys]
     f = go.Figure()
     cur = [current.summary[f"norm_{m}"]["median"] for m in keys]
