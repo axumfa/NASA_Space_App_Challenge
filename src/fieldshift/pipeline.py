@@ -21,6 +21,8 @@ from .scoring import (DailyClimate, Weights, classify_by_demand, irrigation_dema
 
 
 NDVI_BARE_THRESHOLD = 0.2   # configurable: NDVI below this = bare soil
+NDVI_CROP_MIN_PEAK = 0.6    # a cropland pixel greens up to at least this in a typical year; below it the point is bare ground, town edge or water
+MIN_OBS_PER_YEAR = 12       # a year counts towards the peak only with this many quality-passed observations
 MIN_YEARS_ANOMALY = 4       # a calendar-month z-score needs several years of the same month
 
 
@@ -76,6 +78,9 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         ndvi, smap = FetchResult.failed("MODIS NDVI", why), FetchResult.failed("SMAP soil moisture", why)
     else:
         ndvi, smap = load_ndvi(lat, lon), load_smap(lat, lon)
+        peak = ndvi_cropland_peak(ndvi.data["ndvi"]) if ndvi.ok else None
+        if peak is not None and peak < NDVI_CROP_MIN_PEAK:        # not a crop pixel: never compare it with the crop calendar
+            ndvi = FetchResult.failed("MODIS NDVI", Msg("g.ndvi_notcrop", peak=peak, thr=NDVI_CROP_MIN_PEAK))
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
     root_w = F.root_wetness_summary(daily)
@@ -113,15 +118,25 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, sm_anom, root_w)
 
 
-_NOPOINT = re.compile(r"^(?P<file>.+?): no point within (?P<d>[\d.]+) deg of \((?P<lat>[^,]+), (?P<lon>[^)]+)\); nearest is (?P<near>[\d.]+) deg away$")
+_NOPOINT = re.compile(r"(?P<file>[^;]+?): no point within (?P<d>[\d.]+) deg of \((?P<lat>[^,]+), (?P<lon>[^)]+)\); nearest is (?P<near>[\d.]+) deg away")
+
+
+def ndvi_cropland_peak(ndvi: pd.Series) -> float | None:
+    """Median over years of the yearly maximum NDVI (years with enough good observations); None if fewer than 2 such years."""
+    d = ndvi.dropna()
+    g = d.groupby(d.index.year)
+    peaks = g.max()[g.count() >= MIN_OBS_PER_YEAR]
+    return float(peaks.median()) if len(peaks) >= 2 else None
 
 
 def _detail(message):
-    """Known fetch messages become translatable; anything else stays as the (technical) English text."""
+    """Known fetch messages (one per file searched) become translatable; anything else stays as the (technical) English text."""
     if isinstance(message, Msg):
         return message
-    m = _NOPOINT.match(message or "")
-    return Msg("g.nopoint", **m.groupdict()) if m else message
+    found = [Msg("g.nopoint", **m.groupdict()) for m in _NOPOINT.finditer(message or "")]
+    if not found:
+        return message
+    return found[0] if len(found) == 1 else Msg("g.joined", items=found)
 
 
 def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = None,

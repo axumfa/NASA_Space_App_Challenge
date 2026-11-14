@@ -17,3 +17,6 @@ data/*-metadata.xml
 data/raw/*-request.json
 data/raw/*-granule-list.txt
 data/raw/*-metadata.xml
+
+# full AppEEARS downloads (re-creatable with scripts/appeears_fetch.py); the trimmed demo copies live in data/demo_cache/
+data/raw/*.csv

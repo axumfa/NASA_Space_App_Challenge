@@ -10,8 +10,8 @@ options and shows its uncertainty, and it does not replace a farmer's or agronom
 |---|---|---|
 | NASA POWER daily (MERRA-2 / CERES-SYN), ~0.5° grid, 2001–last full year | all climate features, ET0, frost, heat, year classes | **required**, cached on disk |
 | ISRIC SoilGrids (REST, 10 s timeout) → manual JSON read from the SoilGrids web map | soil texture, organic carbon, pH (shown, **not in the scores**) | optional; REST returns nothing for masked (urban, water) pixels and takes 6–10 s per point, so the demo values are cached; the Fergana demo point sits on farmland just outside the urban mask |
-| MODIS MOD13Q1.061 NDVI via AppEEARS CSV in `data/raw/` | observed greenness and bare-soil windows (shown and compared, **not in the scores**) | optional; parser tested on a synthetic fixture only |
-| SMAP SPL3SMP_E via AppEEARS CSV in `data/raw/` | soil-moisture anomaly (shown) | optional; same caveat |
+| MODIS MOD13Q1.061 NDVI via AppEEARS CSV in `data/raw/` | observed greenness and bare-soil windows (shown and compared, **not in the scores**) | optional; parsed from real AppEEARS downloads (task of 14 Nov 2026) for the five requested points; trimmed copies for the demo points are committed in `data/demo_cache/`; a point whose typical yearly NDVI peak is below 0.6 is **not used** (not cropland) |
+| SMAP SPL3SMP_E via AppEEARS CSV in `data/raw/` | soil-moisture anomaly (shown) | optional; same source. Valid retrievals exist at the Kansas and Karakalpakstan points (about 45% of days pass the quality flag) and at none of the three Fergana points |
 | NASA GIBS map tiles (MODIS NDVI 8-day, GPM IMERG rate, MODIS land surface temperature 8-day, SMAP L4 surface soil moisture) | **map layers only**: shown as images with their NASA colour legend, source and observation date; never used in scores or numbers | optional; global coverage; the browser fetches the tiles; if GIBS cannot be reached the layers are listed as unavailable |
 | GPM IMERG / SRTM slope as model inputs | – | **not implemented** |
 
@@ -78,6 +78,8 @@ Also computed: **pest-cycle break** = 100 × (1 − share of cyclic neighbours f
   in AppEEARS; layer names were verified against its product API. Over some places no retrieval is ever "recommended quality" (none
   was at the Fergana, Bukhara or Samarkand town points in 2025–26), so SMAP can legitimately be empty.
 - **Point matching:** the CSV may hold several points; NDVI needs one within 0.01° (~1 km) of the field and SMAP within 0.06° (~6 km).
+- **Cropland check:** the NDVI of a point is used only if the median of its yearly maxima (years with at least 12 good observations) reaches 0.6. Real downloads: the first Fergana demo point peaked at 0.29 (not cropland, so it was replaced by the 213 ha farmland candidate at 0.81); a 56 ha candidate reached only 0.56.
+- **Scale detection:** one fill value (−3000) in a column must not decide whether NDVI is raw or already scaled (a real Karakalpakstan file did exactly that and made the series read ~0; fixed, with a regression test).
 - **Short records:** a seasonal NDVI curve from fewer than 5 years is labelled a rough picture; a soil-moisture anomaly needs ≥ 4 years
   of the same calendar month, otherwise none is shown. Observed bare days need a year with at least 12 good observations.
 - The column names are matched by pattern; if required columns are missing, an error lists the real ones and the gap is reported.

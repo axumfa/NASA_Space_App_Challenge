@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from html import escape
+from pathlib import Path
 
 import folium
 from branca.element import MacroElement, Template
@@ -70,11 +71,36 @@ def _legend_html(layer: GibsLayer, key: str, labels: dict) -> dict:
         lo = hi = ""
         bar = "none"
     return {"title": labels["title"], "bar": bar, "lo": lo, "hi": hi, "src": labels["src"], "date": layer.date + (" *" if layer.stale else ""),
-            "note": labels["note"]}
+            "note": labels["note"], "asof": labels.get("asof", "") if layer.stale else ""}
 
 
-def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = "en", zoom: int = 7, tooltip: str = "") -> folium.Map:
+LEAFLET_VERSION = "1.9.3"
+LEAFLET_CDN = f"https://cdn.jsdelivr.net/npm/leaflet@{LEAFLET_VERSION}/dist"
+LEAFLET_LOCAL = "/app/static/leaflet"        # served by Streamlit when `server.enableStaticServing` is on (see .streamlit/config.toml)
+STATIC_DIR = Path(__file__).resolve().parents[2] / "static" / "leaflet"
+
+
+def local_assets_available() -> bool:
+    """True if the vendored Leaflet exists and Streamlit serves ./static; otherwise the map falls back to the CDN."""
+    try:
+        import streamlit as st
+        return (STATIC_DIR / "leaflet.js").exists() and bool(st.get_option("server.enableStaticServing"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def resources(local: bool) -> tuple[list, list]:
+    """(default_js, default_css) for the map. streamlit-folium loads exactly these, one after another, before drawing the map.
+    The stock bundle also fetches jQuery, Bootstrap, Font Awesome and awesome-markers from CDNs; none is used here and they were
+    most of the time between "page ready" and "map visible"."""
+    base = LEAFLET_LOCAL if local else LEAFLET_CDN
+    return [("leaflet", f"{base}/leaflet.js")], [("leaflet_css", f"{base}/leaflet.css")]
+
+
+def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = "en", zoom: int = 7, tooltip: str = "",
+              local_assets: bool = False) -> folium.Map:
     m = folium.Map(location=[lat, lon], zoom_start=zoom, tiles=None, control_scale=True, max_zoom=13, prefer_canvas=True)
+    m.default_js, m.default_css = resources(local_assets)
     m.get_root().header.add_child(folium.Element(CSS))
 
     base_names, base_vars = {}, {}
@@ -95,7 +121,8 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
         tl.add_to(m)
         data_vars[name] = tl.get_name()
         info[name] = _legend_html(layer, key, {"title": tr(f"map.title_{key}", lang), "src": tr(f"map.src_{key}", lang),
-                                               "note": tr(f"map.note_{key}", lang)})
+                                               "note": tr(f"map.note_{key}", lang),
+                                               "asof": tr("map.asof", lang, d=layer.as_of or "?")})
 
     folium.CircleMarker([lat, lon], radius=8, color="#FFFFFF", weight=3, fill=True, fill_color=FOREST, fill_opacity=1,
                         tooltip=tooltip or None).add_to(m)
@@ -126,7 +153,7 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
     if (!i) {{ d.style.display = 'none'; return; }}
     var rng = i.bar !== 'none' ? '<div class="bar" style="background:' + i.bar + '"></div><div class="rng"><span>' + esc(i.lo) + '</span><span>' + esc(i.hi) + '</span></div>' : '';
     d.innerHTML = '<b>' + esc(i.title) + '</b>' + rng + '<div class="src">' + esc(T.source) + ': ' + esc(i.src) + '<br>' + esc(T.date) + ': ' + esc(i.date) + '</div>' +
-      '<div class="note">' + esc(i.note) + '</div>' + (status ? '<div class="st ' + (cls || '') + '">' + esc(status) + '</div>' : '');
+      '<div class="note">' + esc(i.note) + '</div>' + (i.asof ? '<div class="note">' + esc(i.asof) + '</div>' : '') + (status ? '<div class="st ' + (cls || '') + '">' + esc(status) + '</div>' : '');
     d.style.display = 'block';
   }}
   function activate(name) {{

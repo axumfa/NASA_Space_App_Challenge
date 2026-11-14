@@ -80,8 +80,10 @@ def verify_layers() -> dict[str, list[str]]:
 
 # Points of the current request: three demo/preset fields plus two OSM-verified farmland candidates near the Fergana demo field
 # (213 ha parcel 4.9 km away; 56 ha parcel 2.9 km away) to find a pixel with a cropland NDVI signal.
-FIELD_POINTS = ("fergana", "kansas", "karakalpakstan")
-EXTRA_POINTS = {"fergana_213ha": (40.4229, 71.7576), "fergana_56ha": (40.4261, 71.7339)}
+FIELD_POINTS = ("kansas", "karakalpakstan")
+# The five points of the submitted task. "fergana_old" is the first Fergana demo point (summer NDVI peak 0.24: not cropland); the 213 ha
+# candidate became the demo field.
+EXTRA_POINTS = {"fergana_old": (40.43, 71.70), "fergana_213ha": (40.4229, 71.7576), "fergana_56ha": (40.4261, 71.7339)}
 
 
 def task_points() -> dict[str, tuple[float, float]]:

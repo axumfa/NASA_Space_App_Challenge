@@ -80,11 +80,6 @@ def get_display(lat: float, lon: float, rain_pct: int, temp_c: float, current: t
     return choose(get_pool(lat, lon, rain_pct, temp_c, current, supply), Weights(*weights), n=4, force=force)
 
 
-@st.cache_data(show_spinner=False, ttl=3600)
-def get_gibs_layers():
-    return gibs.load_layers()
-
-
 @st.cache_data(show_spinner=False)
 def get_soil(lat: float, lon: float, key: str | None):
     r = fetch_soil(lat, lon, key)
@@ -198,10 +193,16 @@ try:
 except Exception as e:  # noqa: BLE001
     st.error(t("err.power", e=e))
     st.stop()
-with st.spinner(t("spin.pool")):
-    display, tied = get_display(lat, lon, rain_pct, temp_c, current, supply, tuple(w.as_dict().values()),
-                                (("winter_wheat", "mung_bean", "cotton"),) if current == ("winter_wheat", "cotton") else ())
-cur = display[0]
+
+
+def load_display():
+    """Rotation options are needed only below the map (field view) or in the options view, so they are computed lazily:
+    the map and the climate indicators appear first on a cold start."""
+    with st.spinner(t("spin.pool")):
+        return get_display(lat, lon, rain_pct, temp_c, current, supply, tuple(w.as_dict().values()),
+                           (("winter_wheat", "mung_bean", "cotton"),) if current == ("winter_wheat", "cotton") else ())
+
+
 soil_ok, soil_recs, _soil_msg, soil_src = get_soil(lat, lon, k)
 ui.notice(t("ui.notice"))
 if rain_pct or temp_c or supply < 1:
@@ -246,9 +247,10 @@ if view == "field":
         with st.container(border=True, key="panel_map"):
             try:
                 from streamlit_folium import st_folium
-                with st.spinner(t("map.loading")):
-                    layers = get_gibs_layers()
-                m = mapview.build_map(lat, lon, layers, S.lang, tooltip=f"{t('map.marker')}: {lat:.2f}, {lon:.2f}")
+                layers = gibs.load_cached()          # instant: live copy or the committed snapshot, never the network
+                gibs.refresh_in_background()          # at most one daemon thread, only when the copy is older than 12 h
+                m = mapview.build_map(lat, lon, layers, S.lang, tooltip=f"{t('map.marker')}: {lat:.2f}, {lon:.2f}",
+                                      local_assets=mapview.local_assets_available())
                 out = st_folium(m, height=345, width=None, returned_objects=["last_clicked"], key="map")
                 if out and out.get("last_clicked"):
                     lc = out["last_clicked"]
@@ -257,8 +259,9 @@ if view == "field":
                         st.rerun()
                 st.caption(t("map.help"))
                 st.markdown(ui.layer_line(t("map.layers_h"), mapview.layer_status(layers, S.lang)), unsafe_allow_html=True)
-                if any(l.stale for l in layers.values()):
-                    st.caption(t("map.stale_note"))
+                stale = [l for l in layers.values() if l.ok and l.stale]
+                if stale:
+                    st.caption(t("map.stale_note", d=stale[0].as_of or "?"))
             except Exception:  # noqa: BLE001  - the map must never take the dashboard down; plain map as a fallback
                 import traceback
                 traceback.print_exc()
@@ -313,6 +316,8 @@ if view == "field":
     with cd, st.container(border=True, key="panel_heat"):
         st.plotly_chart(viz.fig_heat(heat, lang=S.lang), width="stretch")
 
+    display, tied = load_display()
+    cur = display[0]
     ui.section(t("ui.sec_season"), t("f.bare_h"))
     with st.container(border=True, key="panel_cal"):
         st.plotly_chart(viz.fig_calendar(cur.rotation, lang=S.lang), width="stretch")
@@ -351,7 +356,7 @@ if view == "field":
             def soil_label(key: str) -> str:
                 return t(f"soil.{key}") if f"soil.{key}" in i18n.S else key
             ui.kpi_grid([ui.kpi(soil_label(kk), f"{vv:.1f}" if isinstance(vv, float) else str(vv), "", "") for kk, vv in r.items()])
-            st.caption(f"{t('f.soil')}: {soil_src}")
+            st.caption(soil_src)
         else:
             st.info(t("f.soil_na"))
     with st.expander(t("f.gaps")):
@@ -368,6 +373,8 @@ if view == "field":
 
 # ------------------------------------------------------------------ view 2: rotation options
 if view == "options":
+    display, tied = load_display()
+    cur = display[0]
     st.caption(t("ui.step_trail"))
     ui.section(t("fit.label"), t("o.caption"))
     sb = summary_box(display, w, S.lang, arid=is_arid(ctx))

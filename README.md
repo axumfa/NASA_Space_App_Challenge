@@ -13,9 +13,9 @@ code and are cached for offline use. Their points were chosen on OpenStreetMap f
 SoilGrids returns values. **No MODIS NDVI or SMAP was requested for the presets** (the gaps section says so), and their default rotation
 (winter wheat → cotton) is an assumption to review locally: rice, vegetables and orchards are not in the crop list.
 
-Default demo fields: **Fergana Valley, Uzbekistan** (40.43°N, 71.70°E; winter wheat → cotton; water scarcity) and **central Kansas, USA**
-(38.50°N, 98.50°W; maize → soybean). The Fergana point is farmland about 7 km west of Fergana city: the city centre itself is inside
-the urban mask where SoilGrids returns no data. Both points sit in the same NASA POWER grid cell, so the climate is the same.
+Default demo fields: **Fergana Valley, Uzbekistan** (40.42°N, 71.76°E; winter wheat → cotton; water scarcity) and **central Kansas, USA**
+(38.50°N, 98.50°W; maize → soybean). The Fergana point is a 213 ha farmland point east of Fergana city whose MODIS NDVI shows a real crop cycle (yearly peak about 0.8); the
+earlier demo point nearby peaked at only 0.29 and was replaced. All Fergana candidates sit in the same NASA POWER grid cell, so the climate is the same.
 
 ## Quick start
 
@@ -128,3 +128,7 @@ available 40…100%).
 ## Map
 
 The field view has an interactive map: satellite / street / terrain basemaps and four NASA GIBS layers (NDVI, rainfall rate, land surface temperature, surface soil moisture) with legend, source and observation date. Use the layers button (top right of the map); click the map to move the field. The layers need internet access in the browser; the rest of the app does not. Details and provider notes: `docs/methodology.md`, section 12.
+
+## Satellite data in the demo
+
+`data/demo_cache/demo-points-*.csv` are trimmed copies (same values, fewer columns and points) of the NASA AppEEARS point-sample downloads for the three demo points with real cropland NDVI: Fergana (213 ha farmland point), Kansas and Karakalpakstan. They are public NASA data (MOD13Q1.061, SPL3SMP_E.006) and make the demo show real satellite greenness and soil moisture offline. To rebuild them after a new download, run `python scripts/make_demo_satellite.py`.

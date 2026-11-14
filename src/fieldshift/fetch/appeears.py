@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import RAW_DIR
+from ..config import DEMO_CACHE_DIR, RAW_DIR
 from .base import FetchResult
 
 NDVI_MAX_DEG = 0.01    # ~1 km: a 250 m pixel must be the field, not a town 9 km away
@@ -66,7 +66,7 @@ def parse_ndvi(path: Path, lat: float, lon: float, accept: tuple[int, ...] = NDV
     df = _select_point(raw, lat, lon, NDVI_MAX_DEG)
     cols = list(df.columns)
     vals = df[_find_col(cols, r"250m_16_days_NDVI$")].astype(float).to_numpy()
-    finite = vals[np.isfinite(vals)]
+    finite = vals[np.isfinite(vals) & (vals != NDVI_FILL)]          # the fill value must not decide the scale (one -3000 row made a whole column read ~0)
     scaled = finite.size == 0 or np.abs(finite).max() <= 1.5         # AppEEARS CSVs deliver scaled NDVI; raw MODIS ints reach 10000
     ndvi = vals if scaled else vals * NDVI_SCALE
     in_range = (ndvi >= -0.2) & (ndvi <= 1.0)
@@ -111,8 +111,8 @@ def parse_smap(path: Path, lat: float, lon: float) -> pd.DataFrame:
 
 
 def _files(pattern: str) -> list[Path]:
-    """AppEEARS CSVs in data/raw/ and (where bundles are often unzipped by hand) data/."""
-    dirs = [Path(RAW_DIR), Path(RAW_DIR).parent]
+    """AppEEARS CSVs in data/raw/, data/ (bundles are often unzipped by hand) and the committed data/demo_cache/."""
+    dirs = [Path(RAW_DIR), Path(RAW_DIR).parent, Path(DEMO_CACHE_DIR)]      # DEMO_CACHE_DIR: trimmed copies committed for the demo points
     return sorted({f for d in dirs if d.exists() for f in d.glob(f"*{pattern}*.csv")})
 
 

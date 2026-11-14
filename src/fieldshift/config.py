@@ -27,10 +27,10 @@ class Field:
 
 
 DEMO_FIELDS: dict[str, Field] = {
-    # Moved 7.5 km west of Fergana city (40.40, 71.78): that point is inside the urban mask where SoilGrids returns no
-    # data. 40.43, 71.70 is valley-floor farmland (OSM: farmland/grass within 800 m) in the SAME POWER grid cell,
-    # so the climate series is identical to the old point.
-    "fergana": Field("fergana", "Fergana Valley, Uzbekistan", 40.43, 71.70,
+    # Satellite-verified cropland point (a 213 ha farmland candidate east of Fergana). The earlier demo point (40.43, 71.70) showed
+    # a summer MODIS NDVI peak of only 0.24 (town edge / bare ground, not a crop), so it was replaced. All three Fergana points
+    # lie in the SAME POWER grid cell, so the climate series (and every score) is unchanged.
+    "fergana": Field("fergana", "Fergana Valley, Uzbekistan", 40.4229, 71.7576,
                      ("winter_wheat", "cotton"), "UZ"),
     "kansas": Field("kansas", "Central Kansas, USA", 38.50, -98.50,
                     ("maize", "soybean"), "US"),
@@ -38,7 +38,7 @@ DEMO_FIELDS: dict[str, Field] = {
     # SoilGrids returns values; default rotation = the common Uzbek cotton-wheat system, an ASSUMPTION to be reviewed
     # locally: e.g. rice, vegetables and orchards are not in the crop list). No MODIS NDVI / SMAP was requested for them.
     "karakalpakstan": Field("karakalpakstan", "Karakalpakstan farmland (near Nukus), Uzbekistan", 42.4128, 59.5159,
-                            ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True,
+                            ("winter_wheat", "cotton"), "UZ", satellite=True, preset=True,
                             gap_notes=(Msg("g.rice"),)),
     "bukhara": Field("bukhara", "Bukhara region farmland, Uzbekistan", 39.9904, 64.3238,
                      ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),

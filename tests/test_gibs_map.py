@@ -55,8 +55,12 @@ class FakeSession:
 
 @pytest.fixture
 def cache_dir(tmp_path, monkeypatch):
-    monkeypatch.setattr(gibs, "CACHE_DIR", tmp_path)
-    return tmp_path
+    live, snap = tmp_path / "live", tmp_path / "snap"
+    monkeypatch.setattr(gibs, "CACHE_DIR", live)
+    monkeypatch.setattr(gibs, "SNAPSHOT_DIR", snap)          # keep the committed snapshot out of unit tests
+    monkeypatch.setitem(gibs._state, "running", False)
+    monkeypatch.setitem(gibs._state, "last_try", 0.0)
+    return live
 
 
 def test_load_caches_metadata_and_unlisted_layers_are_unavailable(cache_dir):
@@ -93,3 +97,76 @@ def test_map_contains_real_tile_urls_attribution_and_marker(cache_dir):
         assert "circleMarker" in html and "fs-maplegend" in html
     from fieldshift.i18n import tr
     assert json.dumps(tr("map.base_sat", "uz"))[1:-1] in html and "Sun'iy yo'ldosh" in tr("map.base_sat", "uz")
+
+
+# ---------------------------------------------------------------- committed snapshot + background refresh
+def test_committed_snapshot_is_complete_and_loads_instantly_without_network(monkeypatch):
+    import time
+
+    import requests
+    monkeypatch.setattr(requests, "get", lambda *a, **k: (_ for _ in ()).throw(AssertionError("network used")))
+    t0 = time.perf_counter()
+    out = gibs.load_cached()
+    assert time.perf_counter() - t0 < 0.1
+    assert all(l.ok and l.date and l.legend and l.legend.stops and l.as_of for l in out.values()), {k: l.reason for k, l in out.items()}
+    assert out["ndvi"].tile_url().startswith("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_8Day/default/")
+
+
+def test_snapshot_is_used_and_marked_stale_when_old(cache_dir, tmp_path):
+    snap = tmp_path / "snap"
+    snap.mkdir()
+    (snap / gibs.FILE).write_text(json.dumps({"fetched": 1000.0, "layers": {k: {"date": "2026-01-01", "tms": "GoogleMapsCompatible_Level6", "ext": "png", "legend": None}
+                                                                          for k in gibs.LAYERS}}))
+    out = gibs.load_cached(now=1000.0 + 3600)
+    assert all(l.ok and not l.stale for l in out.values())
+    old = gibs.load_cached(now=1000.0 + gibs.CACHE_TTL_S + 1)
+    assert all(l.stale and l.as_of == "1970-01-01" for l in old.values())
+    assert mapview.layer_status(old)[0][1].endswith("*")
+    html = mapview.build_map(40, 71, old).get_root().render()
+    assert "Latest observation known on 1970-01-01" in html
+
+
+def test_newer_live_copy_beats_the_snapshot(cache_dir, tmp_path):
+    snap = tmp_path / "snap"
+    snap.mkdir()
+    rec = lambda d: {"date": d, "tms": "GoogleMapsCompatible_Level6", "ext": "png", "legend": None}  # noqa: E731
+    (snap / gibs.FILE).write_text(json.dumps({"fetched": 1000.0, "layers": {k: rec("2026-01-01") for k in gibs.LAYERS}}))
+    cache_dir.mkdir()
+    (cache_dir / gibs.FILE).write_text(json.dumps({"fetched": 2000.0, "layers": {k: rec("2026-02-02") for k in gibs.LAYERS}}))
+    assert gibs.load_cached(now=2100.0)["ndvi"].date == "2026-02-02"
+
+
+def test_no_cache_at_all_is_unavailable_without_network(cache_dir):
+    assert all(not l.ok and "no layer metadata" in l.reason for l in gibs.load_cached().values())
+
+
+def test_background_refresh_starts_once_writes_live_copy_and_backs_off(cache_dir, monkeypatch):
+    import threading
+    import time
+    s = FakeSession()
+    monkeypatch.setattr(gibs.requests, "get", s.get)
+    assert gibs.refresh_in_background(now=5000.0) is True
+    assert gibs.refresh_in_background(now=5001.0) is False                      # running or within the back-off window
+    for _ in range(100):
+        if not gibs._state["running"]:
+            break
+        time.sleep(0.02)
+    assert (cache_dir / gibs.FILE).exists() and gibs.load_cached(now=5000.0)["ndvi"].date == "2026-11-13"
+    assert gibs.refresh_in_background(now=5000.0 + 60) is False                  # fresh now: nothing to do
+    assert not [t for t in threading.enumerate() if t.name == "gibs-refresh" and t.is_alive()]
+
+
+def test_failed_background_refresh_is_not_retried_for_ten_minutes(cache_dir, monkeypatch):
+    import time
+    monkeypatch.setattr(gibs.requests, "get", FakeSession(fail=True).get)
+    assert gibs.refresh_in_background(now=10000.0) is True
+    for _ in range(100):
+        if not gibs._state["running"]:
+            break
+        time.sleep(0.02)
+    assert gibs.refresh_in_background(now=10000.0 + gibs.RETRY_AFTER_S - 1) is False
+    assert gibs.refresh_in_background(now=10000.0 + gibs.RETRY_AFTER_S + 1) is True
+    for _ in range(100):
+        if not gibs._state["running"]:
+            break
+        time.sleep(0.02)

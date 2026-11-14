@@ -664,7 +664,11 @@ add("map.unavailable", "unavailable", "mavjud emas")
 add("map.help", "Click the map to move the field. The layers button (top right) switches the basemap or shows a NASA data layer.",
     "Dalani ko'chirish uchun xaritani bosing. Qatlamlar tugmasi (yuqori o'ng) xarita asosini almashtiradi yoki NASA ma'lumot qatlamini ko'rsatadi.")
 add("map.layers_h", "NASA layers (latest observation)", "NASA qatlamlari (oxirgi kuzatuv)")
-add("map.stale_note", "* from a saved copy: NASA GIBS could not be reached just now.", "* saqlangan nusxadan: NASA GIBS'ga hozir ulanib bo'lmadi.")
+add("map.stale_note", "* Latest observation known on {d} (saved copy). It refreshes from NASA GIBS in the background when reachable.", "* {d} sanasida ma'lum bo'lgan oxirgi kuzatuv (saqlangan nusxa). NASA GIBS'ga ulanish mumkin bo'lganda fonda yangilanadi.")
+add("map.asof", "* Latest observation known on {d}; may be newer on NASA GIBS.", "* {d} sanasida ma'lum bo'lgan oxirgi kuzatuv; NASA GIBS'da yangiroq bo'lishi mumkin.")
 add("map.scope", "Layers are global satellite or model images shown at their own resolution. The climate figures on this page come from NASA POWER (~50 km) and do not change with the layer.",
     "Qatlamlar o'z aniqligida ko'rsatiladigan global sun'iy yo'ldosh yoki model tasvirlari. Sahifadagi iqlim ko'rsatkichlari NASA POWER'dan (~50 km) olinadi va qatlamga bog'liq emas.")
 add("map.marker", "Selected field", "Tanlangan dala")
+add("g.ndvi_notcrop", "the NDVI at this point peaks at only {peak:.2f} in a typical year (below {thr:.1f}), so the pixel is not clearly cropland (bare ground, town edge or water) and is not used",
+    "bu nuqtadagi NDVI odatdagi yilda atigi {peak:.2f} gacha ko'tariladi ({thr:.1f} dan past), shuning uchun piksel aniq ekin maydoni emas (yalang yer, shahar chekkasi yoki suv) va ishlatilmaydi")
+add("g.joined", "{items}", "{items}")

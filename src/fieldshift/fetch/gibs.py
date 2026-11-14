@@ -16,13 +16,18 @@ from __future__ import annotations
 import html
 import json
 import re
+import os
+import threading
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
 
-from .base import CACHE_DIR
+from ..config import CACHE_DIR, DEMO_CACHE_DIR
+
+SNAPSHOT_DIR = DEMO_CACHE_DIR          # committed copy of the metadata below: the map never waits for the 6 MB capabilities file
 
 CAPS_URL = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml"
 TILE_URL = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{layer}/default/{date}/{tms}/{{z}}/{{y}}/{{x}}.{ext}"
@@ -58,6 +63,7 @@ class GibsLayer:
     ok: bool = False
     reason: str = ""
     stale: bool = False
+    as_of: str = ""                 # date the metadata was read from GIBS (YYYY-MM-DD); shown when the copy is not fresh
 
     @property
     def max_zoom(self) -> int:
@@ -108,30 +114,57 @@ def parse_colormap(xml: str, kelvin: bool = False) -> Legend:
     return Legend(stops, min(nums) if nums else None, max(nums) if nums else None)
 
 
-# ---------------------------------------------------------------- fetching with a small disk cache
-def _cache_path() -> Path:
-    return Path(CACHE_DIR) / "gibs_layers.json"
+# ---------------------------------------------------------------- cache: live copy, committed snapshot, background refresh
+FILE = "gibs_layers.json"
+RETRY_AFTER_S = 600
 
 
-def _read_cache() -> dict | None:
+def _read(path: Path) -> dict | None:
     try:
-        return json.loads(_cache_path().read_text())
+        d = json.loads(path.read_text())
+        return d if isinstance(d, dict) and "layers" in d else None
     except Exception:  # noqa: BLE001
         return None
 
 
-def _from_record(key: str, rec: dict, stale: bool) -> GibsLayer:
+def _best_cache() -> dict | None:
+    """The newest of the live copy and the committed snapshot."""
+    caches = [c for c in (_read(Path(CACHE_DIR) / FILE), _read(Path(SNAPSHOT_DIR) / FILE)) if c]
+    return max(caches, key=lambda c: c.get("fetched", 0)) if caches else None
+
+
+def _as_of(fetched: float) -> str:
+    return datetime.fromtimestamp(fetched, timezone.utc).strftime("%Y-%m-%d")
+
+
+def _from_record(key: str, rec: dict, stale: bool, fetched: float = 0.0) -> GibsLayer:
     lg = rec.get("legend")
     return GibsLayer(key, LAYERS[key], rec["date"], rec["tms"], rec["ext"],
-                     Legend([tuple(c) for c in lg["stops"]], lg["vmin"], lg["vmax"]) if lg else None, True, "", stale)
+                     Legend([tuple(c) for c in lg["stops"]], lg["vmin"], lg["vmax"]) if lg else None, True, "", stale,
+                     _as_of(fetched) if fetched else "")
 
 
-def load_layers(session=None, now: float | None = None) -> dict[str, GibsLayer]:
-    """All four layers. Fresh cache (<12 h) -> used; otherwise fetch; fetch failure -> older cache marked stale, else unavailable."""
+def needs_refresh(now: float | None = None) -> bool:
     now = time.time() if now is None else now
-    cache = _read_cache()
-    if cache and now - cache.get("fetched", 0) < CACHE_TTL_S and all(k in cache.get("layers", {}) for k in LAYERS):
-        return {k: _from_record(k, cache["layers"][k], False) for k in LAYERS}
+    c = _best_cache()
+    return not c or now - c.get("fetched", 0) >= CACHE_TTL_S or not all(k in c["layers"] for k in LAYERS)
+
+
+def load_cached(now: float | None = None) -> dict[str, GibsLayer]:
+    """Instant, no network: the newest of the live cache and the committed snapshot. A copy older than 12 h is marked stale
+    (the date shown is then the latest known when the copy was saved, flagged with its `as_of` date)."""
+    now = time.time() if now is None else now
+    c = _best_cache()
+    if not c:
+        return {k: GibsLayer(k, LAYERS[k], reason="no layer metadata available yet") for k in LAYERS}
+    stale = now - c.get("fetched", 0) >= CACHE_TTL_S
+    return {k: _from_record(k, c["layers"][k], stale, c.get("fetched", 0)) if k in c["layers"]
+            else GibsLayer(k, LAYERS[k], reason="not listed by NASA GIBS") for k in LAYERS}
+
+
+def refresh(session=None, now: float | None = None, path: Path | None = None) -> dict[str, GibsLayer]:
+    """Fetch the capabilities + colormaps from GIBS and store them (atomically). On failure, return whatever `load_cached` has."""
+    now = time.time() if now is None else now
     get = (session or requests).get
     try:
         r = get(CAPS_URL, timeout=TIMEOUT_S)
@@ -152,17 +185,51 @@ def load_layers(session=None, now: float | None = None) -> dict[str, GibsLayer]:
                 except Exception:  # noqa: BLE001
                     legend = None
             recs[key] = {"date": info["date"], "tms": info["tms"], "ext": info["ext"], "legend": legend}
-        out = {}
-        for key in LAYERS:
-            out[key] = _from_record(key, recs[key], False) if key in recs else GibsLayer(key, LAYERS[key], reason="not listed by NASA GIBS")
+        target = path or Path(CACHE_DIR) / FILE
         try:
-            _cache_path().parent.mkdir(parents=True, exist_ok=True)
-            _cache_path().write_text(json.dumps({"fetched": now, "layers": recs}))
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(f".{os.getpid()}.tmp")
+            tmp.write_text(json.dumps({"fetched": now, "layers": recs}))
+            os.replace(tmp, target)
         except OSError:
             pass
-        return out
+        return {k: _from_record(k, recs[k], False, now) if k in recs else GibsLayer(k, LAYERS[k], reason="not listed by NASA GIBS")
+                for k in LAYERS}
     except Exception as e:  # noqa: BLE001
-        reason = f"NASA GIBS could not be reached ({type(e).__name__})"
-        if cache and cache.get("layers"):
-            return {k: _from_record(k, cache["layers"][k], True) if k in cache["layers"] else GibsLayer(k, LAYERS[k], reason=reason) for k in LAYERS}
-        return {k: GibsLayer(k, LAYERS[k], reason=reason) for k in LAYERS}
+        out = load_cached(now)
+        if not any(l.ok for l in out.values()):
+            out = {k: GibsLayer(k, LAYERS[k], reason=f"NASA GIBS could not be reached ({type(e).__name__})") for k in LAYERS}
+        return out
+
+
+def load_layers(session=None, now: float | None = None) -> dict[str, GibsLayer]:
+    """Synchronous: cached copy if fresh, otherwise refresh (used by scripts and tests; the app uses load_cached + background)."""
+    return load_cached(now) if not needs_refresh(now) else refresh(session, now)
+
+
+_lock = threading.Lock()
+_state = {"running": False, "last_try": 0.0}
+
+
+def refresh_in_background(now: float | None = None) -> bool:
+    """Start (at most one) daemon thread that refreshes the metadata when it is older than 12 h. Never blocks, never raises.
+    A failed attempt is not retried for 10 minutes. Returns True if a refresh was started."""
+    now = time.time() if now is None else now
+    if not needs_refresh(now):
+        return False
+    with _lock:
+        if _state["running"] or now - _state["last_try"] < RETRY_AFTER_S:
+            return False
+        _state["running"], _state["last_try"] = True, now
+
+    def work() -> None:
+        try:
+            refresh()
+        except Exception:  # noqa: BLE001
+            pass
+        finally:
+            with _lock:
+                _state["running"] = False
+
+    threading.Thread(target=work, daemon=True, name="gibs-refresh").start()
+    return True

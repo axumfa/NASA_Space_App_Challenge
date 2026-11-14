@@ -43,6 +43,7 @@ def test_missing_columns_raise_with_column_list(tmp_path):
 
 def test_loader_absent_files_is_a_clean_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(appeears, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(appeears, "DEMO_CACHE_DIR", tmp_path)
     r = appeears.load_ndvi(40.4, 71.78)
     assert not r.ok and "data/raw" in r.message
     assert not appeears.load_smap(40.4, 71.78).ok
@@ -138,3 +139,17 @@ def test_ndvi_requires_both_qa_layers_when_both_present(tmp_path):
     assert d["qa"].iloc[0] == "VI_Quality bits + pixel_reliability"
     assert d["ndvi"].notna().sum() <= only_bits["ndvi"].notna().sum()
     assert d["ndvi"].iloc[:5].isna().all()
+
+
+def test_one_fill_value_does_not_rescale_an_already_scaled_ndvi_column(tmp_path):
+    """Regression from the real Karakalpakstan file: a single -3000 fill made the 'raw integers' branch fire and the whole series read ~0."""
+    import pandas as pd
+
+    from fieldshift.fetch.appeears import parse_ndvi
+    rows = [("2024-01-01", -3000.0), ("2024-01-17", 0.20), ("2024-02-02", 0.45), ("2024-02-18", 0.70)]
+    df = pd.DataFrame({"Latitude": 42.4128, "Longitude": 59.5159, "Date": [d for d, _ in rows],
+                       "MOD13Q1_061__250m_16_days_NDVI": [v for _, v in rows], "MOD13Q1_061__250m_16_days_VI_Quality": 0})
+    f = tmp_path / "x-MOD13Q1-061-results.csv"
+    df.to_csv(f, index=False)
+    out = parse_ndvi(f, 42.4128, 59.5159)
+    assert out["ndvi"].dropna().round(2).tolist() == [0.20, 0.45, 0.70]

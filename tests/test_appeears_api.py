@@ -13,8 +13,8 @@ def test_task_payload_covers_the_five_points_products_and_dates():
     p = t["params"]
     assert t["task_type"] == "point" and p["dates"] == [{"startDate": "01-01-2019", "endDate": "11-14-2026"}]
     ids = {c["id"]: (c["latitude"], c["longitude"]) for c in p["coordinates"]}
-    assert set(ids) == {"fergana", "kansas", "karakalpakstan", "fergana_213ha", "fergana_56ha"} and len(p["coordinates"]) == 5
-    assert ids["fergana"] == (DEMO_FIELDS["fergana"].lat, DEMO_FIELDS["fergana"].lon) and ids["fergana_213ha"] == (40.4229, 71.7576)
+    assert set(ids) == {"fergana_old", "kansas", "karakalpakstan", "fergana_213ha", "fergana_56ha"} and len(p["coordinates"]) == 5
+    assert ids["fergana_old"] == (40.43, 71.70) and ids["fergana_213ha"] == (40.4229, 71.7576) and ids["kansas"] == (DEMO_FIELDS["kansas"].lat, DEMO_FIELDS["kansas"].lon)
     assert ids["fergana_56ha"] == (40.4261, 71.7339) and ids["kansas"] == (38.5, -98.5)
     got = {(x["product"], x["layer"]) for x in p["layers"]}
     assert ("MOD13Q1.061", "_250m_16_days_pixel_reliability") in got and ("MOD13Q1.061", "_250m_16_days_VI_Quality") in got
