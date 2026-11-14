@@ -22,6 +22,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["verify", "submit", "status", "download", "wait", "run"])
     ap.add_argument("--poll-seconds", type=int, default=60)
+    ap.add_argument("--logout", action="store_true", help="log out at the end (off by default: it can invalidate other sessions)")
     a = ap.parse_args()
     if a.cmd == "verify":
         bad = A.verify_layers()
@@ -49,12 +50,13 @@ def main() -> int:
         if a.cmd == "status":
             print(client.status(task_id))
         if a.cmd in ("run", "wait"):
-            print("final status:", client.wait(task_id, a.poll_seconds), flush=True)
+            print("final status:", client.wait(task_id, a.poll_seconds, log=lambda m: print(m, flush=True)), flush=True)
         if a.cmd in ("download", "run", "wait"):
             files = client.download(task_id)
             print("saved:", [f.name for f in files] or "nothing (task not finished?)")
     finally:
-        client.logout()
+        if a.logout:
+            client.logout()
     return 0
 
 

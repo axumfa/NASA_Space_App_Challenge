@@ -89,12 +89,17 @@ def build_task(end: dt.date | None = None, name: str = "fieldshift-demo-fields")
     }
 
 
-class Client:
-    """Minimal AppEEARS session: login (Basic auth) -> bearer token -> logout."""
+TRANSIENT_STATUS = {429, 500, 502, 503, 504}
 
-    def __init__(self, creds: Credentials):
-        self._creds, self._token = creds, None
+
+class Client:
+    """Minimal AppEEARS session: login (Basic auth) -> bearer token. Requests re-login once on 401/403 (the token may
+    have been invalidated by another session on the same account) and back off on transient errors."""
+
+    def __init__(self, creds: Credentials, sleep=time.sleep):
+        self._creds, self._token, self._sleep = creds, None, sleep
         self.http = requests.Session()
+        self.relogins = 0
 
     def login(self) -> None:
         r = self.http.post(f"{BASE}/login", auth=(self._creds.username, self._creds.password), timeout=60)
@@ -104,37 +109,78 @@ class Client:
         self.http.headers["Authorization"] = f"Bearer {self._token}"
 
     def logout(self) -> None:
+        """Explicit only: logging out may invalidate the token other sessions of this account are using."""
         if self._token:
             self.http.post(f"{BASE}/logout", timeout=30)
             self.http.headers.pop("Authorization", None)
             self._token = None
 
+    def _request(self, method: str, url: str, retries: int = 5, **kw) -> requests.Response:
+        """One logical request: re-login once on 401/403; exponential backoff (2..60 s) on 429/5xx/connection errors.
+
+        `retries=0` disables the transient-error retries (used for task submission, where a lost response
+        could mean the task WAS created); the 401/403 re-login is still allowed, since a rejected request creates nothing.
+        """
+        kw.setdefault("timeout", 60)
+        relogged, delay, attempt = False, 2.0, 0
+        while True:
+            try:
+                r = self.http.request(method, url, **kw)
+            except (requests.ConnectionError, requests.Timeout) as e:
+                if attempt >= retries:
+                    raise
+                attempt += 1
+                self._sleep(delay); delay = min(delay * 2, 60)
+                continue
+            if r.status_code in (401, 403) and not relogged:
+                relogged = True
+                self.relogins += 1
+                self.login()
+                continue
+            if r.status_code in TRANSIENT_STATUS and attempt < retries:
+                attempt += 1
+                self._sleep(delay); delay = min(delay * 2, 60)
+                continue
+            return r
+
     def submit(self, task: dict) -> str:
-        r = self.http.post(f"{BASE}/task", json=task, timeout=120)
+        r = self._request("POST", f"{BASE}/task", retries=0, json=task, timeout=120)
         if r.status_code not in (200, 202):
             raise RuntimeError(f"task submission failed (HTTP {r.status_code}): {r.text[:300]}")
         return r.json()["task_id"]
 
     def status(self, task_id: str) -> str:
-        r = self.http.get(f"{BASE}/task/{task_id}", timeout=60)
+        r = self._request("GET", f"{BASE}/task/{task_id}")
         r.raise_for_status()
         return r.json().get("status", "unknown")
 
-    def wait(self, task_id: str, every: int = 60, timeout_s: int = 6 * 3600) -> str:
-        t0 = time.time()
+    def wait(self, task_id: str, every: int = 60, timeout_s: int = 6 * 3600, max_failures: int = 20, log=print) -> str:
+        """Poll until the task is done/error/expired. A failed poll is logged and retried next round, so a transient
+        outage (or a second session on the same account) cannot kill the wait; `max_failures` consecutive failures do."""
+        t0, failures = time.time(), 0
         while True:
-            st = self.status(task_id)
-            if st in ("done", "error", "expired"):
-                return st
+            try:
+                st = self.status(task_id)
+                failures = 0
+                log(f"{dt.datetime.now():%H:%M:%S} status={st} (relogins so far: {self.relogins})")
+                if st in ("done", "error", "expired"):
+                    return st
+            except (requests.RequestException, RuntimeError, KeyError, ValueError) as e:
+                failures += 1
+                log(f"{dt.datetime.now():%H:%M:%S} poll failed ({type(e).__name__}); consecutive failures: {failures}/{max_failures}")
+                if failures >= max_failures:
+                    raise
             if time.time() - t0 > timeout_s:
                 return "timeout"
-            time.sleep(every)
+            self._sleep(every)
 
     def download(self, task_id: str, out_dir: Path | None = None) -> list[Path]:
         """Download the *-results.csv files of a finished task (server-provided names are sanitised)."""
         out_dir = Path(out_dir or RAW_DIR)
         out_dir.mkdir(parents=True, exist_ok=True)
-        files = self.http.get(f"{BASE}/bundle/{task_id}", timeout=60).json()["files"]
+        r = self._request("GET", f"{BASE}/bundle/{task_id}")
+        r.raise_for_status()
+        files = r.json()["files"]
         saved = []
         for f in files:
             name = Path(str(f["file_name"])).name                       # strip any directory part from the server's name
@@ -142,9 +188,9 @@ class Client:
                 continue
             if int(f.get("file_size", 0)) > MAX_DOWNLOAD_BYTES:
                 raise RuntimeError(f"{name} is unexpectedly large ({f['file_size']} bytes); not downloading")
-            r = self.http.get(f"{BASE}/bundle/{task_id}/{f['file_id']}", timeout=300)   # redirects to cloud storage
-            r.raise_for_status()
-            (out_dir / name).write_bytes(r.content)
+            d = self._request("GET", f"{BASE}/bundle/{task_id}/{f['file_id']}", timeout=300)   # redirects to cloud storage
+            d.raise_for_status()
+            (out_dir / name).write_bytes(d.content)
             saved.append(out_dir / name)
         return saved
 
