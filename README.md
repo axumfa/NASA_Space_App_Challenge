@@ -19,13 +19,32 @@ earlier demo point nearby peaked at only 0.29 and was replaced. All Fergana cand
 
 ## Quick start
 
-Python 3.11+ (developed and deployed on 3.12). On Fedora:
+### 🚀 Modern Decoupled Stack (Next.js + FastAPI)
 
+1. **Start the FastAPI backend**:
 ```bash
 python3.12 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt   # requirements.txt = app only (pinned); -dev adds pytest
-.venv/bin/streamlit run app.py                  # open http://localhost:8501
-.venv/bin/pytest -q                             # unit tests
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn backend.app.main:app --reload --port 8000
+```
+
+2. **Start the Next.js frontend**:
+```bash
+cd frontend
+pnpm install
+pnpm dev    # open http://localhost:3000
+```
+
+### 🎈 Legacy Streamlit UI (Optional Fallback)
+```bash
+.venv/bin/streamlit run app.py    # open http://localhost:8501
+```
+
+### 🧪 Automated Tests
+```bash
+.venv/bin/pytest backend/tests/ -v    # backend API tests
+.venv/bin/pytest -q                   # agronomy core tests
+cd frontend && pnpm run build         # Next.js build & typecheck
 ```
 
 **The two demo fields work with no network.** Their NASA POWER downloads (and the Kansas SoilGrids values) are committed

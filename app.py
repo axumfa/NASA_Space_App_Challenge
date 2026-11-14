@@ -140,7 +140,7 @@ st.markdown('<div class="fs-rule"></div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------ field bar (location selection)
 with st.container(border=True, key="bar_field"):
-    b1, b2, b3 = st.columns([5, 1.4, 1.4])
+    b1, b2, b3 = st.columns([3.4, 1.4, 1.4], vertical_alignment="bottom")
     with b1:
         first_run = "crop0" not in S
         _, field_changed = pick(st.selectbox, t("ui.field_label"), [*names, OWN], "field_choice", field_label, help=t("ui.field_help"))
@@ -257,7 +257,7 @@ if view == "field":
                 gibs.refresh_in_background()          # at most one daemon thread, only when the copy is older than 12 h
                 m = mapview.build_map(lat, lon, layers, S.lang, tooltip=f"{t('map.marker')}: {lat:.2f}, {lon:.2f}",
                                       local_assets=mapview.local_assets_available())
-                out = st_folium(m, height=345, width=None, returned_objects=["last_clicked"], key="map")
+                out = st_folium(m, height=280, width=None, returned_objects=["last_clicked"], key="map")
                 if out and out.get("last_clicked"):
                     lc = out["last_clicked"]
                     if abs(lc["lat"] - lat) > 1e-3 or abs(lc["lng"] - lon) > 1e-3:
@@ -382,9 +382,9 @@ if view == "field":
 
     st.write("")
     with st.container(border=True, key="panel_next"):
-        nl, nr = st.columns([4, 1.4], vertical_alignment="center")
+        nl, nr = st.columns([3, 2], vertical_alignment="center")
         nl.markdown(f'<div class="fs-next"><div><b>{t("ui.next_h")}</b><br><span>{t("ui.next_t")}</span></div></div>', unsafe_allow_html=True)
-        if nr.button(t("ui.cta") + "  →", type="primary", key="cta2"):
+        if nr.button(t("ui.cta") + "  →", type="primary", key="cta2", use_container_width=True):
             S["view"] = "options"
             st.rerun()
 

@@ -31,13 +31,48 @@ GIBS_ATTR = "NASA GIBS / EOSDIS"
 UNITS = {"ndvi": "", "precip": "mm/h", "temp": "°C", "soil": "m³/m³"}
 
 CSS = """<style>
+:root{
+  --spring-snappy: linear(
+    0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 
+    1.017, 1.049 21.6%, 1.054 23.9%, 1.038, 1.018 30.5%, 0.999 35.8%, 
+    0.995 40%, 1 50%
+  );
+  --spring-bouncy: linear(
+    0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.6%, 
+    1.042 42.5%, 1.069 47.2%, 1.066 52.8%, 0.989 68.3%, 0.985 75.5%, 1 90%
+  );
+  --spring-gentle: linear(
+    0, 0.004, 0.016, 0.035, 0.063, 0.098, 0.141 6.8%, 0.441 16.2%, 
+    0.72 25.6%, 0.904 36.1%, 0.968 44.5%, 0.993 54.4%, 1 65%
+  );
+}
 .leaflet-container{font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
 .leaflet-control-attribution{font-size:10px !important; background:rgba(255,255,255,.8) !important;}
 .leaflet-control-scale-line{font-size:10px;}
-.leaflet-control-layers{border:1px solid #E3DFD3 !important; border-radius:8px !important; box-shadow:none !important;}
+.leaflet-control-layers{
+  border:1px solid #E3DFD3 !important; border-radius:8px !important; box-shadow:0 1px 4px rgba(0,0,0,.06) !important;
+  transition:transform 400ms var(--spring-gentle), box-shadow 400ms var(--spring-gentle);
+}
+.leaflet-control-layers:hover{box-shadow:0 4px 14px rgba(0,0,0,.1) !important;}
 .leaflet-control-layers-expanded{padding:8px 12px !important; font-size:13px; color:#232623;}
+.leaflet-control-layers-expanded label{
+  cursor:pointer; display:flex; align-items:center; gap:4px;
+  transition:transform 250ms var(--spring-snappy), color 150ms ease;
+}
+.leaflet-control-layers-expanded label:hover{transform:translateX(2px); color:#2F6B45;}
 .leaflet-control-layers-separator{margin:6px 0 !important;}
-.fs-maplegend{background:rgba(255,255,255,.94); border:1px solid #E3DFD3; border-radius:8px; padding:8px 11px; width:225px; font-size:11.5px; line-height:1.35; color:#232623;}
+.leaflet-bar a{
+  transition:transform 300ms var(--spring-snappy), background-color 200ms ease, box-shadow 300ms var(--spring-snappy);
+}
+.leaflet-bar a:hover{background-color:#F6F4EC !important; transform:scale(1.08); z-index:2;}
+.leaflet-bar a:active{transform:scale(0.92); transition-duration:100ms;}
+.fs-maplegend{
+  background:rgba(255,255,255,.94); border:1px solid #E3DFD3; border-radius:8px; padding:8px 11px; width:225px;
+  font-size:11.5px; line-height:1.35; color:#232623; box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:transform 400ms var(--spring-gentle), box-shadow 400ms var(--spring-gentle);
+  backdrop-filter:blur(2px);
+}
+.fs-maplegend:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.12);}
 .fs-maplegend b{font-size:12.5px;}
 .fs-maplegend .bar{height:9px; border-radius:3px; margin:6px 0 2px; border:1px solid rgba(0,0,0,.08);}
 .fs-maplegend .rng{display:flex; justify-content:space-between; color:#4a4e46; font-variant-numeric:tabular-nums;}
@@ -47,6 +82,14 @@ CSS = """<style>
 .fs-maplegend .note{color:#6B6F66; margin-top:3px;}
 .leaflet-top{z-index:1001 !important;}
 @media (max-width: 480px){.fs-maplegend{width:185px; padding:6px 8px;} .fs-maplegend .note{display:none;} .fs-maplegend .src{font-size:10.5px;}}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
 </style>"""
 
 
