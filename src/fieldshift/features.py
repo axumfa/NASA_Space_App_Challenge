@@ -207,3 +207,51 @@ def classify_years(ann: pd.DataFrame) -> pd.Series:
 def completeness(df: pd.DataFrame) -> dict[str, float]:
     """Fraction of missing values per column (for the information-gaps section)."""
     return df.isna().mean().round(4).to_dict()
+
+
+# ------------------------------------------------------------------ NDVI (satellite) features
+def ndvi_seasonal_curve(ndvi: pd.Series, bin_days: int = 16) -> pd.DataFrame:
+    """Median and p25/p75 NDVI by 16-day period of the year across all years (NaNs ignored)."""
+    s = ndvi.dropna()
+    period = (s.index.day_of_year - 1) // bin_days
+    g = s.groupby(period)
+    out = pd.DataFrame({"median": g.median(), "p25": g.quantile(.25), "p75": g.quantile(.75), "n": g.count()})
+    out.insert(0, "doy", out.index * bin_days + bin_days // 2)
+    return out
+
+
+def bare_windows_from_ndvi(curve: pd.DataFrame, threshold: float = 0.2, min_days: int = 16,
+                           bin_days: int = 16) -> list[tuple[int, int]]:
+    """Windows (start_doy, length_days) where the median seasonal NDVI is below `threshold`.
+
+    Periods without data are treated as unknown (they break a window). A window touching the year
+    boundary on both sides is merged.
+    """
+    n = 365 // bin_days + 1
+    med = curve["median"].reindex(range(n))
+    low = (med < threshold).values
+    wins, i = [], 0
+    while i < n:
+        if low[i]:
+            j = i
+            while j + 1 < n and low[j + 1]:
+                j += 1
+            wins.append([i * bin_days + 1, (j - i + 1) * bin_days])
+            i = j + 1
+        else:
+            i += 1
+    if len(wins) > 1 and wins[0][0] == 1 and wins[-1][0] + wins[-1][1] >= 365:
+        last = wins.pop(); wins[0] = [last[0], last[1] + wins[0][1]]
+    return [(s, l) for s, l in wins if l >= min_days]
+
+
+def observed_bare_days_per_year(ndvi: pd.Series, threshold: float = 0.2) -> pd.Series:
+    """Per year: days with linearly interpolated NDVI below threshold (years with <12 valid obs dropped)."""
+    out = {}
+    for y, g in ndvi.dropna().groupby(ndvi.dropna().index.year):
+        if len(g) < 12:
+            continue
+        days = pd.date_range(f"{y}-01-01", f"{y}-12-31")
+        daily = g.reindex(g.index.union(days)).interpolate("time", limit_area="inside").reindex(days)
+        out[y] = int((daily < threshold).sum())   # days outside the first/last observation stay NaN, not counted
+    return pd.Series(out, name="observed_bare_days")
