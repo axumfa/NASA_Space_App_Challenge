@@ -23,7 +23,7 @@ LAYERS: dict[str, list[str]] = {
     "MOD13Q1.061": ["_250m_16_days_NDVI", "_250m_16_days_VI_Quality", "_250m_16_days_pixel_reliability"],
     "SPL3SMP_E.006": ["Soil_Moisture_Retrieval_Data_AM_soil_moisture", "Soil_Moisture_Retrieval_Data_AM_retrieval_qual_flag"],
 }
-START = "2015-04-01"
+START = "2019-01-01"
 MAX_DOWNLOAD_BYTES = 200_000_000
 STATE_FILE = Path(RAW_DIR) / ".appeears_task.json"
 
@@ -78,8 +78,20 @@ def verify_layers() -> dict[str, list[str]]:
     return problems
 
 
-def build_task(end: dt.date | None = None, name: str = "fieldshift-demo-fields") -> dict:
-    """Point-sample task for every demo field, both products, START..end (dates are MM-DD-YYYY in the API)."""
+# Points of the current request: three demo/preset fields plus two OSM-verified farmland candidates near the Fergana demo field
+# (213 ha parcel 4.9 km away; 56 ha parcel 2.9 km away) to find a pixel with a cropland NDVI signal.
+FIELD_POINTS = ("fergana", "kansas", "karakalpakstan")
+EXTRA_POINTS = {"fergana_213ha": (40.4229, 71.7576), "fergana_56ha": (40.4261, 71.7339)}
+
+
+def task_points() -> dict[str, tuple[float, float]]:
+    pts = {k: (DEMO_FIELDS[k].lat, DEMO_FIELDS[k].lon) for k in FIELD_POINTS}
+    pts.update(EXTRA_POINTS)
+    return pts
+
+
+def build_task(end: dt.date | None = None, name: str = "fieldshift-points-2019") -> dict:
+    """Point-sample task for `task_points()`, both products, START..end (dates are MM-DD-YYYY in the API)."""
     end = end or dt.date.today()
     start = dt.date.fromisoformat(START)
     return {
@@ -88,7 +100,7 @@ def build_task(end: dt.date | None = None, name: str = "fieldshift-demo-fields")
         "params": {
             "dates": [{"startDate": start.strftime("%m-%d-%Y"), "endDate": end.strftime("%m-%d-%Y")}],
             "layers": [{"product": p, "layer": lyr} for p, ls in LAYERS.items() for lyr in ls],
-            "coordinates": [{"id": k, "category": k, "latitude": f.lat, "longitude": f.lon} for k, f in DEMO_FIELDS.items()],
+            "coordinates": [{"id": k, "category": k, "latitude": la, "longitude": lo} for k, (la, lo) in task_points().items()],
         },
     }
 

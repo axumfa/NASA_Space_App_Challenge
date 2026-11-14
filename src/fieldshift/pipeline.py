@@ -114,6 +114,8 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         "Temperatures come from ~50 km reanalysis (MERRA-2) that runs hot over irrigated land, so hot-day counts and ET0 are likely overstated.",
         "Crop parameters are approximate regional values, not field trials.",
     ]
+    if fld is not None:
+        gaps.extend(fld.gap_notes)                 # field-specific notes (e.g. a common local crop that is not modelled)
     miss = {k: v for k, v in F.completeness(daily).items() if v > 0.01}
     if miss:
         gaps.append(f"POWER has gaps in: {', '.join(miss)}.")

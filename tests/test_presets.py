@@ -29,3 +29,11 @@ def test_preset_runs_offline_and_gaps_say_no_satellite_requested(key, tmp_path, 
 def test_field_at_matches_only_exact_demo_points():
     f = DEMO_FIELDS["bukhara"]
     assert field_at(f.lat, f.lon).key == "bukhara" and field_at(f.lat + 0.2, f.lon) is None
+
+
+def test_karakalpakstan_gap_note_says_rice_is_common_and_not_modelled():
+    f = DEMO_FIELDS["karakalpakstan"]
+    ctx = build_context(f.lat, f.lon)
+    assert any("Rice is a common crop in Karakalpakstan and is not modelled" in g for g in ctx.gaps)
+    other = DEMO_FIELDS["bukhara"]
+    assert not any("Rice" in g for g in build_context(other.lat, other.lon).gaps)

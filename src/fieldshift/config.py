@@ -21,6 +21,7 @@ class Field:
     country: str = ""
     satellite: bool = True     # False for presets: no MODIS NDVI / SMAP point was requested for them
     preset: bool = False       # regional farmland preset (not one of the two fully documented demo fields)
+    gap_notes: tuple[str, ...] = ()   # extra lines for the information-gaps section of this field
 
 
 DEMO_FIELDS: dict[str, Field] = {
@@ -35,7 +36,9 @@ DEMO_FIELDS: dict[str, Field] = {
     # SoilGrids returns values; default rotation = the common Uzbek cotton-wheat system, an ASSUMPTION to be reviewed
     # locally: e.g. rice, vegetables and orchards are not in the crop list). No MODIS NDVI / SMAP was requested for them.
     "karakalpakstan": Field("karakalpakstan", "Karakalpakstan farmland (near Nukus), Uzbekistan", 42.4128, 59.5159,
-                            ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
+                            ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True,
+                            gap_notes=("Rice is a common crop in Karakalpakstan and is not modelled (it is not in the crop list), "
+                                       "so rotations that include rice cannot be compared here.",)),
     "bukhara": Field("bukhara", "Bukhara region farmland, Uzbekistan", 39.9904, 64.3238,
                      ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
     "samarkand": Field("samarkand", "Samarkand region farmland, Uzbekistan", 39.6350, 67.0596,
