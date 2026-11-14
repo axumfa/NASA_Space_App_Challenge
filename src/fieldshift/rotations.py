@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .crops import Crop
+from .i18n import CropRef, Msg
 from .features import gdd_daily
 
 GAP_DAYS = 7
@@ -122,21 +123,21 @@ class ClimateClimatology:
 def check_feasible(rot: Rotation, db: dict[str, Crop], clim: ClimateClimatology,
                    gdd_cap: float = 30.0) -> tuple[bool, list[str]]:
     """Frost-free-season and GDD screening of every planting against median climate."""
-    notes: list[str] = []
+    notes: list = []
     for p in rot.plantings:
         c = db[p.crop_id]
         idx = np.arange(p.start, p.end) % 365
         doy_start = p.start % 365
         if c["frost_kill_c"] > -3:  # frost-sensitive
             if not np.isnan(clim.last_frost_doy) and doy_start < clim.last_frost_doy - 5:
-                notes.append(f"{c['name']} sown (day {doy_start}) before typical last frost (day {clim.last_frost_doy:.0f})")
+                notes.append(Msg("f.early", crop=CropRef(p.crop_id, c["name"]), day=doy_start, frost=clim.last_frost_doy))
             mature = (p.start + int(p.days * 0.85)) % 365
             if not np.isnan(clim.first_frost_doy) and p.start % 365 < mature and mature > clim.first_frost_doy + 5:
-                notes.append(f"{c['name']} matures after typical first autumn frost")
+                notes.append(Msg("f.late", crop=CropRef(p.crop_id, c["name"])))
         if c["gdd_req"] > 0:
             gdd = gdd_daily(clim.tmin[idx], clim.tmax[idx], c["gdd_base"], gdd_cap).sum()
             if gdd < 0.85 * c["gdd_req"]:
-                notes.append(f"{c['name']}: only {gdd:.0f} GDD available vs ~{c['gdd_req']} needed")
+                notes.append(Msg("f.gdd", crop=CropRef(p.crop_id, c["name"]), gdd=gdd, req=c["gdd_req"]))
     return (not notes, notes)
 
 
@@ -181,13 +182,13 @@ def generate_candidates(current: tuple[str, ...], db: dict[str, Crop], clim: Cli
             continue
         for crops in _insertions(current, cid):
             if c["n_fixing"] and c["season"] in ("summer", "winter"):
-                consider("legume", crops, f"adds {c['name']}", (cid,))
+                consider("legume", crops, Msg("d.adds", crop=CropRef(cid, c["name"])), (cid,))
             if c["season"] == "cover":
-                consider("cover", crops, f"adds {c['name']} in a bare window", (cid,), same_cycle=True)
+                consider("cover", crops, Msg("d.adds_bare", crop=CropRef(cid, c["name"])), (cid,), same_cycle=True)
             if c["season"] == "perennial":
-                consider("perennial", crops, f"adds {c['name']}", (cid,))
+                consider("perennial", crops, Msg("d.adds", crop=CropRef(cid, c["name"])), (cid,))
             if c["season"] == "winter" and not c["n_fixing"]:
-                consider("winter_crop", crops, f"adds {c['name']} to break the cycle", (cid,))
+                consider("winter_crop", crops, Msg("d.adds_break", crop=CropRef(cid, c["name"])), (cid,))
     for i, old in enumerate(current):
         oc = db[old]
         for cid, c in db.items():
@@ -195,13 +196,13 @@ def generate_candidates(current: tuple[str, ...], db: dict[str, Crop], clim: Cli
                 continue
             if c["income"] >= oc["income"] + 0.1:
                 consider("income", current[:i] + (cid,) + current[i + 1:],
-                         f"replaces {oc['name']} with the higher-value {c['name']}", (cid,), (old,))
+                         Msg("d.repl_income", old=CropRef(old, oc["name"]), new=CropRef(cid, c["name"])), (cid,), (old,))
             if c["drought_tol"] > oc["drought_tol"] and c["water_need_mm"] < oc["water_need_mm"]:
                 consider("swap_drought", current[:i] + (cid,) + current[i + 1:],
-                         f"replaces {oc['name']} with the more drought-tolerant {c['name']}", (cid,), (old,))
+                         Msg("d.repl_drought", old=CropRef(old, oc["name"]), new=CropRef(cid, c["name"])), (cid,), (old,))
 
     for crops in pinned:
-        consider("pinned", tuple(crops), "pinned: " + " > ".join(db[c]["name"] for c in crops))
+        consider("pinned", tuple(crops), Msg("d.pinned", crops=tuple(CropRef(c, db[c]["name"]) for c in crops)))
     picks: list[Rotation] = []
     for rule, cands in by_rule.items():
         if rule != "pinned":

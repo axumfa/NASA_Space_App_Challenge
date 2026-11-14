@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -12,6 +13,7 @@ from .crops import load_crops
 from .fetch.appeears import load_ndvi, load_smap
 from .fetch.base import FetchResult
 from .fetch.power import fetch_power
+from .i18n import Msg
 from . import compare
 from .rotations import ClimateClimatology, Rotation, generate_candidates
 from .scoring import (DailyClimate, Weights, classify_by_demand, irrigation_demand_by_year,
@@ -70,14 +72,14 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     clim = ClimateClimatology.from_daily(daily, F.frost_table(daily, lat))
     fld = field_at(lat, lon)
     if fld is not None and not fld.satellite:      # regional presets: say so explicitly instead of searching files
-        why = "no satellite NDVI/SMAP point has been requested for this preset field"
+        why = Msg("g.nosat")
         ndvi, smap = FetchResult.failed("MODIS NDVI", why), FetchResult.failed("SMAP soil moisture", why)
     else:
         ndvi, smap = load_ndvi(lat, lon), load_smap(lat, lon)
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
     root_w = F.root_wetness_summary(daily)
-    gaps = ["Soil: not used in the scores (shown for information only; see the Soil section for its status)."]
+    gaps: list = [Msg("g.soil")]
     def span_years(df: pd.DataFrame) -> float:
         return (df.index.max() - df.index.min()).days / 365.25
 
@@ -88,38 +90,38 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
         wins = F.bare_windows_from_ndvi(curve, NDVI_BARE_THRESHOLD)
         ob = F.observed_bare_days_per_year(ndvi.data["ndvi"], NDVI_BARE_THRESHOLD)
         obs = float(ob.median()) if len(ob) else None
-        gaps.append(f"Satellite NDVI ({ndvi.meta['n_valid']}/{ndvi.meta['n_total']} observations pass quality checks, "
-                    f"{ndvi.date_range}) is shown and compared with the crop calendar; the scores still use the calendar."
-                    + (f" It covers only {nd_years:.1f} years, so the seasonal curve is a rough picture, not a climatology." if nd_years < 5 else ""))
+        gaps.append(Msg("g.ndvi_short" if nd_years < 5 else "g.ndvi_ok", nv=ndvi.meta["n_valid"], nt=ndvi.meta["n_total"],
+                        rng=ndvi.date_range, yrs=nd_years))
     else:
-        gaps.append(f"Vegetation (MODIS NDVI) not loaded: bare periods come from crop calendars, not satellite. ({ndvi.message})")
+        gaps.append(Msg("g.ndvi_na", detail=_detail(ndvi.message)))
     if smap.ok:
         sources.append(smap)
         sm_years = span_years(smap.data)
         if sm_years >= MIN_YEARS_ANOMALY:
             sm_anom = F.soil_moisture_anomaly(smap.data.rename(columns={"soil_moisture": "SMAP"}), "SMAP")
-            gaps.append(f"SMAP soil moisture ({smap.date_range}) is shown for information; the scores do not use it.")
+            gaps.append(Msg("g.smap_info", rng=smap.date_range))
         else:
-            gaps.append(f"SMAP soil moisture loaded ({smap.date_range}) but it covers only {sm_years:.1f} years: a wetter/drier-than-normal "
-                        f"anomaly needs at least {MIN_YEARS_ANOMALY} years, so none is shown; NASA POWER root-zone wetness (GWETROOT, model-based, ~50 km) is shown instead.")
+            gaps.append(Msg("g.smap_short", rng=smap.date_range, yrs=sm_years, minyrs=MIN_YEARS_ANOMALY))
     else:
-        gaps.append(f"SMAP soil moisture is not usable for this field ({smap.message}); NASA POWER root-zone wetness "
-                    f"(GWETROOT, a model estimate on a ~50 km grid, not a satellite measurement) is shown instead.")
-    gaps += [
-        "Slope/erosion terrain (SRTM) not loaded: erosion score uses crop cover only.",
-        "Irrigation water availability and soil salinity are unknown for this field.",
-        "ET0 is computed from NASA POWER (MERRA-2) variables; it can differ from station-based ET0.",
-        "Dry/normal/wet classes use irrigation demand (crop water need minus effective rain); actual "
-        "water supply (rivers, snowmelt, canals) is not observed - use the irrigation-supply slider.",
-        "Temperatures come from ~50 km reanalysis (MERRA-2) that runs hot over irrigated land, so hot-day counts and ET0 are likely overstated.",
-        "Crop parameters are approximate regional values, not field trials.",
-    ]
+        gaps.append(Msg("g.smap_na", detail=_detail(smap.message)))
+    gaps += [Msg(k) for k in ("g.srtm", "g.irr_salt", "g.et0", "g.classes", "g.temps", "g.params")]
     if fld is not None:
         gaps.extend(fld.gap_notes)                 # field-specific notes (e.g. a common local crop that is not modelled)
     miss = {k: v for k, v in F.completeness(daily).items() if v > 0.01}
     if miss:
-        gaps.append(f"POWER has gaps in: {', '.join(miss)}.")
+        gaps.append(Msg("g.power_gaps", cols=", ".join(miss)))
     return FieldContext(lat, lon, elev, daily, ann, cls, clim, sources, gaps, ndvi, smap, curve, wins, obs, sm_anom, root_w)
+
+
+_NOPOINT = re.compile(r"^(?P<file>.+?): no point within (?P<d>[\d.]+) deg of \((?P<lat>[^,]+), (?P<lon>[^)]+)\); nearest is (?P<near>[\d.]+) deg away$")
+
+
+def _detail(message):
+    """Known fetch messages become translatable; anything else stays as the (technical) English text."""
+    if isinstance(message, Msg):
+        return message
+    m = _NOPOINT.match(message or "")
+    return Msg("g.nopoint", **m.groupdict()) if m else message
 
 
 def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = None,

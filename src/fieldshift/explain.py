@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .crops import load_crops
+from .i18n import CropRef, Msg
 from .pipeline import FieldContext, RotationResult
 from .compare import FIT_LABEL
 from .scoring import PRIORITIES
@@ -32,11 +33,14 @@ def _names(crops: tuple[str, ...]) -> str:
 
 
 def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> Explanation:
+    """Bullets are `Msg` objects: str() is English, `i18n.render(x, lang)` gives the chosen language from the same numbers."""
     db = load_crops()
     r, cur = res.rotation, current.rotation
     s, cs = res.summary, current.summary
     ann = ctx.annual
     e = Explanation(title=_names(r.crops) + ("  (your current rotation)" if r.rule == "current" else ""))
+    cref = lambda cid: CropRef(cid, db[cid]["name"])  # noqa: E731
+    lab = lambda m: Msg(f"p.{m}")  # noqa: E731
 
     bare_now, bare_new = cur.bare_days_per_year(), r.bare_days_per_year()
     frost_med, heat_med = ann["frost_days"].median(), ann["heat_days"].median()
@@ -45,55 +49,44 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
 
     # ---- why
     if r.rule == "current":
-        e.why.append("This is what you grow now. It is the baseline every other option is compared against.")
+        e.why.append(Msg("x.why_current"))
     elif r.rule == "legume":
         c = db[r.added[0]]
-        e.why.append(f"{r.detail}: a nitrogen-fixing legume (about {c['n_credit']} kg N/ha credit for the next crop, approximate) "
-                     f"that also breaks the pest and disease cycle.")
+        e.why.append(Msg("x.why_legume", detail=r.detail, n=c["n_credit"]))
     elif r.rule == "cover":
-        e.why.append(f"{r.detail}. Your current rotation leaves the field bare about {bare_now:.0f} days a year; "
-                     f"this brings it to about {bare_new:.0f}.")
+        e.why.append(Msg("x.why_cover", detail=r.detail, now=bare_now, new=bare_new))
     elif r.rule == "swap_drought":
         d = s["irrigation_demand_mm"]["median"] - cs["irrigation_demand_mm"]["median"]
-        eff = (f"Estimated irrigation need falls by {-d:.0f} mm/year." if d < -5 else
-               f"Note: estimated irrigation need is NOT lower here ({d:+.0f} mm/year vs today), "
-               f"because the cycle fits more crop-days per year; the benefit is a more drought-tolerant crop.")
-        e.why.append(f"{r.detail}, aimed at water scarcity. {eff}")
+        eff = Msg("x.eff_down", d=-d) if d < -5 else Msg("x.eff_up", d=d)
+        e.why.append(Msg("x.why_drought", detail=r.detail, eff=eff))
     elif r.rule == "perennial":
-        e.why.append(f"{r.detail}: a deep-rooted perennial legume that builds organic matter, fixes nitrogen and covers the soil.")
+        e.why.append(Msg("x.why_perennial", detail=r.detail))
     elif r.rule == "winter_crop":
-        e.why.append(f"{r.detail}: a winter crop that uses the cool, wetter months and changes the crop family sequence.")
+        e.why.append(Msg("x.why_winter", detail=r.detail))
 
     # ---- evidence (numbers)
-    e.evidence.append(f"Calendar: field is bare about {bare_new:.0f} days/year in this rotation "
-                      f"(current: {bare_now:.0f}); cycle length {r.cycle_years} year(s).")
+    e.evidence.append(Msg("x.ev_cal", new=bare_new, now=bare_now, years=r.cycle_years))
     if r.rule == "current" and ctx.observed_bare_days is not None:
-        e.evidence.append(f"Satellite check (MODIS NDVI below 0.2): about {ctx.observed_bare_days:.0f} bare days/year observed, "
-                          f"against {bare_now:.0f} from the crop calendar.")
-    e.evidence.append(f"Climate at the field ({ctx.annual.index.min()}–{ctx.annual.index.max()}, NASA POWER): "
-                      f"median {frost_med:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), "
-                      f"{heat_med:.0f} days/year with Tmax ≥ 35 °C, rainfall {ann['precip'].median():.0f} mm vs reference ET0 {ann['et0'].median():.0f} mm.")
+        e.evidence.append(Msg("x.ev_sat", obs=ctx.observed_bare_days, now=bare_now))
+    e.evidence.append(Msg("x.ev_clim", y0=ctx.annual.index.min(), y1=ctx.annual.index.max(), frost=frost_med, last=last, first=first,
+                          heat=heat_med, rain=ann["precip"].median(), et0=ann["et0"].median()))
     t, ct = s["fit"], cs["fit"]
-    e.evidence.append(f"{FIT_LABEL}: {t['median']:.0f} (typical range {t['p10']:.0f}–{t['p90']:.0f}); "
-                      f"dry years {t['median_dry']:.0f}, normal {t['median_normal']:.0f}, wet {t['median_wet']:.0f}. "
-                      f"Current rotation: {ct['median']:.0f}. This is a relative score among the options shown, not an absolute grade.")
+    e.evidence.append(Msg("x.ev_fit", label=Msg("fit.label"), med=t["median"], p10=t["p10"], p90=t["p90"], dry=t["median_dry"],
+                          normal=t["median_normal"], wet=t["median_wet"], cur=ct["median"]))
     irr, cirr = s["irrigation_demand_mm"], cs["irrigation_demand_mm"]
     pct = 100 * (irr["median"] - cirr["median"]) / cirr["median"] if cirr["median"] else 0.0
-    e.evidence.append(f"Estimated irrigation need: {irr['median']:.0f} mm/year" +
-                      ("" if r.rule == "current" else f" ({pct:+.0f}% vs current {cirr['median']:.0f} mm)") +
-                      f"; dry years {irr['median_dry']:.0f}, wet years {irr['median_wet']:.0f}.")
+    cmp_ = "" if r.rule == "current" else Msg("x.ev_irr_cmp", pct=pct, cur=cirr["median"])
+    e.evidence.append(Msg("x.ev_irr", irr=irr["median"], cmp=cmp_, dry=irr["median_dry"], wet=irr["median_wet"]))
     if s["n_kg"]["median"] > 0:
-        e.evidence.append(f"Nitrogen credit from legumes: about {s['n_kg']['median']:.0f} kg N/ha per year (approximate).")
+        e.evidence.append(Msg("x.ev_n", n=s["n_kg"]["median"]))
     yl = s["yield_loss"]
-    e.evidence.append(f"Yield at risk from water shortage (FAO yield-response): {yl['median']*100:.0f}% typical, "
-                      f"{yl['p90']*100:.0f}% in the worst 1 year in 10 (irrigation supply set to the slider value).")
+    e.evidence.append(Msg("x.ev_yield", med=yl["median"] * 100, p90=yl["p90"] * 100))
     for i, pl in enumerate(r.plantings):
         c = db[pl.crop_id]
         hd = s[f"heat_days_{i}"]
         if c["gdd_req"] > 0 or hd["median"] > 0:
-            e.evidence.append(f"Heat exposure, {c['name']}: {hd['median']:.0f} days above {c['heat_thr_c']:.0f} °C in season "
-                              f"(worst 1 in 10: {hd['p90']:.0f}); not converted to yield loss.")
-    e.evidence.append(f"Climate fit {s['suitability']['median']:.0f}/100; pest-cycle break {s['pest_break']['median']:.0f}/100.")
+            e.evidence.append(Msg("x.ev_heat", crop=cref(pl.crop_id), n=hd["median"], thr=c["heat_thr_c"], p90=hd["p90"]))
+    e.evidence.append(Msg("x.ev_suit", suit=s["suitability"]["median"], pest=s["pest_break"]["median"]))
 
     # ---- benefits / trade-offs vs current
     if r.rule != "current":
@@ -102,26 +95,26 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
                 continue
             d = s[f"norm_{m}"]["median"] - cs[f"norm_{m}"]["median"]
             if d >= 10:
-                e.benefits.append(f"{LABEL[m]}: better than your current rotation (relative score {s[f'norm_{m}']['median']:.0f} vs {cs[f'norm_{m}']['median']:.0f}).")
+                e.benefits.append(Msg("x.b_better", label=lab(m), new=s[f"norm_{m}"]["median"], old=cs[f"norm_{m}"]["median"]))
             elif d <= -10:
-                e.tradeoffs.append(f"{LABEL[m]}: worse than your current rotation (relative score {s[f'norm_{m}']['median']:.0f} vs {cs[f'norm_{m}']['median']:.0f}).")
+                e.tradeoffs.append(Msg("x.t_worse", label=lab(m), new=s[f"norm_{m}"]["median"], old=cs[f"norm_{m}"]["median"]))
         if bare_new < bare_now - 5:
-            e.benefits.append(f"Bare soil reduced from ~{bare_now:.0f} to ~{bare_new:.0f} days/year.")
+            e.benefits.append(Msg("x.b_bare", now=bare_now, new=bare_new))
         if not e.benefits:
-            e.benefits.append("No priority improves by 5+ points over the current rotation with your weights.")
+            e.benefits.append(Msg("x.b_none"))
     else:
-        e.benefits.append("Known to you; no new equipment, seed or market arrangements needed.")
-        weak = [LABEL[m] for m in PRIORITIES if not res.tied.get(m) and s[f"norm_{m}"]["median"] < 30]
+        e.benefits.append(Msg("x.b_known"))
+        weak = [lab(m) for m in PRIORITIES if not res.tied.get(m) and s[f"norm_{m}"]["median"] < 30]
         if weak:
-            e.tradeoffs.append("Lowest among the options on: " + ", ".join(weak) + ".")
-    ties = [LABEL[m] for m, v in res.tied.items() if v]
+            e.tradeoffs.append(Msg("x.t_lowest", list=weak))
+    ties = [lab(m) for m, v in res.tied.items() if v]
     if ties:
-        e.evidence.append("No real difference between these options for: " + ", ".join(ties) + " (treated as a tie).")
+        e.evidence.append(Msg("x.ev_ties", list=ties))
 
     # ---- gaps
     e.gaps.extend(ctx.gaps)
     approx = sorted({a for c in r.crops for a in db[c]["approx"]})
-    e.gaps.append(f"Crop values marked approximate for: {', '.join(approx)}.")
+    e.gaps.append(Msg("g.approx", list=[Msg(f"ap.{a}") for a in approx]))
     if r.feasibility_notes:
         e.gaps.extend(r.feasibility_notes)
 
@@ -129,11 +122,11 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
     for cid in r.crops:
         c = db[cid]
         if c["salinity_tol"] < 0.5:
-            e.risks.append(f"{c['name']} is salt-sensitive; check soil/irrigation-water salinity locally.")
+            e.risks.append(Msg("x.r_salt", crop=cref(cid)))
         if cid not in cur.crops:
-            e.risks.append(f"New crop {c['name']}: confirm seed availability, machinery, and local agronomy advice.")
-        e.risks.append(f"Market ({c['name']}): {c['market_note']}")
-    e.risks.append("Irrigation water supply and timing were not modelled; confirm with your water-user association.")
+            e.risks.append(Msg("x.r_new", crop=cref(cid)))
+        e.risks.append(Msg("x.r_market", crop=cref(cid), note=Msg(f"mk.{cid}")))
+    e.risks.append(Msg("x.r_irr"))
     return e
 
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .i18n import Msg
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = ROOT / "data" / "cache"                 # live downloads (git-ignored)
 DEMO_CACHE_DIR = ROOT / "data" / "demo_cache"       # committed copies for the two demo fields (read first)
@@ -37,8 +39,7 @@ DEMO_FIELDS: dict[str, Field] = {
     # locally: e.g. rice, vegetables and orchards are not in the crop list). No MODIS NDVI / SMAP was requested for them.
     "karakalpakstan": Field("karakalpakstan", "Karakalpakstan farmland (near Nukus), Uzbekistan", 42.4128, 59.5159,
                             ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True,
-                            gap_notes=("Rice is a common crop in Karakalpakstan and is not modelled (it is not in the crop list), "
-                                       "so rotations that include rice cannot be compared here.",)),
+                            gap_notes=(Msg("g.rice"),)),
     "bukhara": Field("bukhara", "Bukhara region farmland, Uzbekistan", 39.9904, 64.3238,
                      ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
     "samarkand": Field("samarkand", "Samarkand region farmland, Uzbekistan", 39.6350, 67.0596,

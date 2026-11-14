@@ -262,14 +262,12 @@ if view == "field":
         st.info(t("f.soil_na"))
     with st.expander(t("f.gaps")):
         for g in ctx.gaps:
-            st.write("• " + g)
+            st.write("• " + i18n.render(g, S.lang))
 
 # ------------------------------------------------------------------ view 2: rotation options
 if view == "options":
     st.subheader(t("fit.label"))
     st.caption(t("o.caption"))
-    if S.lang != "en":
-        st.caption(t("note.en_only"))
     sb = summary_box(display, w, S.lang, arid=is_arid(ctx))
     with st.container(border=True):
         st.markdown(f"#### {sb['title']}")
@@ -311,7 +309,7 @@ if view == "options":
                                ("ex.gaps", e.gaps), ("ex.risks", e.risks)):
                 with st.expander(t(key), expanded=(key == "ex.why")):
                     for it in items:
-                        st.write("• " + it)
+                        st.write("• " + i18n.render(it, S.lang))
     st.caption(t("o.radar_cap"))
 
 # ------------------------------------------------------------------ view 3: glossary and data

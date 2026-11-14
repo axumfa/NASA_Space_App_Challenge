@@ -5,13 +5,28 @@ All Uzbek text (Latin script) was written by the AI assistant and has **not** be
 To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uzbek_review.py` regenerates this file.
 
 
-## 1. Strings I am unsure about (37)
+## 1. Strings I am unsure about (51)
 
 | key | English | Uzbek | why unsure |
 |---|---|---|---|
+| `ap.cover` | ground cover | tuproqni qoplash | parameter names in the 'approximate' list |
+| `ap.drought_tol` | drought tolerance | qurg'oqchilikka chidamlilik | parameter names in the 'approximate' list |
+| `ap.forage` | forage value | em-xashak qiymati | parameter names in the 'approximate' list |
+| `ap.frost_kill_c` | frost-kill temperature | sovuq o'ldiruvchi harorat | parameter names in the 'approximate' list |
+| `ap.gdd_req` | growing degree days needed | kerakli samarali harorat yig'indisi (GDD) | parameter names in the 'approximate' list |
+| `ap.heat_thr_c` | heat threshold | issiqlik chegarasi | parameter names in the 'approximate' list |
+| `ap.income` | income index | daromad ko'rsatkichi | parameter names in the 'approximate' list |
+| `ap.ky` | yield response (Ky) | hosildorlikning suvga sezgirligi (Ky) | parameter names in the 'approximate' list |
+| `ap.n_credit` | nitrogen credit | azot hissasi | parameter names in the 'approximate' list |
+| `ap.om` | organic matter input | organik modda qo'shilishi | parameter names in the 'approximate' list |
+| `ap.salinity_tol` | salt tolerance | tuzga chidamlilik | parameter names in the 'approximate' list |
+| `ap.stages` | stage lengths | rivojlanish bosqichlari uzunligi | parameter names in the 'approximate' list |
+| `ap.t_opt` | optimal temperature | optimal harorat | parameter names in the 'approximate' list |
+| `ap.water_need_mm` | seasonal water need | mavsumiy suv ehtiyoji | parameter names in the 'approximate' list |
 | `ex.gaps` | Information gaps | Ma'lumot bo'shliqlari | 'bo'shliqlar' for information gaps |
 | `f.trend` | **Trend {y0}–{y1}:** temperature {dt:+.2f} °C per decade ({tclear} trend); rain {dp:+.0f} mm per decade ({pclear} trend). | **Yo'nalish {y0}–{y1}:** harorat o'n yilda {dt:+.2f} °C ({tclear}); yog'in o'n yilda {dp:+.0f} mm ({pclear}). | 'trend' as 'yo'nalish' |
 | `field.kansas` | Central Kansas, USA | Markaziy Kanzas, AQSH | 'Kanzas' spelling; 'AQSH' for USA |
+| `g.rice` | Rice is a common crop in Karakalpakstan and is not modelled (it is not in the crop list), so rotations that include rice cannot be compared here. | Qoraqalpog'istonda sholi keng tarqalgan ekin, lekin u modellashtirilmagan (ekinlar ro'yxatida yo'q), shuning uchun sholi kiritilgan almashlab ekishlarni bu yerda solishtirib bo'lmaydi. | 'Qoraqalpog'iston' spelling; 'sholi' for rice |
 | `g.versus_text` | • Climate values come from a ~50 km model/satellite blend, not from a weather station at your field. Over irrigated land it tends to run hotter and drier than the ground.<br>• Irrigation need and ET0 are computed (FAO-56 Penman–Monteith), not measured.<br>• Crop values (water use, heat limits, nitrogen credit) are regional approximations; check them with local advisers.<br>• Water supply from rivers or canals is not observed; use the irrigation-water slider to test shortages. | • Iqlim qiymatlari dalangizdagi ob-havo stansiyasidan emas, ~50 km li model/sun'iy yo'ldosh aralashmasidan olingan. Sug'oriladigan yerlarda u haqiqatdagidan issiqroq va quruqroq chiqishga moyil.<br>• Sug'orish ehtiyoji va ET0 o'lchanmagan, hisoblangan (FAO-56 Penman–Monteith).<br>• Ekin qiymatlari (suv sarfi, issiqlik chegaralari, azot hisobi) mintaqaviy taxminlar; mahalliy maslahatchilar bilan tekshiring.<br>• Daryo yoki kanallardan suv yetkazib berish kuzatilmaydi; suv yetishmasligini sinash uchun sug'orish suvi slayderidan foydalaning. | technical bullets: check terms |
 | `gl.dnw.d` | Years sorted into thirds by how much irrigation water crops needed: dry = highest need. | Yillar ekinlar qancha sug'orish suvi talab qilganiga qarab uchga bo'lingan: quruq = eng ko'p talab. | technical explanation: check wording and terms |
 | `gl.dnw.t` | Dry / normal / wet year | Quruq / o'rtacha / nam yil | technical term: check the established Uzbek term |
@@ -36,7 +51,6 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `gl.yar.d` | How much of a normal harvest may be lost because the crop gets less water than it needs (FAO yield-response factors). It is 0 when irrigation water is plentiful. Heat is shown separately, as a count of very hot days. | Ekin kerakli suvdan kamroq olgani sababli oddiy hosilning qancha qismi yo'qolishi mumkin (FAO hosil-javob koeffitsientlari). Sug'orish suvi yetarli bo'lsa, 0 bo'ladi. Issiqlik alohida — juda issiq kunlar soni sifatida ko'rsatiladi. | technical explanation: check wording and terms |
 | `gl.yar.t` | Yield at risk | Hosil xavfi | technical term: check the established Uzbek term |
 | `m.lastfrost` | Last spring frost | Oxirgi bahorgi qirov | 'qirov' for frost |
-| `note.en_only` |  | Variant kartochkalaridagi batafsil izohlar (dalillar, bo'shliqlar, xavflar) hozircha faqat inglizcha. | wording of 'bo'shliqlar' for information gaps |
 | `p.forage` | Forage value | Em-xashak qiymati | 'em-xashak' vs 'ozuqa' for forage |
 | `p.nitrogen` | Nitrogen fixing | Azot to'plash | 'azot to'plash' vs 'azot biriktirish' for nitrogen fixing |
 | `p.soil_om` | Soil organic matter | Tuproqdagi organik moddalar (chirindi) | 'chirindi' (humus) vs 'organik moddalar' |
@@ -72,7 +86,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `melon` | Melon | Qovun |  |
 | `sugar_beet` | Sugar beet | Qand lavlagi |  |
 
-## 3. All other strings (189), please still skim
+## 3. All other strings (265), please still skim
 
 | key | English | Uzbek |
 |---|---|---|
@@ -265,10 +279,85 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `c.water` | confirm that irrigation water will really be available ({irr:.0f} mm/yr is needed). | sug'orish suvi haqiqatan mavjud bo'lishini tasdiqlang (yiliga {irr:.0f} mm kerak). |
 | `c.dates` | check that the sowing and harvest dates in this calendar fit your local weather and farm work. | bu taqvimdagi ekish va yig'im-terim sanalari mahalliy ob-havo va dala ishlariga mos kelishini tekshiring. |
 | `c.cycle` | this rotation takes {years} years to complete; check that it fits your land and contracts. | bu almashlab ekish {years} yilda tugaydi; yeringiz va shartnomalaringizga mos kelishini tekshiring. |
+| `g.soil` | Soil: not used in the scores (shown for information only; see the Soil section for its status). | Tuproq: ballarda ishlatilmaydi (faqat ma'lumot uchun ko'rsatiladi; holati uchun Tuproq bo'limiga qarang). |
+| `g.ndvi_ok` | Satellite NDVI ({nv}/{nt} observations pass quality checks, {rng}) is shown and compared with the crop calendar; the scores still use the calendar. | Sun'iy yo'ldosh NDVI ({nv}/{nt} kuzatuv sifat tekshiruvidan o'tdi, {rng}) ko'rsatiladi va ekin taqvimi bilan solishtiriladi; ballar hali ham taqvimdan foydalanadi. |
+| `g.ndvi_short` | Satellite NDVI ({nv}/{nt} observations pass quality checks, {rng}) is shown and compared with the crop calendar; the scores still use the calendar. It covers only {yrs:.1f} years, so the seasonal curve is a rough picture, not a climatology. | Sun'iy yo'ldosh NDVI ({nv}/{nt} kuzatuv sifat tekshiruvidan o'tdi, {rng}) ko'rsatiladi va ekin taqvimi bilan solishtiriladi; ballar hali ham taqvimdan foydalanadi. U atigi {yrs:.1f} yilni qamrab oladi, shuning uchun mavsumiy egri chiziq taxminiy ko'rinish, ko'p yillik me'yor emas. |
+| `g.ndvi_na` | Vegetation (MODIS NDVI) not loaded: bare periods come from crop calendars, not satellite. ({detail}) | O'simlik qoplami (MODIS NDVI) yuklanmagan: yalang davrlar sun'iy yo'ldoshdan emas, ekin taqvimidan olinadi. ({detail}) |
+| `g.smap_info` | SMAP soil moisture ({rng}) is shown for information; the scores do not use it. | SMAP tuproq namligi ({rng}) ma'lumot uchun ko'rsatiladi; ballar undan foydalanmaydi. |
+| `g.smap_short` | SMAP soil moisture loaded ({rng}) but it covers only {yrs:.1f} years: a wetter/drier-than-normal anomaly needs at least {minyrs} years, so none is shown; NASA POWER root-zone wetness (GWETROOT, model-based, ~50 km) is shown instead. | SMAP tuproq namligi yuklandi ({rng}), lekin u atigi {yrs:.1f} yilni qamrab oladi: me'yordan nam/quruq og'ishni hisoblash uchun kamida {minyrs} yil kerak, shuning uchun ko'rsatilmaydi; o'rniga NASA POWER ildiz qatlami namligi (GWETROOT, model asosida, ~50 km) ko'rsatiladi. |
+| `g.smap_na` | SMAP soil moisture is not usable for this field ({detail}); NASA POWER root-zone wetness (GWETROOT, a model estimate on a ~50 km grid, not a satellite measurement) is shown instead. | Bu dala uchun SMAP tuproq namligidan foydalanib bo'lmaydi ({detail}); o'rniga NASA POWER ildiz qatlami namligi (GWETROOT, ~50 km katakdagi model bahosi, sun'iy yo'ldosh o'lchovi emas) ko'rsatiladi. |
+| `g.srtm` | Slope/erosion terrain (SRTM) not loaded: erosion score uses crop cover only. | Nishablik/eroziya relyefi (SRTM) yuklanmagan: eroziya bali faqat ekin qoplamiga asoslanadi. |
+| `g.irr_salt` | Irrigation water availability and soil salinity are unknown for this field. | Bu dala uchun sug'orish suvi mavjudligi va tuproq sho'rligi noma'lum. |
+| `g.et0` | ET0 is computed from NASA POWER (MERRA-2) variables; it can differ from station-based ET0. | ET0 NASA POWER (MERRA-2) ko'rsatkichlaridan hisoblanadi; meteostansiya asosidagi ET0 dan farq qilishi mumkin. |
+| `g.classes` | Dry/normal/wet classes use irrigation demand (crop water need minus effective rain); actual water supply (rivers, snowmelt, canals) is not observed - use the irrigation-supply slider. | Quruq/me'yoriy/nam yil sinflari sug'orish talabiga (ekinning suv ehtiyoji minus samarali yog'in) asoslanadi; haqiqiy suv ta'minoti (daryolar, qor erishi, kanallar) kuzatilmaydi - sug'orish suvi ta'minoti slayderidan foydalaning. |
+| `g.temps` | Temperatures come from ~50 km reanalysis (MERRA-2) that runs hot over irrigated land, so hot-day counts and ET0 are likely overstated. | Harorat ~50 km li qayta tahlildan (MERRA-2) olinadi; u sug'oriladigan yerlarda issiqroq chiqadi, shuning uchun issiq kunlar soni va ET0 oshirib ko'rsatilgan bo'lishi mumkin. |
+| `g.params` | Crop parameters are approximate regional values, not field trials. | Ekin ko'rsatkichlari mintaqaviy taxminiy qiymatlar, dala tajribalari natijasi emas. |
+| `g.power_gaps` | POWER has gaps in: {cols}. | POWER ma'lumotlarida quyidagilar bo'yicha bo'shliqlar bor: {cols}. |
+| `g.nosat` | no satellite NDVI/SMAP point has been requested for this preset field | bu tayyor dala uchun sun'iy yo'ldosh NDVI/SMAP nuqtasi so'ralmagan |
+| `g.nopoint` | {file}: no point within {d} deg of ({lat}, {lon}); nearest is {near} deg away | {file}: ({lat}, {lon}) nuqtadan {d} daraja ichida nuqta yo'q; eng yaqini {near} daraja uzoqda |
+| `g.approx` | Crop values marked approximate for: {list}. | Quyidagilar bo'yicha ekin qiymatlari taxminiy deb belgilangan: {list}. |
+| `d.adds` | adds {crop} | {crop} qo'shiladi |
+| `d.adds_bare` | adds {crop} in a bare window | {crop} yalang davrga qo'shiladi |
+| `d.adds_break` | adds {crop} to break the cycle | {crop} tsiklni buzish uchun qo'shiladi |
+| `d.repl_income` | replaces {old} with the higher-value {new} | {old} o'rniga daromadliroq {new} ekiladi |
+| `d.repl_drought` | replaces {old} with the more drought-tolerant {new} | {old} o'rniga qurg'oqchilikka chidamliroq {new} ekiladi |
+| `d.pinned` | pinned: {crops} | tanlangan: {crops} |
+| `f.early` | {crop} sown (day {day}) before typical last frost (day {frost:.0f}) | {crop} odatdagi oxirgi sovuqdan oldin ekilgan (kun {day}; oxirgi sovuq kuni {frost:.0f}) |
+| `f.late` | {crop} matures after typical first autumn frost | {crop} odatdagi birinchi kuzgi sovuqdan keyin pishadi |
+| `f.gdd` | {crop}: only {gdd:.0f} GDD available vs ~{req} needed | {crop}: faqat {gdd:.0f} GDD mavjud, ~{req} kerak |
+| `x.title_cur` |   (your current rotation) |   (hozirgi almashlab ekishingiz) |
+| `x.why_current` | This is what you grow now. It is the baseline every other option is compared against. | Hozir siz shuni ekasiz. Boshqa barcha variantlar shu bilan solishtiriladi. |
+| `x.why_legume` | {detail}: a nitrogen-fixing legume (about {n} kg N/ha credit for the next crop, approximate) that also breaks the pest and disease cycle. | {detail}: azot to'playdigan dukkakli ekin (keyingi ekin uchun taxminan {n} kg N/ga hissa, taxminiy), u zararkunanda va kasallik tsiklini ham uzadi. |
+| `x.why_cover` | {detail}. Your current rotation leaves the field bare about {now:.0f} days a year; this brings it to about {new:.0f}. | {detail}. Hozirgi almashlab ekishda dala yiliga taxminan {now:.0f} kun yalang qoladi; bu variantda taxminan {new:.0f} kun. |
+| `x.why_drought` | {detail}, aimed at water scarcity. {eff} | {detail}, suv tanqisligiga qaratilgan. {eff} |
+| `x.eff_down` | Estimated irrigation need falls by {d:.0f} mm/year. | Taxminiy sug'orish ehtiyoji yiliga {d:.0f} mm ga kamayadi. |
+| `x.eff_up` | Note: estimated irrigation need is NOT lower here ({d:+.0f} mm/year vs today), because the cycle fits more crop-days per year; the benefit is a more drought-tolerant crop. | Eslatma: bu yerda taxminiy sug'orish ehtiyoji kam EMAS (hozirgidan {d:+.0f} mm/yil), chunki tsiklga yiliga ko'proq ekin kunlari sig'adi; foydasi - qurg'oqchilikka chidamliroq ekin. |
+| `x.why_perennial` | {detail}: a deep-rooted perennial legume that builds organic matter, fixes nitrogen and covers the soil. | {detail}: chuqur ildizli ko'p yillik dukkakli ekin; organik modda to'playdi, azot to'playdi va tuproqni qoplaydi. |
+| `x.why_winter` | {detail}: a winter crop that uses the cool, wetter months and changes the crop family sequence. | {detail}: salqin va namroq oylardan foydalanadigan kuzgi ekin; ekin oilalari ketma-ketligini o'zgartiradi. |
+| `x.ev_cal` | Calendar: field is bare about {new:.0f} days/year in this rotation (current: {now:.0f}); cycle length {years} year(s). | Taqvim: bu almashlab ekishda dala yiliga taxminan {new:.0f} kun yalang (hozirgi: {now:.0f}); tsikl uzunligi {years} yil. |
+| `x.ev_sat` | Satellite check (MODIS NDVI below 0.2): about {obs:.0f} bare days/year observed, against {now:.0f} from the crop calendar. | Sun'iy yo'ldosh tekshiruvi (MODIS NDVI 0,2 dan past): yiliga taxminan {obs:.0f} yalang kun kuzatilgan, ekin taqvimida esa {now:.0f}. |
+| `x.ev_clim` | Climate at the field ({y0}–{y1}, NASA POWER): median {frost:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), {heat:.0f} days/year with Tmax ≥ 35 °C, rainfall {rain:.0f} mm vs reference ET0 {et0:.0f} mm. | Dalaning iqlimi ({y0}–{y1}, NASA POWER): yiliga o'rtacha {frost:.0f} sovuq kun (oxirgi bahorgi sovuq ~{last:.0f}-kun, birinchi kuzgi sovuq ~{first:.0f}-kun), yiliga {heat:.0f} kun Tmax ≥ 35 °C, yog'in {rain:.0f} mm, taqqoslash uchun ET0 {et0:.0f} mm. |
+| `x.ev_fit` | {label}: {med:.0f} (typical range {p10:.0f}–{p90:.0f}); dry years {dry:.0f}, normal {normal:.0f}, wet {wet:.0f}. Current rotation: {cur:.0f}. This is a relative score among the options shown, not an absolute grade. | {label}: {med:.0f} (odatiy oraliq {p10:.0f}–{p90:.0f}); quruq yillarda {dry:.0f}, me'yoriy yillarda {normal:.0f}, nam yillarda {wet:.0f}. Hozirgi almashlab ekish: {cur:.0f}. Bu ko'rsatilgan variantlar orasidagi nisbiy ball, mutlaq baho emas. |
+| `x.ev_irr` | Estimated irrigation need: {irr:.0f} mm/year{cmp}; dry years {dry:.0f}, wet years {wet:.0f}. | Taxminiy sug'orish ehtiyoji: yiliga {irr:.0f} mm{cmp}; quruq yillarda {dry:.0f}, nam yillarda {wet:.0f}. |
+| `x.ev_irr_cmp` |  ({pct:+.0f}% vs current {cur:.0f} mm) |  (hozirgisiga nisbatan {pct:+.0f}%, hozirgi {cur:.0f} mm) |
+| `x.ev_n` | Nitrogen credit from legumes: about {n:.0f} kg N/ha per year (approximate). | Dukkakli ekinlardan azot hissasi: yiliga taxminan {n:.0f} kg N/ga (taxminiy). |
+| `x.ev_yield` | Yield at risk from water shortage (FAO yield-response): {med:.0f}% typical, {p90:.0f}% in the worst 1 year in 10 (irrigation supply set to the slider value). | Suv yetishmasligidan hosil xavfi (FAO hosil-javob usuli): odatda {med:.0f}%, 10 yilning eng yomon 1 yilida {p90:.0f}% (sug'orish ta'minoti slayderdagi qiymatga teng). |
+| `x.ev_heat` | Heat exposure, {crop}: {n:.0f} days above {thr:.0f} °C in season (worst 1 in 10: {p90:.0f}); not converted to yield loss. | Issiqqa duchor bo'lish, {crop}: mavsumda {thr:.0f} °C dan yuqori {n:.0f} kun (10 yilning eng yomonida: {p90:.0f}); hosil yo'qotilishiga aylantirilmagan. |
+| `x.ev_suit` | Climate fit {suit:.0f}/100; pest-cycle break {pest:.0f}/100. | Iqlimga moslik {suit:.0f}/100; zararkunanda tsiklini uzish {pest:.0f}/100. |
+| `x.ev_ties` | No real difference between these options for: {list} (treated as a tie). | Bu variantlar orasida quyidagilar bo'yicha haqiqiy farq yo'q: {list} (teng deb olingan). |
+| `x.b_better` | {label}: better than your current rotation (relative score {new:.0f} vs {old:.0f}). | {label}: hozirgi almashlab ekishingizdan yaxshiroq (nisbiy ball {new:.0f}, hozirgisi {old:.0f}). |
+| `x.t_worse` | {label}: worse than your current rotation (relative score {new:.0f} vs {old:.0f}). | {label}: hozirgi almashlab ekishingizdan yomonroq (nisbiy ball {new:.0f}, hozirgisi {old:.0f}). |
+| `x.b_bare` | Bare soil reduced from ~{now:.0f} to ~{new:.0f} days/year. | Yalang tuproq yiliga ~{now:.0f} kundan ~{new:.0f} kungacha kamayadi. |
+| `x.b_none` | No priority improves by 5+ points over the current rotation with your weights. | Siz tanlagan vaznlarda hech bir ustuvorlik hozirgi almashlab ekishdan 5+ ballga yaxshilanmaydi. |
+| `x.b_known` | Known to you; no new equipment, seed or market arrangements needed. | Sizga tanish; yangi texnika, urug' yoki bozor kelishuvlari kerak emas. |
+| `x.t_lowest` | Lowest among the options on: {list}. | Variantlar orasida eng past: {list}. |
+| `x.r_salt` | {crop} is salt-sensitive; check soil/irrigation-water salinity locally. | {crop} tuzga sezgir; tuproq va sug'orish suvi sho'rligini joyida tekshiring. |
+| `x.r_new` | New crop {crop}: confirm seed availability, machinery, and local agronomy advice. | Yangi ekin {crop}: urug' mavjudligi, texnika va mahalliy agronom maslahatini aniqlang. |
+| `x.r_market` | Market ({crop}): {note} | Bozor ({crop}): {note} |
+| `x.r_irr` | Irrigation water supply and timing were not modelled; confirm with your water-user association. | Sug'orish suvi ta'minoti va muddatlari modellashtirilmagan; suv iste'molchilari uyushmasi bilan aniqlang. |
+| `mk.cotton` | Often sold via contracts/clusters; check current procurement terms and prices. | Ko'pincha shartnoma/klaster orqali sotiladi; joriy xarid shartlari va narxlarni tekshiring. |
+| `mk.winter_wheat` | Food-security crop; procurement/quota rules may apply locally. | Oziq-ovqat xavfsizligi ekini; joyida xarid/kvota qoidalari amal qilishi mumkin. |
+| `mk.barley` | Feed/malting market; lower price than wheat in most regions. | Em-xashak/solod bozori; ko'p hududlarda bug'doydan arzon. |
+| `mk.maize` | Strong feed demand; drying/storage costs matter. | Em-xashak uchun talab kuchli; quritish va saqlash xarajatlari muhim. |
+| `mk.sorghum` | Thin local market in some regions; feed use; check buyers. | Ba'zi hududlarda mahalliy bozor kichik; em-xashak sifatida ishlatiladi; xaridorlarni tekshiring. |
+| `mk.millet` | Small niche market; mostly feed/food local use. | Kichik maxsus bozor; asosan mahalliy em-xashak/oziq-ovqat uchun. |
+| `mk.alfalfa` | Local hay/feed demand; livestock needed or hay sold; seed cost. | Pichan/em-xashakka mahalliy talab; chorva kerak yoki pichan sotiladi; urug' narxi. |
+| `mk.mung_bean` | Often grown as post-wheat short-season crop; check buyers/export prices. | Ko'pincha bug'doydan keyin qisqa mavsumli ekin sifatida ekiladi; xaridorlar/eksport narxlarini tekshiring. |
+| `mk.chickpea` | Good export demand historically; price volatile. | Tarixan eksport talabi yaxshi; narx o'zgaruvchan. |
+| `mk.lentil` | Export/food market; check local buyers. | Eksport/oziq-ovqat bozori; mahalliy xaridorlarni tekshiring. |
+| `mk.soybean` | Large commodity market in the US; limited processing in Central Asia. | AQShda katta tovar bozori; Markaziy Osiyoda qayta ishlash cheklangan. |
+| `mk.sunflower` | Oil crush demand; check local processors. | Moy ishlab chiqarish uchun talab; mahalliy qayta ishlovchilarni tekshiring. |
+| `mk.safflower` | Niche oil/dye market; few buyers in many regions. | Moy/bo'yoq uchun maxsus bozor; ko'p hududlarda xaridor kam. |
+| `mk.rapeseed` | Oil crush demand; needs a nearby processor; winter-kill risk. | Moy uchun talab; yaqin atrofda qayta ishlovchi kerak; qishda nobud bo'lish xavfi. |
+| `mk.rye_cover` | No direct sale; ~USD 60-100/ha seed+termination (rough); may be grazed. | To'g'ridan-to'g'ri sotilmaydi; urug' va yo'q qilish ~60-100 AQSh dollari/ga (taxminiy); yaylov sifatida ishlatilishi mumkin. |
+| `mk.hairy_vetch` | No direct sale; seed costly/hard to find (~USD 100/ha incl. termination, rough); N credit for next crop. | To'g'ridan-to'g'ri sotilmaydi; urug'i qimmat/topish qiyin (yo'q qilish bilan ~100 AQSh dollari/ga, taxminiy); keyingi ekin uchun azot hissasi. |
+| `mk.clover` | Forage value (hay/grazing); seed availability varies. | Em-xashak qiymati (pichan/yaylov); urug' mavjudligi turlicha. |
+| `mk.potato` | High value but high cost, storage and price risk. | Qiymati yuqori, lekin xarajat, saqlash va narx xavfi ham yuqori. |
+| `mk.melon` | High value local/regional demand; labour intensive; perishable. | Mahalliy/mintaqaviy talab yuqori; ko'p mehnat talab qiladi; tez buziladi. |
+| `mk.sugar_beet` | Needs a sugar factory within reach; contract-based. | Yaqin atrofda shakar zavodi kerak; shartnoma asosida. |
 
 ## 4. What is NOT translated (stays English in Uzbek mode)
 
-- The long bullets inside each option card: *Why this option*, *Evidence (numbers)*, *Benefits*, *Information gaps*, *Risks to check with a local expert*. The section titles are translated; the bullet sentences are templated English built from the numbers. The app shows a note about this in Uzbek mode.
-- The *What data is missing for this field?* list on the field view (same reason).
+- Technical detail inside a data-loading message that is not one of the known patterns (e.g. a file-format error from a satellite CSV) stays as the original English text; the known "no point within ... deg" message is translated.
 - Texts inside the downloaded documents (`README.md`, `docs/`).
 - Soil texture class names (`clay loam`, `loam`, ...) and the data-source names.

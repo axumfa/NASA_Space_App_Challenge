@@ -37,9 +37,7 @@ def main() -> None:
     for k in sure:
         out.append(f"| `{k}` | {esc(i18n.S[k]['en'])} | {esc(i18n.S[k]['uz'])} |")
     out += ["\n## 4. What is NOT translated (stays English in Uzbek mode)\n",
-            "- The long bullets inside each option card: *Why this option*, *Evidence (numbers)*, *Benefits*, *Information gaps*, *Risks to check with a local expert*. "
-            "The section titles are translated; the bullet sentences are templated English built from the numbers. The app shows a note about this in Uzbek mode.",
-            "- The *What data is missing for this field?* list on the field view (same reason).",
+            "- Technical detail inside a data-loading message that is not one of the known patterns (e.g. a file-format error from a satellite CSV) stays as the original English text; the known \"no point within ... deg\" message is translated.",
             "- Texts inside the downloaded documents (`README.md`, `docs/`).",
             "- Soil texture class names (`clay loam`, `loam`, ...) and the data-source names."]
     Path(__file__).resolve().parents[1].joinpath("docs", "uzbek_review.md").write_text("\n".join(out) + "\n")
