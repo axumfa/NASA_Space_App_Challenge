@@ -59,7 +59,7 @@ def add_et0(df: pd.DataFrame, lat: float, elev_m: float) -> pd.DataFrame:
     """Return df with an `ET0` column computed from POWER variables."""
     out = df.copy()
     es = (sat_vp(out["T2M_MAX"]) + sat_vp(out["T2M_MIN"])) / 2
-    ea = out["RH2M"] / 100 * sat_vp(out["T2M"])  # POWER gives mean RH; use e0(Tmean)
+    ea = out["RH2M"] / 100 * es  # FAO-56 eq. 19: mean RH with the mean of es(Tmax), es(Tmin)
     ea = np.minimum(ea, es)
     out["ET0"] = et0_penman_monteith(out["T2M_MAX"], out["T2M_MIN"], out["ALLSKY_SFC_SW_DWN"],
                                      ea, out["WS2M"], elev_m, lat, out.index.day_of_year)

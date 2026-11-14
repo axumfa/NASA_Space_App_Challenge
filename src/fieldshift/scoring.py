@@ -1,17 +1,23 @@
 """Transparent scoring of rotations, per cycle start year, from climate features and crop traits.
 
-Subscores are 0-100. Per planting we compute (from that year's daily weather):
-  suitability  = 100 * temp_fit * (1 - 0.5*frost_pen) * (1 - 0.5*heat_pen) * gdd_sufficiency
-  ETc          = sum(Kc_d * ET0_d);  effective rain = min(0.8 * P, ETc);  irrigation = ETc - eff. rain
+Per planting, from that year's daily weather:
+  suitability = 100 * temp_fit * (1 - 0.5*frost_pen) * (1 - 0.5*heat_pen) * gdd_sufficiency
+  ETc = sum(Kc_d * ET0_d);  effective rain = min(0.8 * P, ETc);  irrigation demand = ETc - eff. rain
+Irrigation supply (fraction `s`, default 1): water available to a planting = s * P90 of that
+planting's demand over the record (the "design" demand). If demand > supply:
+  deficit d = (demand - supply)/demand;  yield loss = min(1, ky * d);  ky = 0.6 + 0.9*(1 - drought_tol)
+  (drought-tolerant crops lose less); suitability is multiplied by (1 - loss); applied irrigation = supply.
 Rotation-level (per year of the cycle):
-  water_saving = 100 * (1 - irrigation_mm_per_year / 1200)
+  water_saving = 100 * (1 - FULL irrigation demand per year / 1200)   (a rotation property: shortage does not 'save' water)
   nitrogen     = 100 * sum(n_credit) / years / 50
   soil_om      = 100 * sum(om * days) / (365 * years) / 0.6
   erosion      = 100 * sum(cover * days) / (365 * years) / 0.8
   forage       = 100 * sum(forage * yield_factor) / years / 0.6
-  income       = 100 * sum(income * yield_factor) / years / 0.9      (yield_factor = suitability/100)
+  income       = 100 * sum(income * yield_factor) / years / 0.9    (yield_factor = suitability/100;
+                 cover crops have income <= 0 = seed + termination cost)
   pest_break   = 100 * (1 - share of cyclic neighbours from the same family)
 Total = weighted mean of the six priority subscores x (0.6 + 0.4*suitability/100) x (0.85 + 0.15*pest_break/100).
+Year classes (dry/normal/wet) come from terciles of irrigation demand (high demand = "dry").
 """
 from __future__ import annotations
 
@@ -40,6 +46,13 @@ class Weights:
 
     def as_dict(self) -> dict[str, float]:
         return {f.name: getattr(self, f.name) for f in fields(self)}
+
+
+PROFILES = {
+    "water-first": Weights(water_saving=8),
+    "income-first": Weights(income=8),
+    "soil-first": Weights(soil_om=4, nitrogen=4, erosion=4),
+}
 
 
 class DailyClimate:
@@ -95,40 +108,69 @@ def static_subscores(rot: Rotation, db: dict[str, Crop]) -> dict[str, float]:
                 bare_days=rot.bare_days_per_year())
 
 
-def score_year(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, year: int,
-               weights: Weights, static: dict[str, float] | None = None) -> dict[str, float] | None:
-    static = static or static_subscores(rot, db)
-    k = rot.cycle_years
-    per = []
-    for p in rot.plantings:
-        sl = clim.window(year, p.start, p.days)
-        if sl is None:
-            return None
-        per.append((p, db[p.crop_id], score_planting(p, db[p.crop_id], clim, sl)))
-    suit = float(np.mean([r["suitability"] for _, _, r in per]))
-    irr = sum(r["irrigation_mm"] for _, _, r in per) / k
-    forage = sum(c["forage"] * r["suitability"] / 100 for _, c, r in per) / k
-    income = sum(c["income"] * r["suitability"] / 100 for _, c, r in per) / k
-    sub = dict(water_saving=float(np.clip(100 * (1 - irr / REF_IRRIGATION_MM), 0, 100)),
-               soil_om=static["soil_om"], nitrogen=static["nitrogen"], erosion=static["erosion"],
-               forage=float(np.clip(100 * forage / 0.6, 0, 100)),
-               income=float(np.clip(100 * income / 0.9, 0, 100)))
-    w = weights.as_dict()
-    prior = sum(w[m] * sub[m] for m in PRIORITIES) / max(sum(w.values()), 1e-9)
-    total = prior * (0.6 + 0.4 * suit / 100) * (0.85 + 0.15 * static["pest_break"] / 100)
-    return dict(year=year, total=total, suitability=suit, pest_break=static["pest_break"],
-                irrigation_mm_per_year=irr, bare_days=static["bare_days"],
-                heat_days=sum(r["heat_days"] for _, _, r in per) / k,
-                frost_days=sum(r["frost_days"] for _, _, r in per) / k, **sub)
+def planting_table(rot: Rotation, db: dict[str, Crop], clim: DailyClimate) -> dict[int, list[dict]]:
+    """Raw (full-demand) per-planting results for every start year with complete data."""
+    out: dict[int, list[dict]] = {}
+    for y in range(clim.first_year, clim.last_year + 1):
+        sls = [clim.window(y, p.start, p.days) for p in rot.plantings]
+        if all(sl is not None for sl in sls):
+            out[y] = [score_planting(p, db[p.crop_id], clim, sl) for p, sl in zip(rot.plantings, sls)]
+    return out
+
+
+def irrigation_demand_by_year(rot: Rotation, table: dict[int, list[dict]]) -> pd.Series:
+    """Full irrigation demand (mm per year of cycle) per start year."""
+    return pd.Series({y: sum(r["irrigation_mm"] for r in rows) / rot.cycle_years
+                      for y, rows in table.items()}, name="irrigation_demand")
+
+
+def classify_by_demand(demand: pd.Series) -> pd.Series:
+    """dry (top tercile of irrigation demand) / normal / wet (bottom tercile)."""
+    lo, hi = demand.quantile([1 / 3, 2 / 3])
+    cls = pd.Series("normal", index=demand.index, name="year_class")
+    cls[demand >= hi] = "dry"
+    cls[demand <= lo] = "wet"
+    return cls
 
 
 def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weights: Weights,
-                   year_classes: pd.Series) -> pd.DataFrame:
+                   year_classes: pd.Series, irrigation_supply: float = 1.0,
+                   table: dict[int, list[dict]] | None = None) -> pd.DataFrame:
     """One row per cycle start year with all subscores and the year's dry/normal/wet class."""
     static = static_subscores(rot, db)
-    rows = [r for y in range(clim.first_year, clim.last_year + 1)
-            if (r := score_year(rot, db, clim, y, weights, static)) is not None]
-    df = pd.DataFrame(rows).set_index("year")
+    table = table or planting_table(rot, db, clim)
+    k = rot.cycle_years
+    # design demand per planting = P90 over years; available water = supply * design demand
+    design = [np.percentile([rows[i]["irrigation_mm"] for rows in table.values()], 90)
+              for i in range(len(rot.plantings))]
+    w = weights.as_dict()
+    rows_out = []
+    for y, rows in table.items():
+        suits, applied, losses, forage, income = [], [], [], 0.0, 0.0
+        for i, (p, r) in enumerate(zip(rot.plantings, rows)):
+            c = db[p.crop_id]
+            demand, supply = r["irrigation_mm"], irrigation_supply * design[i]
+            d = max(0.0, (demand - supply) / demand) if demand > 0 else 0.0
+            ky = 0.6 + 0.9 * (1 - c["drought_tol"])
+            loss = min(1.0, ky * d)
+            suit = r["suitability"] * (1 - loss)
+            suits.append(suit); losses.append(loss); applied.append(min(demand, supply) if d > 0 else demand)
+            forage += c["forage"] * suit / 100
+            income += c["income"] * suit / 100
+        suit_m, irr = float(np.mean(suits)), sum(applied) / k
+        full = sum(r['irrigation_mm'] for r in rows) / k
+        sub = dict(water_saving=float(np.clip(100 * (1 - full / REF_IRRIGATION_MM), 0, 100)),
+                   soil_om=static["soil_om"], nitrogen=static["nitrogen"], erosion=static["erosion"],
+                   forage=float(np.clip(100 * forage / k / 0.6, 0, 100)),
+                   income=float(np.clip(100 * income / k / 0.9, 0, 100)))
+        prior = sum(w[m] * sub[m] for m in PRIORITIES) / max(sum(w.values()), 1e-9)
+        total = prior * (0.6 + 0.4 * suit_m / 100) * (0.85 + 0.15 * static["pest_break"] / 100)
+        rows_out.append(dict(year=y, total=total, suitability=suit_m, pest_break=static["pest_break"],
+                             irrigation_mm_per_year=irr, irrigation_demand_mm=full, bare_days=static["bare_days"],
+                             yield_loss=float(np.mean(losses)),
+                             heat_days=sum(r["heat_days"] for r in rows) / k,
+                             frost_days=sum(r["frost_days"] for r in rows) / k, **sub))
+    df = pd.DataFrame(rows_out).set_index("year")
     df["year_class"] = year_classes.reindex(df.index)
     return df
 
@@ -136,7 +178,7 @@ def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weigh
 def summarize(scores: pd.DataFrame, cols: list[str] | None = None) -> dict[str, dict[str, float]]:
     """Median and p10-p90 across all years and for each year class, per column."""
     cols = cols or ["total", *PRIORITIES, "suitability", "pest_break", "irrigation_mm_per_year",
-                    "heat_days", "frost_days"]
+                    "heat_days", "frost_days", "yield_loss"]
     out: dict[str, dict[str, float]] = {}
     for c in cols:
         s = scores[c]

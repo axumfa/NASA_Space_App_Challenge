@@ -76,6 +76,10 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
     irr, cirr = s["irrigation_mm_per_year"], cs["irrigation_mm_per_year"]
     e.evidence.append(f"Estimated irrigation need: {irr['median']:.0f} mm/year (dry years {irr['median_dry']:.0f}, wet {irr['median_wet']:.0f}); "
                       f"current rotation {cirr['median']:.0f} mm/year.")
+    yl = s["yield_loss"]
+    if yl["median"] > 0.005 or yl["p90"] > 0.005:
+        e.evidence.append(f"Water shortage: estimated yield loss {yl['median']*100:.0f}% typical, up to "
+                          f"{yl['p90']*100:.0f}% in the driest years (limited irrigation supply).")
     e.evidence.append(f"Climate fit {s['suitability']['median']:.0f}/100; pest-cycle break {s['pest_break']['median']:.0f}/100.")
 
     # ---- benefits / trade-offs vs current

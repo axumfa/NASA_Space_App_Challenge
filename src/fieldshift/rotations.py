@@ -37,7 +37,7 @@ class Rotation:
     crops: tuple[str, ...]
     plantings: tuple[Planting, ...]
     cycle_years: int
-    rule: str = "current"            # current | legume | cover | swap_drought | perennial | winter_crop
+    rule: str = "current"            # current | legume | cover | swap_drought | income | perennial | winter_crop | pinned
     detail: str = ""                 # what changed vs current, e.g. "adds hairy_vetch"
     added: tuple[str, ...] = ()
     removed: tuple[str, ...] = ()
@@ -150,8 +150,12 @@ def _no_adjacent_repeat(crops: tuple[str, ...]) -> bool:
 
 
 def generate_candidates(current: tuple[str, ...], db: dict[str, Crop], clim: ClimateClimatology,
-                        scorer: Callable[[Rotation], float], n_alternatives: int = 4) -> list[Rotation]:
-    """Current rotation first, then up to n alternatives (best candidate per rule family)."""
+                        scorer: Callable[[Rotation], float], n_alternatives: int = 4,
+                        pinned: tuple[tuple[str, ...], ...] = (), n_per_rule: int = 1) -> list[Rotation]:
+    """Current rotation first, then up to n alternatives (best `n_per_rule` per rule family).
+
+    `pinned` rotations are always included when calendar- and climate-feasible.
+    """
     cur = schedule(current, db)
     if cur is None:
         raise ValueError(f"Current rotation {current} cannot be scheduled on the calendar")
@@ -182,19 +186,28 @@ def generate_candidates(current: tuple[str, ...], db: dict[str, Crop], clim: Cli
                 consider("cover", crops, f"adds {c['name']} in a bare window", (cid,), same_cycle=True)
             if c["season"] == "perennial":
                 consider("perennial", crops, f"adds {c['name']}", (cid,))
-            if c["season"] == "winter" and cid not in ("winter_wheat",) and not c["n_fixing"]:
+            if c["season"] == "winter" and not c["n_fixing"]:
                 consider("winter_crop", crops, f"adds {c['name']} to break the cycle", (cid,))
     for i, old in enumerate(current):
         oc = db[old]
         for cid, c in db.items():
             if cid in current or c["season"] != oc["season"] or c["season"] in ("cover", "perennial"):
                 continue
+            if c["income"] >= oc["income"] + 0.1:
+                consider("income", current[:i] + (cid,) + current[i + 1:],
+                         f"replaces {oc['name']} with the higher-value {c['name']}", (cid,), (old,))
             if c["drought_tol"] > oc["drought_tol"] and c["water_need_mm"] < oc["water_need_mm"]:
                 consider("swap_drought", current[:i] + (cid,) + current[i + 1:],
                          f"replaces {oc['name']} with the more drought-tolerant {c['name']}", (cid,), (old,))
 
+    for crops in pinned:
+        consider("pinned", tuple(crops), "pinned: " + " > ".join(db[c]["name"] for c in crops))
     picks: list[Rotation] = []
     for rule, cands in by_rule.items():
-        picks.append(max(cands, key=scorer))
+        if rule != "pinned":
+            picks.extend(sorted(cands, key=scorer, reverse=True)[:n_per_rule])
     picks.sort(key=scorer, reverse=True)
-    return [cur] + picks[:n_alternatives]
+    picks = picks[:n_alternatives]
+    keys = {r.crops for r in picks}
+    picks += [r for r in by_rule.get("pinned", []) if r.crops not in keys]
+    return [cur] + picks

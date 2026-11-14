@@ -50,7 +50,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -115,7 +115,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -180,7 +180,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -245,7 +245,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -310,7 +310,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -375,7 +375,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -440,7 +440,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -505,7 +505,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -570,7 +570,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -635,7 +635,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -700,7 +700,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -765,7 +765,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -830,7 +830,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -895,7 +895,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -947,20 +947,20 @@
    "root_m": 1.5,
    "cover": 0.95,
    "om": 0.7,
-   "forage": 0.4,
-   "income": -0.1,
+   "forage": 0.2,
+   "income": -0.12,
    "family": "cover_rye",
    "sow_doy": [
     262,
     305
    ],
    "n_fixing": false,
-   "market_note": "No direct sale; costs seed and termination; may be grazed.",
+   "market_note": "No direct sale; ~USD 60-100/ha seed+termination (rough); may be grazed.",
    "sources": {
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -1012,20 +1012,20 @@
    "root_m": 1.0,
    "cover": 0.85,
    "om": 0.75,
-   "forage": 0.8,
-   "income": -0.1,
+   "forage": 0.4,
+   "income": -0.18,
    "family": "legume_cover",
    "sow_doy": [
     250,
     290
    ],
    "n_fixing": true,
-   "market_note": "No direct sale; seed can be costly/hard to find; N credit for next crop.",
+   "market_note": "No direct sale; seed costly/hard to find (~USD 100/ha incl. termination, rough); N credit for next crop.",
    "sources": {
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -1077,8 +1077,8 @@
    "root_m": 0.9,
    "cover": 0.85,
    "om": 0.7,
-   "forage": 0.9,
-   "income": 0.0,
+   "forage": 0.45,
+   "income": -0.08,
    "family": "legume_forage",
    "sow_doy": [
     255,
@@ -1090,7 +1090,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -1155,7 +1155,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -1220,7 +1220,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
@@ -1285,7 +1285,7 @@
     "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
-    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates informed by FAO/extension sources",
+    "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },

@@ -66,3 +66,19 @@ def test_weights_change_total_and_summary_has_classes():
     assert a["total"].median() != b["total"].median()
     s = summarize(a)
     assert {"median", "p10", "p90", "median_dry", "median_wet"} <= set(s["total"])
+
+
+def test_supply_deficit_penalises_by_drought_tolerance_and_keeps_water_score():
+    from fieldshift.scoring import classify_by_demand
+    cls = pd.Series("normal", index=range(2001, 2009))
+    clim = _clim(p=0.5)
+    sens, tol = schedule(("maize",), DB), schedule(("sorghum",), DB)  # drought_tol .35 vs .85
+    full = score_rotation(sens, DB, clim, Weights(), cls, irrigation_supply=1.0)
+    short = score_rotation(sens, DB, clim, Weights(), cls, irrigation_supply=0.6)
+    assert short["yield_loss"].median() > 0.2 and full["yield_loss"].median() < 0.01
+    assert short["irrigation_mm_per_year"].median() < full["irrigation_mm_per_year"].median()
+    assert short["water_saving"].median() == pytest.approx(full["water_saving"].median())  # shortage != saving
+    tol_short = score_rotation(tol, DB, clim, Weights(), cls, irrigation_supply=0.6)
+    assert tol_short["yield_loss"].median() < short["yield_loss"].median()
+    d = pd.Series([1, 2, 3, 4, 5, 6], index=range(6))
+    assert list(classify_by_demand(d))[0] == "wet" and list(classify_by_demand(d))[-1] == "dry"

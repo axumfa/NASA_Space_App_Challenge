@@ -67,3 +67,14 @@ def test_theil_sen_trend():
     s = pd.Series(np.arange(20) * 0.05 + 10, index=range(2000, 2020))
     tr = F.theil_sen_trend(s)
     assert tr.slope_per_decade == pytest.approx(0.5) and tr.significant
+
+
+def test_add_et0_uses_fao56_eq19_for_actual_vapour_pressure():
+    # With RH=50% the ET0 must match the explicit eq.19 calculation (ea from mean of es(Tmax), es(Tmin)).
+    idx = pd.date_range("2020-07-01", periods=3)
+    df = pd.DataFrame({"T2M": 30.0, "T2M_MAX": 38.0, "T2M_MIN": 22.0, "RH2M": 50.0, "WS2M": 2.0,
+                       "ALLSKY_SFC_SW_DWN": 27.0}, index=idx)
+    es = (F.sat_vp(38.0) + F.sat_vp(22.0)) / 2
+    expected = F.et0_penman_monteith(38.0, 22.0, 27.0, 0.5 * es, 2.0, 500, 40.0, idx.day_of_year.values)
+    got = F.add_et0(df, 40.0, 500)["ET0"].values
+    assert got == pytest.approx(expected)
