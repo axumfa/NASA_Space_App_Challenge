@@ -13,20 +13,21 @@ Default demo fields: **Fergana Valley, Uzbekistan** (winter wheat → cotton; wa
 
 ## Quick start
 
-Python 3.11+ (developed on 3.12). On Fedora:
+Python 3.11+ (developed and deployed on 3.12). On Fedora:
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python scripts/prewarm.py          # one-time download of NASA POWER (+ SoilGrids) for the demo fields
-.venv/bin/streamlit run app.py               # open http://localhost:8501
-.venv/bin/pytest -q                          # unit tests
+.venv/bin/pip install -r requirements-dev.txt   # requirements.txt = app only (pinned); -dev adds pytest
+.venv/bin/streamlit run app.py                  # open http://localhost:8501
+.venv/bin/pytest -q                             # unit tests
 ```
 
-NASA POWER needs no account. Every response is cached under `data/cache/` (git-ignored), so after the pre-warm the
-demo fields work without network access. Command-line reports (no UI):
-`scripts/field_report.py fergana`, `scripts/rotation_report.py kansas --rain -20 --temp 2`,
-`scripts/checks.py` (scoring-balance, irrigation-supply and ET0 audits).
+**The two demo fields work with no network.** Their NASA POWER downloads (and the Kansas SoilGrids values) are committed
+under `data/demo_cache/` and are read first; the end year is pinned to 2025 for them so the cache keys never go stale.
+Any other location is downloaded from NASA POWER (no account needed, about a minute the first time) and cached under
+`data/cache/` (git-ignored). `scripts/prewarm.py` downloads and caches the demo fields again and reports what is missing.
+Command-line reports (no UI): `scripts/field_report.py fergana`, `scripts/rotation_report.py kansas --rain -20 --temp 2`,
+`scripts/checks.py` (scoring balance, irrigation supply and ET0 audits), `scripts/app_smoke.py` (headless UI test).
 
 ### Optional data you add by hand
 
@@ -37,6 +38,18 @@ demo fields work without network access. Command-line reports (no UI):
   documented layout and tested on a **synthetic fixture only**; check it on your first real file.
 - **Soil**: SoilGrids REST is tried first (10 s timeout). If it returns nothing, fill `data/manual/soil_<field>.json`
   (values read by hand from the SoilGrids web map, 0–30 cm); the source is then shown as "SoilGrids web map, read manually".
+
+## Deploy on Streamlit Community Cloud
+
+1. Push this repo to GitHub (it needs `app.py`, `requirements.txt`, `.streamlit/config.toml`, `src/` and `data/demo_cache/`).
+2. Sign in at <https://share.streamlit.io> with GitHub and authorise access to the repository (private repos work after you grant access).
+3. Click **Create app** → **Deploy a public app from GitHub**; choose the repository, branch `master`, and set
+   **Main file path** to `app.py`.
+4. Open **Advanced settings** and choose **Python 3.12**. No secrets are needed.
+5. Click **Deploy**. The first build installs the pinned `requirements.txt` (a few minutes). The demo fields then load from
+   the committed cache without calling any external service.
+6. Share the `*.streamlit.app` link. Notes: the app's disk is temporary, so anything downloaded for a custom location is
+   lost when the app restarts; the app sleeps after inactivity and wakes on the next visit. Custom locations call NASA POWER live.
 
 ## How it works
 
@@ -82,6 +95,7 @@ available 40…100%).
   approximations and several are unverified estimates (flagged `approx` in `crops.json` and in the UI).
 - Irrigation supply, salinity, slope, machinery and prices are not observed. Uncertainty ranges reflect weather variability only.
 - Not implemented: GPM IMERG and SRTM, the Uzbek-language UI, the optional LLM rewording of explanations, the AppEEARS API fallback.
+- What-if sliders recompute only when you press **Apply what-if** (about a second; repeats are cached).
 
 ## Data, credits and AI tools
 
