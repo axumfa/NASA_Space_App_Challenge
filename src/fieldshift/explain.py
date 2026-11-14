@@ -156,9 +156,13 @@ def summary_box(display: list, weights, lang: str = "en", arid: bool = False) ->
     `arid` (annual rain / ET0 below 0.3, i.e. irrigated drylands where salt build-up is a real concern) switches on the salinity check.
     Returns {'best', 'reason', 'tradeoff', 'check', 'caveat', 'title'} plus 'facts' (the numbers used), for testing.
     """
-    from .i18n import tr
+    from .i18n import crop_name, tr
     db = load_crops()
     w = weights.normalized()
+
+    def nm(c: str) -> str:
+        return crop_name(c, lang, db[c]["name"])
+
     cur = display[0]
     best = max(display, key=lambda r: r.summary["fit"]["median"])
     facts: dict[str, float] = {}
@@ -172,7 +176,7 @@ def summary_box(display: list, weights, lang: str = "en", arid: bool = False) ->
         out_best = tr("sum.best_is_current", lang, fit=cur.summary["fit"]["median"], other=runner.summary["fit"]["median"])
         ref = runner
     else:
-        crops = " → ".join(db[c]["name"] for c in best.rotation.crops)
+        crops = " → ".join(nm(c) for c in best.rotation.crops)
         out_best = tr("sum.best", lang, crops=crops, fit=best.summary["fit"]["median"], cur=cur.summary["fit"]["median"])
         ref = cur
     facts["fit_best"] = best.summary["fit"]["median"]
@@ -227,9 +231,9 @@ def summary_box(display: list, weights, lang: str = "en", arid: bool = False) ->
     salt = [c for c in new_crops if arid and db[c]["salinity_tol"] < 0.5]
     irr_new, irr_old = _natural(best, "water_saving"), _natural(cur, "water_saving")
     if salt:
-        check = tr("c.salinity", lang, crop=db[salt[0]]["name"])
+        check = tr("c.salinity", lang, crop=nm(salt[0]))
     elif new_crops:
-        check = tr("c.newcrop", lang, crop=db[new_crops[0]]["name"])
+        check = tr("c.newcrop", lang, crop=nm(new_crops[0]))
     elif irr_new >= 1.1 * irr_old and best is not cur:
         check = tr("c.water", lang, irr=irr_new)
     elif best.rotation.cycle_years > 1 and best is not cur:
