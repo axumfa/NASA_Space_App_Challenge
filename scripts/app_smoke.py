@@ -10,6 +10,7 @@ def report(tag, at, t0):
 at = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py"), default_timeout=400)
 t = time.time(); at.run(); report("fergana default", at, t)
 t = time.time(); at.radio(key="field_choice").set_value("Central Kansas, USA").run(); report("kansas", at, t)
+t = time.time(); at.radio(key="field_choice").set_value("Karakalpakstan farmland (near Nukus), Uzbekistan").run(); report("preset: Karakalpakstan", at, t)
 t = time.time(); at.selectbox(key="profile").set_value("water-first").run(); report("water-first", at, t)
 def apply_whatif(**vals):
     for k, v in vals.items():

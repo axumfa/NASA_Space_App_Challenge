@@ -8,6 +8,11 @@ current rotation with rule-generated alternatives**: why each was suggested, the
 information gaps and risks that need a local expert. It **supports and does not replace** the judgment of farmers
 and agronomists.
 
+Three **regional farmland presets** (Karakalpakstan near Nukus 42.41°N 59.52°E, Bukhara region 39.99°N 64.32°E, Samarkand region 39.64°N 67.06°E) use the same
+code and are cached for offline use. Their points were chosen on OpenStreetMap farmland polygons of 160+ ha, away from town centres, where
+SoilGrids returns values. **No MODIS NDVI or SMAP was requested for the presets** (the gaps section says so), and their default rotation
+(winter wheat → cotton) is an assumption to review locally: rice, vegetables and orchards are not in the crop list.
+
 Default demo fields: **Fergana Valley, Uzbekistan** (40.43°N, 71.70°E; winter wheat → cotton; water scarcity) and **central Kansas, USA**
 (38.50°N, 98.50°W; maize → soybean). The Fergana point is farmland about 7 km west of Fergana city: the city centre itself is inside
 the urban mask where SoilGrids returns no data. Both points sit in the same NASA POWER grid cell, so the climate is the same.

@@ -19,6 +19,8 @@ class Field:
     lon: float
     rotation: tuple[str, ...]  # current rotation, crop ids in sequence (one per season slot)
     country: str = ""
+    satellite: bool = True     # False for presets: no MODIS NDVI / SMAP point was requested for them
+    preset: bool = False       # regional farmland preset (not one of the two fully documented demo fields)
 
 
 DEMO_FIELDS: dict[str, Field] = {
@@ -29,6 +31,15 @@ DEMO_FIELDS: dict[str, Field] = {
                      ("winter_wheat", "cotton"), "UZ"),
     "kansas": Field("kansas", "Central Kansas, USA", 38.50, -98.50,
                     ("maize", "soybean"), "US"),
+    # ---- regional farmland presets (points chosen on OSM farmland polygons >= 160 ha, away from town centres, where
+    # SoilGrids returns values; default rotation = the common Uzbek cotton-wheat system, an ASSUMPTION to be reviewed
+    # locally: e.g. rice, vegetables and orchards are not in the crop list). No MODIS NDVI / SMAP was requested for them.
+    "karakalpakstan": Field("karakalpakstan", "Karakalpakstan farmland (near Nukus), Uzbekistan", 42.4128, 59.5159,
+                            ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
+    "bukhara": Field("bukhara", "Bukhara region farmland, Uzbekistan", 39.9904, 64.3238,
+                     ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
+    "samarkand": Field("samarkand", "Samarkand region farmland, Uzbekistan", 39.6350, 67.0596,
+                       ("winter_wheat", "cotton"), "UZ", satellite=False, preset=True),
 }
 
 
@@ -43,3 +54,11 @@ def end_year_for(lat: float, lon: float, today_year: int | None = None) -> int:
     if any(abs(f.lat - lat) < 0.005 and abs(f.lon - lon) < 0.005 for f in DEMO_FIELDS.values()):
         return DEMO_END_YEAR
     return (today_year or dt.date.today().year) - 1
+
+
+def field_at(lat: float, lon: float) -> "Field | None":
+    """The demo/preset field located at (lat, lon), if any."""
+    for f in DEMO_FIELDS.values():
+        if abs(f.lat - lat) < 0.005 and abs(f.lon - lon) < 0.005:
+            return f
+    return None

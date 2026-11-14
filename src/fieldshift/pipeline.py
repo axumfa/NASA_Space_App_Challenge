@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from . import features as F
-from .config import end_year_for
+from .config import end_year_for, field_at
 from .crops import load_crops
 from .fetch.appeears import load_ndvi, load_smap
 from .fetch.base import FetchResult
@@ -68,7 +68,12 @@ def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int 
     cls = F.classify_years(ann)
     ann["year_class"] = cls
     clim = ClimateClimatology.from_daily(daily, F.frost_table(daily, lat))
-    ndvi, smap = load_ndvi(lat, lon), load_smap(lat, lon)
+    fld = field_at(lat, lon)
+    if fld is not None and not fld.satellite:      # regional presets: say so explicitly instead of searching files
+        why = "no satellite NDVI/SMAP point has been requested for this preset field"
+        ndvi, smap = FetchResult.failed("MODIS NDVI", why), FetchResult.failed("SMAP soil moisture", why)
+    else:
+        ndvi, smap = load_ndvi(lat, lon), load_smap(lat, lon)
     sources = [res]
     curve, wins, obs, sm_anom = None, [], None, None
     root_w = F.root_wetness_summary(daily)
