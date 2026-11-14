@@ -11,7 +11,7 @@ import streamlit as st
 
 from fieldshift import features as F
 from fieldshift import viz
-from fieldshift.config import DEMO_FIELDS
+from fieldshift.config import DEMO_FIELDS, field_at
 from fieldshift.crops import load_crops
 from fieldshift.explain import explain, is_arid, summary_box
 from fieldshift.fetch.soil import fetch_soil
@@ -145,17 +145,29 @@ with st.container(border=True, key="bar_field"):
 # ------------------------------------------------------------------ sidebar: rotation, priorities, scenario
 with st.sidebar:
     ui.side_heading(t("ui.sidebar_rot"))
-    st.caption(t("side.grow_help"))
-    opts = ["—", *CROP_IDS]
-    picks = [pick(st.selectbox, t("side.crop_opt", n=i + 1) if i == 2 else t("side.crop", n=i + 1), opts if i else CROP_IDS,
-                  f"crop{i}", lambda c: cname(c) if c in DB else t("side.none"))[0] for i in range(3)]
-    current = tuple(c for c in picks if c != "—")
-    ui.side_heading(t("ui.sidebar_prio"))
-    _, profile_changed = pick(st.selectbox, t("side.quick"), ["Balanced", *PROFILES], "profile", lambda p: t(f"profile.{p}"),
-                              help=t("side.quick_help"))
-    if profile_changed:
-        on_profile()
-    w = Weights(**{m: float(st.slider(t(f"p.{m}"), 0, 10, key=f"w_{m}", help=t(f"ph.{m}"))) for m in PRIORITIES})
+    with st.container(key="sidecrops"):                  # the crops you grow are the most important input: shown first, in a card
+        st.caption(t("ui.step_rot"))
+        opts = ["—", *CROP_IDS]
+        picks = [pick(st.selectbox, t("side.crop_opt", n=i + 1) if i == 2 else t("side.crop", n=i + 1), opts if i else CROP_IDS,
+                      f"crop{i}", lambda c: cname(c) if c in DB else t("side.none"))[0] for i in range(3)]
+        current = tuple(c for c in picks if c != "—")
+        if current:
+            ui.rotation_preview([cname(c) for c in current])
+    st.write("")
+    with st.expander(t("ui.sidebar_prio"), expanded=True):
+        _, profile_changed = pick(st.selectbox, t("side.quick"), ["Balanced", *PROFILES], "profile", lambda p: t(f"profile.{p}"),
+                                  help=t("side.quick_help"))
+        if profile_changed:
+            on_profile()
+        st.caption(t("ui.prio_hint"))
+        wv = {}
+        ui.group_label(t("ui.grp_env"))
+        for m in ("water_saving", "soil_om", "nitrogen", "erosion"):
+            wv[m] = float(st.slider(t(f"p.{m}"), 0, 10, key=f"w_{m}", help=t(f"ph.{m}")))
+        ui.group_label(t("ui.grp_econ"))
+        for m in ("forage", "income"):
+            wv[m] = float(st.slider(t(f"p.{m}"), 0, 10, key=f"w_{m}", help=t(f"ph.{m}")))
+        w = Weights(**{m: wv[m] for m in PRIORITIES})
     ui.side_heading(t("ui.sidebar_what"))
     with st.expander(t("side.whatif"), expanded=bool(S.rain or S.temp or S.supply < 100)):
         with st.form("whatif"):   # one recompute per click, not one per slider move
@@ -195,18 +207,34 @@ if view == "field":
     nd_ok = ctx.ndvi is not None and ctx.ndvi.ok
     sm_ok = ctx.smap is not None and ctx.smap.ok
     title = t("side.own") if S.field_choice == OWN else field_label(S.field_choice)
-    ui.hero(t("ui.selected"), title,
-            f"{lat:.2f}°, {lon:.2f}°  ·  {t('ui.grows')}: " + " → ".join(cname(c) for c in current), t("ui.hero"),
-            [ui.chip(t("ui.chip_power", rng=ctx.sources[0].date_range)),
-             ui.chip(t("ui.chip_ndvi_on" if nd_ok else "ui.chip_ndvi_off"), nd_ok),
-             ui.chip(t("ui.chip_smap_on" if sm_ok else "ui.chip_smap_off"), sm_ok),
-             ui.chip(t("ui.chip_soil_on" if soil_ok else "ui.chip_soil_off"), soil_ok)])
-    if st.button(t("ui.cta") + "  →", type="primary", key="cta"):
-        S["view"] = "options"
-        st.rerun()
+    fld = field_at(lat, lon)
+    def state(ok: bool, applicable: bool = True) -> str:
+        return "ok" if ok else ("miss" if applicable else "na")
+    sat_applicable = not (fld is not None and not fld.satellite)       # presets never had a satellite point requested
+    rows = [
+        (t("ui.ds_power"), "ok", t("ui.st_ok"), t("ui.tip_power", rng=ctx.sources[0].date_range)),
+        (t("ui.ds_ndvi"), state(nd_ok, sat_applicable), t("ui.st_ok") if nd_ok else t("ui.st_miss" if sat_applicable else "ui.st_na"),
+         t("ui.tip_ndvi_ok") if nd_ok else t("ui.tip_ndvi_miss" if sat_applicable else "ui.tip_na")),
+        (t("ui.ds_smap"), state(sm_ok, sat_applicable), t("ui.st_ok") if sm_ok else t("ui.st_miss" if sat_applicable else "ui.st_na"),
+         t("ui.tip_smap_ok") if sm_ok else t("ui.tip_smap_miss" if sat_applicable else "ui.tip_na")),
+        (t("ui.ds_soil"), state(soil_ok), t("ui.st_ok") if soil_ok else t("ui.st_miss"),
+         t("ui.tip_soil_ok") if soil_ok else t("ui.tip_soil_miss")),
+    ]
+    coords = (f"{abs(lat):.2f}° {t('ui.hemi_n' if lat >= 0 else 'ui.hemi_s')}  ·  {abs(lon):.2f}° {t('ui.hemi_e' if lon >= 0 else 'ui.hemi_w')}")
+    with st.container(border=True, key="hero"):
+        hl, hr = st.columns([3, 2], gap="large")
+        with hl:
+            st.markdown(ui.hero_left(t("ui.selected"), title, coords, [t("ui.elev", m=ctx.elevation_m)], t("ui.grows"),
+                                     [cname(c) for c in current], t("ui.hero")), unsafe_allow_html=True)
+            if st.button(t("ui.cta") + "  →", type="primary", key="cta"):
+                S["view"] = "options"
+                st.rerun()
+        with hr:
+            st.markdown(ui.data_status(t("ui.data_h"), rows, t("ui.data_note") if any(r_[1] != "ok" for r_ in rows) else ""),
+                        unsafe_allow_html=True)
 
     ui.section(t("ui.sec_overview"), t("ui.sec_overview_sub"))
-    c1, c2 = st.columns([5, 7])
+    c1, c2 = st.columns([6, 6], gap="medium")
     with c1:
         with st.container(border=True, key="panel_map"):
             try:
@@ -215,7 +243,7 @@ if view == "field":
                 m = folium.Map(location=[lat, lon], zoom_start=7, tiles="OpenStreetMap")
                 folium.CircleMarker([lat, lon], radius=9, color="#234E35", weight=2, fill=True, fill_color="#2F6B45", fill_opacity=0.9,
                                     tooltip=t("f.marker")).add_to(m)
-                out = st_folium(m, height=380, width=None, returned_objects=["last_clicked"], key="map")
+                out = st_folium(m, height=345, width=None, returned_objects=["last_clicked"], key="map")
                 if out and out.get("last_clicked"):
                     lc = out["last_clicked"]
                     if abs(lc["lat"] - lat) > 1e-3 or abs(lc["lng"] - lon) > 1e-3:
@@ -247,13 +275,18 @@ if view == "field":
             ui.kpi(t("ui.kpi_first"), viz.doy_to_date(ann["first_autumn_frost_doy"].median(), S.lang), "", t("ui.kpi_first_d"), dates("first_autumn_frost_doy")),
             ui.kpi(t("ui.kpi_free"), f"{free.median():.0f}", t("ui.unit_days"), t("ui.kpi_free_d"),
                    t("ui.kpi_free_ctx", lo=free.quantile(.1), hi=free.quantile(.9))),
-            ui.kpi(t("ui.kpi_frost"), f"{ann['frost_days'].median():.0f}", t("ui.unit_days"), t("ui.kpi_frost_d"),
-                   t("ui.kpi_range", lo=flo, hi=fhi, unit=t("ui.unit_days"))),
-            ui.kpi(t("ui.kpi_hot"), f"{ann['heat_days'].median():.0f}", t("ui.unit_days"), t("ui.kpi_hot_d"),
-                   t("ui.kpi_hot_ctx", lo=hlo, hi=hhi), warn=True),
-        ])
-        st.caption(t("f.trend", y0=ann.index.min(), y1=ann.index.max(), dt=t_t.slope_per_decade, dp=p_t.slope_per_decade,
-                     tclear=t("f.clear") if t_t.significant else t("f.notclear"), pclear=t("f.clear") if p_t.significant else t("f.notclear")))
+        ], cols=3)
+    st.write("")
+    ui.kpi_grid([
+        ui.kpi(t("ui.kpi_frost"), f"{ann['frost_days'].median():.0f}", t("ui.unit_days"), t("ui.kpi_frost_d"),
+               t("ui.kpi_range", lo=flo, hi=fhi, unit=t("ui.unit_days"))),
+        ui.kpi(t("ui.kpi_hot"), f"{ann['heat_days'].median():.0f}", t("ui.unit_days"), t("ui.kpi_hot_d"),
+               t("ui.kpi_hot_ctx", lo=hlo, hi=hhi), warn=True),
+        ui.kpi(t("ui.kpi_rtrend"), f"{p_t.slope_per_decade:+.0f}", t("ui.unit_mm_dec"), t("ui.kpi_rtrend_d", y0=ann.index.min(), y1=ann.index.max()),
+               t("f.clear") if p_t.significant else t("f.notclear")),
+    ])
+    st.caption(t("f.trend", y0=ann.index.min(), y1=ann.index.max(), dt=t_t.slope_per_decade, dp=p_t.slope_per_decade,
+                 tclear=t("f.clear") if t_t.significant else t("f.notclear"), pclear=t("f.clear") if p_t.significant else t("f.notclear")))
 
     ui.section(t("ui.sec_history"))
     wk = F.frost_probability_by_week(d)
@@ -314,8 +347,17 @@ if view == "field":
         for g in ctx.gaps:
             st.write("• " + i18n.render(g, S.lang))
 
+    st.write("")
+    with st.container(border=True, key="panel_next"):
+        nl, nr = st.columns([4, 1.4], vertical_alignment="center")
+        nl.markdown(f'<div class="fs-next"><div><b>{t("ui.next_h")}</b><br><span>{t("ui.next_t")}</span></div></div>', unsafe_allow_html=True)
+        if nr.button(t("ui.cta") + "  →", type="primary", key="cta2"):
+            S["view"] = "options"
+            st.rerun()
+
 # ------------------------------------------------------------------ view 2: rotation options
 if view == "options":
+    st.caption(t("ui.step_trail"))
     ui.section(t("fit.label"), t("o.caption"))
     sb = summary_box(display, w, S.lang, arid=is_arid(ctx))
     with st.container(border=True, key="panel_summary"):
@@ -340,14 +382,22 @@ if view == "options":
     bares = [r.rotation.bare_days_per_year() for r in display]
     nitro = [x["n_kg"]["median"] for x in sm]
     ylds = [x["yield_loss"]["median"] * 100 for x in sm]
+    best_fit = max(range(len(display)), key=lambda i: fits[i]) if len({round(v) for v in fits}) > 1 else None
+    prio_rows = [(t(f"p.{m}"), [f"{x[f'norm_{m}']['median']:.0f}" for x in sm],
+                  set() if tied.get(m) else best_idx([x[f"norm_{m}"]["median"] for x in sm], True)) for m in PRIORITIES]
     ui.compare_table(head, [
+        ("__group__", t("ui.g_main")),
         (t("ui.tbl_fit"), [f"{v:.0f}" for v in fits], best_idx(fits, True)),
+        (t("ui.tbl_dry"), [f"{x['fit']['median_dry']:.0f} / {x['fit']['median_normal']:.0f} / {x['fit']['median_wet']:.0f}" for x in sm], set()),
+        ("__group__", t("ui.g_water")),
         (t("ui.tbl_irr"), [f"{v:.0f}" for v in irrs], best_idx(irrs, False)),
+        (t("ui.tbl_yield"), [f"{x['yield_loss']['median'] * 100:.0f}% / {x['yield_loss']['p90'] * 100:.0f}%" for x in sm], best_idx(ylds, False)),
+        ("__group__", t("ui.g_soil")),
         (t("ui.tbl_bare"), [f"{v:.0f}" for v in bares], best_idx(bares, False)),
         (t("ui.tbl_n"), [f"{v:.0f}" for v in nitro], best_idx(nitro, True)),
-        (t("ui.tbl_yield"), [f"{x['yield_loss']['median'] * 100:.0f}% / {x['yield_loss']['p90'] * 100:.0f}%" for x in sm], best_idx(ylds, False)),
-        (t("ui.tbl_dry"), [f"{x['fit']['median_dry']:.0f} / {x['fit']['median_normal']:.0f} / {x['fit']['median_wet']:.0f}" for x in sm], set()),
-    ], t("ui.tbl_metric"))
+        ("__group__", t("ui.g_prio")),
+        *prio_rows,
+    ], t("ui.tbl_metric"), top=best_fit, top_tag=t("ui.best_fit"))
     st.caption(t("ui.best_note"))
     with st.container(border=True, key="panel_fit"):
         st.plotly_chart(viz.fig_fit_by_year_type(display, S.lang), width="stretch")
@@ -358,14 +408,15 @@ if view == "options":
     cols = [c for j in range(0, len(display), PER_ROW) for c in st.columns(PER_ROW)][:len(display)]
     for i, (col, r) in enumerate(zip(cols, display)):
         s, e = r.summary, explain(r, cur, ctx)
-        with col, st.container(border=True, key=f"panel_card{i}"):
+        with col, st.container(border=True, key=("panel_cardtop" if i == best_fit else f"panel_card{i}")):
             names_ = " → ".join(cname(c) for c in r.rotation.crops)
             st.markdown(f'<div class="fs-opt-h">{names_}</div>', unsafe_allow_html=True)
+            top_tag = f' <span class="fs-tag top">{t("ui.best_fit")}</span>' if i == best_fit else ""
             if i == 0:
-                st.markdown(f'<span class="fs-tag">{t("o.current")}</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="fs-tag">{t("o.current")}</span>{top_tag}', unsafe_allow_html=True)
             else:
                 rot = r.rotation
-                st.markdown(f'<span class="fs-tag new">{t("ui.opt_n", n=i)}</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="fs-tag new">{t("ui.opt_n", n=i)}</span>{top_tag}', unsafe_allow_html=True)
                 st.caption(t(f"rule.{rot.rule}", crop=cname(rot.added[0]) if rot.added else " → ".join(cname(c) for c in rot.crops),
                              old=cname(rot.removed[0]) if rot.removed else ""))
             fit = s["fit"]

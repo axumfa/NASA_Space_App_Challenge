@@ -33,14 +33,20 @@ html, body, .stApp, [class*="css"]{font-family:var(--fs-font); color:var(--fs-in
 #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"]{visibility:hidden; height:0;}
 header[data-testid="stHeader"]{background:transparent; pointer-events:none;}
 header[data-testid="stHeader"] button, header[data-testid="stHeader"] a{pointer-events:auto;}
-.block-container{max-width:1240px; padding:1.1rem 1.4rem 3rem;}
+.block-container{max-width:min(1640px, 96vw); padding:1.1rem 2rem 3.5rem;}
 h1,h2,h3,h4{color:var(--fs-ink); letter-spacing:-0.01em; font-weight:650;}
-[data-testid="stMarkdownContainer"] h2, h2{font-size:1.2rem !important; margin:1.5rem 0 .1rem !important; padding:0 !important; font-weight:650 !important;}
+[data-testid="stMarkdownContainer"] h2, h2{font-size:1.2rem !important; margin:2.1rem 0 .15rem !important; padding:0 !important; font-weight:650 !important;}
 h3{font-size:1.05rem;} [data-testid="stMarkdownContainer"] h4{font-size:1rem !important;}
 p, li, label, .stMarkdown{font-size:15px;}
 [data-testid="stCaptionContainer"]{color:var(--fs-muted);}
 section[data-testid="stSidebar"]{background:#F3F1E8; border-right:1px solid var(--fs-border);}
 section[data-testid="stSidebar"] .block-container{padding-top:1.2rem;}
+section[data-testid="stSidebar"][aria-expanded="true"]{min-width:340px; max-width:340px;}
+.fs-rotprev{display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; margin:.1rem 0 .7rem;}
+.fs-rotprev span.c{background:var(--fs-sage-l); border:1px solid #D3DDC9; color:var(--fs-forest-d); border-radius:6px; padding:.12rem .55rem; font-size:.82rem; font-weight:600;}
+.fs-rotprev span.a{color:var(--fs-muted);}
+.fs-grp{font-size:.74rem; font-weight:650; color:var(--fs-olive); margin:.5rem 0 .1rem; text-transform:uppercase; letter-spacing:.06em;}
+.st-key-sidecrops{background:#fff; border:1px solid var(--fs-border) !important; border-radius:10px; padding:.6rem .7rem .6rem;}
 .fs-side-h{font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--fs-muted); font-weight:650; margin:1.1rem 0 .35rem;}
 
 /* ---------- header ---------- */
@@ -69,20 +75,33 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.2rem;}
 .st-key-panel_summary{border-left:4px solid var(--fs-forest) !important;}
 [class*="st-key-bar"]{background:var(--fs-surface); border:1px solid var(--fs-border) !important; border-radius:10px; padding:.5rem .8rem .2rem;}
 
-/* ---------- hero ---------- */
-.fs-hero{background:var(--fs-sage-l) url("%CONTOUR%") right bottom/auto 100% no-repeat; border:1px solid #D3DDC9; border-radius:12px;
-  padding:1.2rem 1.4rem 1.1rem; margin:.4rem 0 1rem;}
+/* ---------- hero (selected field) ---------- */
+.st-key-hero{background:var(--fs-sage-l) url("%CONTOUR%") right bottom/auto 70% no-repeat; border:1px solid #D3DDC9 !important; border-radius:12px; padding:1.1rem 1.4rem 1rem; margin:.3rem 0 .4rem;}
 .fs-eyebrow{font-size:.72rem; text-transform:uppercase; letter-spacing:.09em; color:var(--fs-forest); font-weight:700;}
-.fs-hero h1{font-size:1.7rem; margin:.15rem 0 .2rem; line-height:1.15;}
-.fs-hero .sub{color:var(--fs-muted); font-size:.92rem; margin-bottom:.55rem;}
-.fs-hero p.lead{max-width:640px; font-size:1rem; margin:.2rem 0 .8rem;}
-.fs-chips{display:flex; flex-wrap:wrap; gap:.4rem;}
-.fs-chip{font-size:.76rem; padding:.18rem .6rem; border-radius:999px; background:#fff; border:1px solid var(--fs-border); color:var(--fs-ink); display:inline-flex; align-items:center; gap:.35rem;}
-.fs-chip i{width:7px; height:7px; border-radius:50%; background:var(--fs-forest); display:inline-block;}
-.fs-chip.off i{background:#C8C3B3;} .fs-chip.off{color:var(--fs-muted);}
+.fs-hero h1{font-size:1.75rem; margin:.1rem 0 .45rem; line-height:1.15;}
+.fs-meta{display:flex; flex-wrap:wrap; gap:.4rem .5rem; align-items:center; margin-bottom:.55rem;}
+.fs-coord{display:inline-flex; align-items:center; gap:.35rem; background:#fff; border:1px solid #D3DDC9; border-radius:7px; padding:.14rem .6rem; font-size:.84rem; font-weight:600; font-variant-numeric:tabular-nums;}
+.fs-coord svg{width:12px; height:12px; flex:none;}
+.fs-meta .lbl{font-size:.78rem; color:var(--fs-muted); margin-left:.3rem;}
+.fs-hero p.lead{max-width:600px; font-size:.97rem; color:#3B3F39; margin:.2rem 0 .3rem;}
+
+/* ---------- data availability ---------- */
+.fs-data{background:rgba(255,255,255,.72); border:1px solid #D3DDC9; border-radius:10px; padding:.7rem .9rem .6rem; backdrop-filter:blur(2px);}
+.fs-data h4{padding:0 !important; line-height:1.2 !important; font-size:.72rem !important; text-transform:uppercase; letter-spacing:.08em; color:var(--fs-muted); margin:0 0 .35rem !important; font-weight:650;}
+.fs-dr{display:flex; align-items:center; gap:.55rem; padding:.28rem 0; border-top:1px solid #E8E5DA; font-size:.85rem;}
+.fs-dr:first-of-type{border-top:none;}
+.fs-dr .dot{width:9px; height:9px; border-radius:50%; flex:none;}
+.fs-dr.ok .dot{background:var(--fs-forest);}
+.fs-dr.miss .dot{background:transparent; border:2px solid var(--fs-amber);}
+.fs-dr.na .dot{background:transparent; border:2px solid #BDB8A6; width:9px; height:2px; border-radius:2px; border-width:0; background:#BDB8A6; height:3px;}
+.fs-dr .nm{flex:1; color:var(--fs-ink);}
+.fs-dr .st{font-size:.76rem; font-weight:600;}
+.fs-dr.ok .st{color:var(--fs-forest-d);} .fs-dr.miss .st{color:#8A5313;} .fs-dr.na .st{color:var(--fs-muted);}
+.fs-dnote{font-size:.76rem; color:var(--fs-muted); margin-top:.4rem; line-height:1.4;}
 
 /* ---------- KPI tiles ---------- */
 .fs-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;}
+.fs-kpis.c3{grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:minmax(190px,1fr);}
 .fs-kpi{background:var(--fs-surface); border:1px solid var(--fs-border); border-radius:10px; padding:.8rem .95rem .75rem;}
 .fs-kpi .n{font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; color:var(--fs-muted); font-weight:650;}
 .fs-kpi .v{font-size:1.75rem; font-weight:680; letter-spacing:-0.02em; line-height:1.15; margin:.15rem 0 .05rem;}
@@ -99,6 +118,9 @@ table.fs-table{border-collapse:collapse; width:100%; min-width:560px; font-size:
 .fs-table td{padding:.55rem .8rem; border-bottom:1px solid #F0EDE2; vertical-align:top;}
 .fs-table tr:last-child td{border-bottom:none;}
 .fs-table td.m{color:var(--fs-muted); width:28%;}
+.fs-table tr.grp td{background:#F6F4EC; font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; font-weight:700; color:var(--fs-olive); padding:.4rem .8rem;}
+.fs-table th.top{background:#EEF4E8; border-top:3px solid var(--fs-forest);}
+.fs-table .tag2{display:inline-block; background:var(--fs-forest); color:#fff; font-size:.64rem; letter-spacing:.05em; text-transform:uppercase; padding:.05rem .4rem; border-radius:4px; margin-bottom:.25rem;}
 .fs-table td.best{font-weight:680; color:var(--fs-forest-d); background:#F1F6EC;}
 .fs-table td.cur, .fs-table th.cur{border-left:3px solid #CFC8B4;}
 .fs-table .num{font-variant-numeric:tabular-nums;}
@@ -107,6 +129,7 @@ table.fs-table{border-collapse:collapse; width:100%; min-width:560px; font-size:
 .fs-opt-h{font-size:1.02rem; font-weight:680; line-height:1.3; margin-bottom:.25rem;}
 .fs-tag{display:inline-block; font-size:.7rem; font-weight:650; letter-spacing:.04em; text-transform:uppercase; padding:.12rem .5rem; border-radius:5px;
   background:#ECE8DC; color:#5C584A;}
+.fs-tag.top{background:var(--fs-forest); color:#fff;}
 .fs-tag.new{background:var(--fs-sage-l); color:var(--fs-forest-d);}
 .fs-score{display:flex; align-items:baseline; gap:.4rem; margin:.5rem 0 .2rem;}
 .fs-score b{font-size:2.3rem; font-weight:700; letter-spacing:-0.03em; color:var(--fs-forest-d); line-height:1;}
@@ -114,6 +137,9 @@ table.fs-table{border-collapse:collapse; width:100%; min-width:560px; font-size:
 .fs-bar{height:6px; background:#ECE8DC; border-radius:4px; overflow:hidden; margin:.1rem 0 .35rem;}
 .fs-bar i{display:block; height:100%; background:var(--fs-forest); border-radius:4px;}
 .fs-line{font-size:.85rem; margin:.18rem 0; color:var(--fs-ink);}
+.st-key-panel_cardtop{border:2px solid var(--fs-forest) !important;}
+.fs-next{display:flex; gap:1rem; align-items:center; justify-content:space-between;}
+.fs-next b{font-size:1.05rem;} .fs-next span{color:var(--fs-muted); font-size:.9rem;}
 .fs-summary{border-left:4px solid var(--fs-forest); padding:.2rem 0 .2rem 1rem;}
 
 /* ---------- widgets ---------- */
@@ -127,11 +153,11 @@ table.fs-table{border-collapse:collapse; width:100%; min-width:560px; font-size:
 [data-testid="stAlert"]{border-radius:9px;}
 
 @media (max-width: 760px){
-  .block-container{padding:.8rem .8rem 2.5rem;}
-  .fs-hero{padding:1rem; background-image:none;}
+  .block-container{padding:.8rem .8rem 2.5rem; max-width:100vw;}
+  .st-key-hero{padding:1rem; background-image:none;}
   .fs-hero h1{font-size:1.4rem;}
   .st-key-langbox [role="radiogroup"]{float:none;}
-  .fs-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .fs-kpis, .fs-kpis.c3{grid-template-columns:repeat(2,minmax(0,1fr));}
   .fs-kpi .v{font-size:1.4rem;}
 }
 </style>
@@ -158,10 +184,32 @@ def chip(text: str, on: bool = True) -> str:
     return f'<span class="fs-chip{"" if on else " off"}"><i></i>{esc(text)}</span>'
 
 
-def hero(eyebrow: str, title: str, sub: str, lead: str, chips: list[str]) -> None:
-    st.markdown(f'<div class="fs-hero"><div class="fs-eyebrow">{esc(eyebrow)}</div><h1>{esc(title)}</h1>'
-                f'<div class="sub">{esc(sub)}</div><p class="lead">{esc(lead)}</p><div class="fs-chips">{"".join(chips)}</div></div>',
+PIN = '<svg viewBox="0 0 16 16" fill="none" stroke="#2F6B45" stroke-width="1.6"><path d="M8 14.5s5-4.4 5-8.2A5 5 0 0 0 3 6.3c0 3.8 5 8.2 5 8.2z"/><circle cx="8" cy="6.3" r="1.7"/></svg>'
+
+
+def hero_left(eyebrow: str, title: str, coords: str, extra: list[str], grows_label: str, crops: list[str], lead: str) -> str:
+    """Selected-field card text: name, scannable coordinate chips, rotation chips, one-line purpose."""
+    chips = f'<span class="fs-coord">{PIN}{esc(coords)}</span>' + "".join(f'<span class="fs-coord" style="font-weight:550">{esc(x)}</span>' for x in extra)
+    rot = '<span class="lbl">' + esc(grows_label) + '</span><span class="fs-rotprev" style="margin:0">' + '<span class="a">→</span>'.join(
+        f'<span class="c">{esc(c)}</span>' for c in crops) + "</span>"
+    return (f'<div class="fs-hero"><div class="fs-eyebrow">{esc(eyebrow)}</div><h1>{esc(title)}</h1>'
+            f'<div class="fs-meta">{chips}</div><div class="fs-meta">{rot}</div><p class="lead">{esc(lead)}</p></div>')
+
+
+def data_status(title: str, rows: list[tuple[str, str, str, str]], note: str = "") -> str:
+    """rows: (name, state in {ok, miss, na}, status text, tooltip). Three visually distinct states."""
+    body = "".join(f'<div class="fs-dr {stt}" title="{esc(tip)}"><span class="dot"></span><span class="nm">{esc(nm)}</span>'
+                   f'<span class="st">{esc(txt)}</span></div>' for nm, stt, txt, tip in rows)
+    return f'<div class="fs-data"><h4>{esc(title)}</h4>{body}' + (f'<div class="fs-dnote">{esc(note)}</div>' if note else "") + "</div>"
+
+
+def rotation_preview(crops: list[str]) -> None:
+    st.markdown('<div class="fs-rotprev">' + '<span class="a">→</span>'.join(f'<span class="c">{esc(c)}</span>' for c in crops) + "</div>",
                 unsafe_allow_html=True)
+
+
+def group_label(text: str) -> None:
+    st.markdown(f'<div class="fs-grp">{esc(text)}</div>', unsafe_allow_html=True)
 
 
 def kpi(name: str, value: str, unit: str, desc: str, ctx: str = "", warn: bool = False) -> str:
@@ -171,8 +219,9 @@ def kpi(name: str, value: str, unit: str, desc: str, ctx: str = "", warn: bool =
             f'<div class="d">{esc(desc)}</div>{ctx_html}</div>')
 
 
-def kpi_grid(items: list[str]) -> None:
-    st.markdown(f'<div class="fs-kpis">{"".join(items)}</div>', unsafe_allow_html=True)
+def kpi_grid(items: list[str], cols: int | None = None) -> None:
+    cls = f"fs-kpis c{cols}" if cols else "fs-kpis"
+    st.markdown(f'<div class="{cls}">{"".join(items)}</div>', unsafe_allow_html=True)
 
 
 def section(title: str, sub: str = "") -> None:
@@ -181,11 +230,19 @@ def section(title: str, sub: str = "") -> None:
         st.caption(sub)
 
 
-def compare_table(head: list[tuple[str, str, bool]], rows: list[tuple[str, list[str], set[int]]], metric_label: str) -> None:
-    """head: (name, small tag, is_current) per option; rows: (measure, cell texts, indexes of best cells). Texts are escaped."""
-    th = "".join(f'<th class="{"cur" if cur else ""}">{esc(n)}<small>{esc(tag)}</small></th>' for n, tag, cur in head)
+def compare_table(head: list[tuple[str, str, bool]], rows: list, metric_label: str, top: int | None = None, top_tag: str = "") -> None:
+    """head: (name, small tag, is_current) per option. rows: (measure, cell texts, best indexes) or ("__group__", label).
+    `top` = index of the highlighted (best-fit) option. All texts are escaped."""
+    def th_cell(i, n, tag, cur):
+        mark = f'<span class="tag2">{esc(top_tag)}</span><br>' if top == i and top_tag else ""
+        return f'<th class="{"cur" if cur else ""}{" top" if top == i else ""}">{mark}{esc(n)}<small>{esc(tag)}</small></th>'
+    th = "".join(th_cell(i, n, tag, cur) for i, (n, tag, cur) in enumerate(head))
     body = ""
-    for label, cells, best in rows:
+    for row in rows:
+        if row[0] == "__group__":
+            body += f'<tr class="grp"><td colspan="{len(head) + 1}">{esc(row[1])}</td></tr>'
+            continue
+        label, cells, best = row
         tds = "".join(f'<td class="num{" best" if i in best else ""}{" cur" if head[i][2] else ""}">{esc(c)}</td>' for i, c in enumerate(cells))
         body += f'<tr><td class="m">{esc(label)}</td>{tds}</tr>'
     st.markdown(f'<div class="fs-tablewrap"><table class="fs-table"><thead><tr><th>{esc(metric_label)}</th>{th}</tr></thead>'

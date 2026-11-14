@@ -5,7 +5,7 @@ All Uzbek text (Latin script) was written by the AI assistant and has **not** be
 To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uzbek_review.py` regenerates this file.
 
 
-## 1. Strings I am unsure about (53)
+## 1. Strings I am unsure about (56)
 
 | key | English | Uzbek | why unsure |
 |---|---|---|---|
@@ -59,6 +59,9 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `soil.clay_pct` | clay % | gil % | soil texture terms: gil/qum/chang |
 | `soil.texture` | texture | tuproq turi | texture class names are not translated |
 | `sum.tradeoff` | **Main trade-off:** {tradeoff}. | **Asosiy kamchilik:** {tradeoff}. | 'trade-off' rendered as 'kamchilik' (drawback) |
+| `ui.elev` | {m:.0f} m elevation (climate cell) | dengiz sathidan {m:.0f} m balandlik (iqlim katagi) | phrasing of elevation |
+| `ui.grp_env` | Environment | Atrof-muhit | 'Atrof-muhit' for environment |
+| `ui.hemi_e` | E | Shq | compass abbreviations Sh (north), Shq (east), J (south), G' (west) |
 | `ui.kpi_et0` | Reference ET0 | Namlanish talabi (ET0) | 'namlanish talabi' for ET0 |
 | `ui.sidebar_what` | Test a scenario | Stsenariyni sinab ko'ring | 'Stsenariy' for scenario |
 | `viz.fit_title` | {short} by type of year (bars = typical, whiskers = 10th–90th percentile) | {short}, yil turi bo'yicha (ustun = odatdagi, chiziq = 10–90-protsentil) | 'protsentil' |
@@ -88,7 +91,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `melon` | Melon | Qovun |  |
 | `sugar_beet` | Sugar beet | Qand lavlagi |  |
 
-## 3. All other strings (336), please still skim
+## 3. All other strings (372), please still skim
 
 | key | English | Uzbek |
 |---|---|---|
@@ -428,6 +431,42 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `ui.best_note` | Shaded cells mark the best value among the options shown for that measure; unshaded rows are tied. | Rangli kataklar ko'rsatilgan variantlar orasida shu ko'rsatkich bo'yicha eng yaxshi qiymatni bildiradi; rangsiz qatorlarda farq yo'q. |
 | `ui.back` | Back to your field | Dalaga qaytish |
 | `col.hot2` | Hot days in season (above the crop's heat threshold) | Mavsumdagi issiq kunlar (ekinning issiqlik chegarasidan yuqori) |
+| `ui.data_h` | Data sources | Ma'lumot manbalari |
+| `ui.st_ok` | Loaded | Yuklangan |
+| `ui.st_miss` | Unavailable | Mavjud emas |
+| `ui.st_na` | Not applicable | Qo'llanilmaydi |
+| `ui.ds_power` | NASA POWER climate | NASA POWER iqlimi |
+| `ui.ds_ndvi` | MODIS vegetation (NDVI) | MODIS o'simlik qoplami (NDVI) |
+| `ui.ds_smap` | SMAP soil moisture | SMAP tuproq namligi |
+| `ui.ds_soil` | SoilGrids soil | SoilGrids tuprog'i |
+| `ui.tip_power` | Daily climate record {rng}. | Kunlik iqlim yozuvi {rng}. |
+| `ui.tip_na` | No satellite point was requested for this field, so this layer does not apply here. | Bu dala uchun sun'iy yo'ldosh nuqtasi so'ralmagan, shuning uchun bu qatlam bu yerda qo'llanilmaydi. |
+| `ui.tip_ndvi_ok` | Satellite greenness is shown next to the crop calendar. | Sun'iy yo'ldosh yashilligi ekin taqvimi yonida ko'rsatiladi. |
+| `ui.tip_ndvi_miss` | No usable satellite file for this place; bare periods come from the crop calendar. | Bu joy uchun yaroqli sun'iy yo'ldosh fayli yo'q; ochiq davrlar ekin taqvimidan olinadi. |
+| `ui.tip_smap_ok` | Soil-moisture anomaly from satellite retrievals. | Sun'iy yo'ldosh o'lchovlaridan tuproq namligi og'ishi. |
+| `ui.tip_smap_miss` | No usable satellite retrievals here; NASA POWER root-zone wetness is shown instead. | Bu yerda yaroqli sun'iy yo'ldosh o'lchovlari yo'q; o'rniga NASA POWER ildiz qatlami namligi ko'rsatiladi. |
+| `ui.tip_soil_ok` | Texture, organic carbon and pH are shown for information. | Tuproq tarkibi, organik uglerod va pH ma'lumot uchun ko'rsatiladi. |
+| `ui.tip_soil_miss` | SoilGrids could not be reached and no manual reading was found. | SoilGrids'ga ulanib bo'lmadi va qo'lda kiritilgan qiymat topilmadi. |
+| `ui.data_note` | Layers marked unavailable or not applicable do not change the scores; they are shown for information. See the full list under “What data is missing”. | Mavjud emas yoki qo'llanilmaydi deb belgilangan qatlamlar ballarga ta'sir qilmaydi; ular ma'lumot uchun ko'rsatiladi. To'liq ro'yxat “Qanday ma'lumotlar yetishmayapti” bo'limida. |
+| `ui.hemi_n` | N | Sh |
+| `ui.hemi_s` | S | J |
+| `ui.hemi_w` | W | G' |
+| `ui.kpi_rtrend` | Rainfall trend | Yog'in tendensiyasi |
+| `ui.kpi_rtrend_d` | Change in yearly rainfall per decade over the record ({y0}–{y1}). | Yillik yog'inning yozuv davridagi ({y0}–{y1}) o'n yillikdagi o'zgarishi. |
+| `ui.unit_mm_dec` | mm/decade | mm/o'n yil |
+| `ui.kpi_extremes` | Frost and heat | Qirov va issiqlik |
+| `ui.grp_econ` | Income and feed | Daromad va em-xashak |
+| `ui.prio_hint` | Move a slider up for what matters more to you. | Siz uchun muhimroq narsani slayderni yuqoriga surib belgilang. |
+| `ui.step_rot` | Choose the crops you grow, in order. | Ekadigan ekinlaringizni tartib bilan tanlang. |
+| `ui.next_h` | Next: compare rotation options | Keyingi qadam: almashlab ekish variantlarini solishtiring |
+| `ui.next_t` | See how other rotations compare with yours on water, soil and income. | Boshqa almashlab ekishlar sizniki bilan suv, tuproq va daromad bo'yicha qanday solishtirilishini ko'ring. |
+| `ui.best_fit` | Best fit | Eng mos |
+| `ui.g_main` | Overall | Umumiy |
+| `ui.g_water` | Water and climate | Suv va iqlim |
+| `ui.g_soil` | Soil and cover | Tuproq va qoplama |
+| `ui.g_prio` | Relative score by priority (0–100) | Ustuvorlik bo'yicha nisbiy ball (0–100) |
+| `ui.back_field` | Back to your field | Dalaga qaytish |
+| `ui.step_trail` | 1 Field  ›  2 Climate  ›  3 Compare options  ›  4 Trade-offs | 1 Dala  ›  2 Iqlim  ›  3 Variantlarni solishtirish  ›  4 Foyda va kamchiliklar |
 
 ## 4. What is NOT translated (stays English in Uzbek mode)
 

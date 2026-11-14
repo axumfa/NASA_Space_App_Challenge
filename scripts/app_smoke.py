@@ -26,3 +26,8 @@ t = time.time(); apply_whatif(rain=-20, temp=2.0, supply=60); report("same what-
 t = time.time(); at.selectbox(key="profile__en").set_value("Income first").run(); report("profile change under what-if", at, t)
 at.selectbox(key="field_choice__en").set_value("My own location").run(); report("own location", at, time.time())
 at.selectbox(key="crop1__en").set_value("Winter wheat").run(); report("duplicate crop", at, time.time())
+at.selectbox(key="crop1__en").set_value("Cotton").run()      # undo the duplicate-crop state
+for lang in ("English", "O'zbekcha"):
+    at.session_state["lang_label"] = lang; at.session_state["view"] = "options"; at.run(); report(f"options view ({lang})", at, time.time())
+    at.session_state["view"] = "glossary"; at.run(); report(f"glossary view ({lang})", at, time.time())
+    at.session_state["view"] = "field"; at.run(); report(f"field view ({lang})", at, time.time())
