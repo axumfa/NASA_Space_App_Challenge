@@ -135,3 +135,112 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
         e.risks.append(f"Market ({c['name']}): {c['market_note']}")
     e.risks.append("Irrigation water supply and timing were not modelled; confirm with your water-user association.")
     return e
+
+
+# ---------------------------------------------------------------- plain-language summary box
+CRITERION_KEYS = {"water_saving": "water", "soil_om": "soil_om", "nitrogen": "nitrogen", "erosion": "erosion",
+                  "forage": "forage", "income": "income"}
+
+
+def _natural(res, m: str) -> float:
+    """The number shown to the farmer for criterion m (mm, kg N, bare days, or a 0-100 index)."""
+    s = res.summary
+    return {"water_saving": s["irrigation_demand_mm"]["median"], "nitrogen": s["n_kg"]["median"],
+            "erosion": res.rotation.bare_days_per_year()}.get(m, s[m]["median"])
+
+
+def summary_box(display: list, weights, lang: str = "en", arid: bool = False) -> dict[str, str]:
+    """Four plain sentences (best option, why, main trade-off, one check) built only from computed results.
+
+    `display` is current first, then alternatives, already normalised by compare.apply (norm_* columns present).
+    `arid` (annual rain / ET0 below 0.3, i.e. irrigated drylands where salt build-up is a real concern) switches on the salinity check.
+    Returns {'best', 'reason', 'tradeoff', 'check', 'caveat', 'title'} plus 'facts' (the numbers used), for testing.
+    """
+    from .i18n import tr
+    db = load_crops()
+    w = weights.normalized()
+    cur = display[0]
+    best = max(display, key=lambda r: r.summary["fit"]["median"])
+    facts: dict[str, float] = {}
+
+    def norm(res, m: str) -> float:
+        return res.summary[f"norm_{m}"]["median"]
+
+    if best is cur:
+        others = display[1:]
+        runner = max(others, key=lambda r: r.summary["fit"]["median"]) if others else cur
+        out_best = tr("sum.best_is_current", lang, fit=cur.summary["fit"]["median"], other=runner.summary["fit"]["median"])
+        ref = runner
+    else:
+        crops = " → ".join(db[c]["name"] for c in best.rotation.crops)
+        out_best = tr("sum.best", lang, crops=crops, fit=best.summary["fit"]["median"], cur=cur.summary["fit"]["median"])
+        ref = cur
+    facts["fit_best"] = best.summary["fit"]["median"]
+
+    # criteria ranked by weighted advantage of `best` over `ref` (ties excluded)
+    gains = []
+    for m in CRITERION_KEYS:
+        if display[0].tied.get(m):
+            continue
+        gains.append((w[m] * (norm(best, m) - norm(ref, m)), m))
+    gains.sort(reverse=True)
+    reasons = []
+    for g, m in gains[:2]:
+        if g <= 0.5 or best is ref:
+            continue
+        new, old = _natural(best, m), _natural(ref, m)
+        pct = 100 * (new - old) / old if old else 0.0
+        reasons.append(tr(f"r.{CRITERION_KEYS[m]}", lang, new=new, old=old, pct=pct))
+        facts[f"{m}_new"], facts[f"{m}_old"] = new, old
+    if best is cur:       # the current rotation leads: explain by what it does better than the runner-up
+        for g, m in sorted(((w[m] * (norm(cur, m) - norm(runner, m)), m) for m in CRITERION_KEYS if not cur.tied.get(m)), reverse=True)[:2]:
+            if g > 0.5:
+                new, old = _natural(cur, m), _natural(runner, m)
+                reasons.append(tr(f"r.{CRITERION_KEYS[m]}", lang, new=new, old=old, pct=100 * (new - old) / old if old else 0.0))
+                facts[f"{m}_new"], facts[f"{m}_old"] = new, old
+    out_reason = tr("sum.reason", lang, reasons="; ".join(reasons)) if reasons else tr("sum.reason_none", lang)
+
+    # main trade-off of `best` relative to `ref`: largest weighted loss, or a worse water-shortage tail
+    losses = sorted(((w[m] * (norm(best, m) - norm(ref, m)), m) for m in CRITERION_KEYS if not best.tied.get(m)))
+    tradeoff = None
+    if best is not ref and losses and losses[0][0] < -0.5:
+        m = losses[0][1]
+        new, old = _natural(best, m), _natural(ref, m)
+        tradeoff = tr(f"t.{CRITERION_KEYS[m]}", lang, new=new, old=old, pct=100 * (new - old) / old if old else 0.0)
+        facts[f"trade_{m}_new"], facts[f"trade_{m}_old"] = new, old
+    elif best is ref:     # current rotation is best: name its weakest weighted criterion against the strongest alternative
+        weakest = sorted(((w[m] * (norm(cur, m) - norm(runner, m)), m) for m in CRITERION_KEYS if not cur.tied.get(m)))
+        if weakest and weakest[0][0] < -0.5:
+            m = weakest[0][1]
+            new, old = _natural(cur, m), _natural(runner, m)
+            tradeoff = tr(f"t.{CRITERION_KEYS[m]}", lang, new=new, old=old, pct=100 * (new - old) / old if old else 0.0)
+            facts[f"trade_{m}_new"], facts[f"trade_{m}_old"] = new, old
+    if tradeoff is None and best is not ref:
+        a, b = best.summary["yield_loss"]["p90"] * 100, ref.summary["yield_loss"]["p90"] * 100
+        if a - b >= 5:
+            tradeoff = tr("t.shortage", lang, new=a, old=b)
+            facts["shortage_new"], facts["shortage_old"] = a, b
+    out_trade = tr("sum.tradeoff", lang, tradeoff=tradeoff) if tradeoff else tr("sum.tradeoff_none", lang)
+
+    # one thing to check, in priority order: salinity, a new crop's seed/market, water availability, cycle length, dates
+    new_crops = [c for c in best.rotation.crops if c not in cur.rotation.crops]
+    salt = [c for c in new_crops if arid and db[c]["salinity_tol"] < 0.5]
+    irr_new, irr_old = _natural(best, "water_saving"), _natural(cur, "water_saving")
+    if salt:
+        check = tr("c.salinity", lang, crop=db[salt[0]]["name"])
+    elif new_crops:
+        check = tr("c.newcrop", lang, crop=db[new_crops[0]]["name"])
+    elif irr_new >= 1.1 * irr_old and best is not cur:
+        check = tr("c.water", lang, irr=irr_new)
+    elif best.rotation.cycle_years > 1 and best is not cur:
+        check = tr("c.cycle", lang, years=best.rotation.cycle_years)
+    else:
+        check = tr("c.dates", lang)
+    return {"title": tr("sum.title", lang), "best": out_best, "reason": out_reason, "tradeoff": out_trade,
+            "check": tr("sum.check", lang, check=check), "caveat": tr("sum.caveat", lang), "facts": facts,
+            "best_is_current": best is cur}
+
+
+def is_arid(ctx) -> bool:
+    """True where median annual rain is under 30% of reference ET0 (irrigation is essential, salts accumulate)."""
+    return float((ctx.annual["precip"] / ctx.annual["et0"]).median()) < 0.3

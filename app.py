@@ -15,7 +15,7 @@ from fieldshift import viz
 from fieldshift.compare import FIT_LABEL, FIT_SHORT
 from fieldshift.config import DEMO_FIELDS
 from fieldshift.crops import load_crops
-from fieldshift.explain import explain
+from fieldshift.explain import explain, is_arid, summary_box
 from fieldshift.fetch.soil import fetch_soil
 from fieldshift.pipeline import build_context, choose, run
 from fieldshift.rotations import schedule
@@ -233,6 +233,11 @@ if view == VIEWS[1]:
     st.subheader(FIT_LABEL)
     st.caption("A relative score from 0 to 100 that compares the options shown here, using the priorities you set. "
                "It is not a grade or a yield forecast. Real units (mm of water, days, % yield at risk) are shown on every card.")
+    sb = summary_box(display, w, "en", arid=is_arid(ctx))
+    with st.container(border=True):
+        st.markdown(f"#### {sb['title']}")
+        st.markdown(sb["best"]); st.markdown(sb["reason"]); st.markdown(sb["tradeoff"]); st.markdown(sb["check"])
+        st.caption(sb["caveat"])
     ties = [LABEL[m] for m, v in tied.items() if v]
     if ties:
         st.info("These options do not differ meaningfully on: " + ", ".join(ties) + ". That priority does not change the ranking.")
