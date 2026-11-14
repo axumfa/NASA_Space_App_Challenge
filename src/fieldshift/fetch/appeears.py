@@ -2,7 +2,7 @@
 
 Expected products (AppEEARS "point sample" CSV output):
   MOD13Q1.061  250 m 16-day NDVI, layers *_250m_16_days_NDVI and *_250m_16_days_pixel_reliability
-  SPL3SMP_E.005 9 km daily soil moisture, layers ..._AM_soil_moisture(+_qual_flag) and ..._PM_soil_moisture_pm(+_qual_flag_pm)
+  SPL3SMP_E.006 9 km daily soil moisture, layers ..._AM_soil_moisture(+_qual_flag) and ..._PM_soil_moisture_pm(+_qual_flag_pm)
 Column names are matched by regular expression (they differ slightly between AppEEARS versions). If the
 required columns are missing, a ValueError lists the columns found. A file may hold several points; the
 row group nearest to the requested lat/lon (within MAX_DEG) is used.
@@ -27,6 +27,7 @@ MAX_DEG = 0.1
 NDVI_SCALE = 0.0001
 NDVI_FILL = -3000
 SMAP_FILL = -9999
+QUAL_FILL = 65534      # uint16 fill of retrieval_qual_flag (verified in the AppEEARS layer list)
 NDVI_ACCEPT_RELIABILITY = (0, 1)
 
 
@@ -78,7 +79,7 @@ def parse_smap(path: Path, lat: float, lon: float) -> pd.DataFrame:
         q = _find_col([c for c in cols if (c.lower().endswith("_pm") == sm.lower().endswith("_pm"))], q_pat)
         v = df[sm].astype(float)
         flag = df[q].astype(float).fillna(65535).astype(int)
-        good = (v != SMAP_FILL) & (v > 0) & ((flag & 1) == 0)
+        good = (v != SMAP_FILL) & (v > 0) & ((flag & 1) == 0) & (flag < QUAL_FILL)   # 65534 (fill) has bit 0 clear: reject explicitly
         parts.append(v.where(good))
     if not parts:
         raise ValueError(f"no AM/PM soil_moisture columns found; columns are: {cols}")

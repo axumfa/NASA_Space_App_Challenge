@@ -69,8 +69,8 @@ Also computed: **pest-cycle break** = 100 × (1 − share of cyclic neighbours f
 ## 8. Quality control of satellite files (`fetch/appeears.py`)
 
 - **MOD13Q1 NDVI:** pixel reliability 0 (good) or 1 (marginal) accepted; 2 (snow/ice), 3 (cloud), −1 (no data) and the fill value −3000 rejected; scale 0.0001.
-- **SMAP SPL3SMP_E:** retrieval-quality flag bit 0 must be 0 (recommended quality); fill −9999 rejected; AM and PM averaged.
-- The parser matches column names by pattern (AppEEARS names vary by version) and raises an error listing the actual columns if they do not match. The code has been tested only on a small synthetic fixture, not on a real AppEEARS download.
+- **SMAP SPL3SMP_E.006:** retrieval-quality flag bit 0 must be 0 (recommended quality) and the flag's fill value 65534 is rejected explicitly; soil-moisture fill −9999 rejected; AM and PM averaged. (Version .005 does not exist in AppEEARS; layer names were verified against its product API.)
+- The parser matches column names by pattern (AppEEARS names vary by version) and raises an error listing the actual columns if they do not match. Until real files are downloaded (`scripts/appeears_fetch.py run`), the parser has been tested only on a small synthetic fixture.
 
 ## 9. Uncertainty
 

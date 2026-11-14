@@ -62,3 +62,12 @@ def test_bare_windows_and_observed_bare_days():
     wins = F.bare_windows_from_ndvi(curve, 0.2)
     assert len(wins) == 1 and wins[0][1] > 200                        # one long bare window wrapping the year end
     assert 150 < F.observed_bare_days_per_year(nd, 0.2).median() < 260
+
+
+def test_smap_rejects_quality_flag_fill_value(tmp_path):
+    f = tmp_path / "x_SPL3SMP.csv"
+    pre = "SPL3SMP_E_006_Soil_Moisture_Retrieval_Data_AM_"
+    pd.DataFrame({"Latitude": [1.0] * 3, "Longitude": [1.0] * 3, "Date": ["2020-01-01", "2020-01-02", "2020-01-03"],
+                  pre + "soil_moisture": [0.3, 0.3, 0.3], pre + "retrieval_qual_flag": [0, 1, 65534]}).to_csv(f, index=False)
+    d = appeears.parse_smap(f, 1.0, 1.0)
+    assert d["soil_moisture"].notna().tolist() == [True, False, False]      # recommended / not recommended / fill

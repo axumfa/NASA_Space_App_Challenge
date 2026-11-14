@@ -32,7 +32,13 @@ Command-line reports (no UI): `scripts/field_report.py fergana`, `scripts/rotati
 
 ### Optional data you add by hand
 
-- **MODIS NDVI and SMAP** (AppEEARS point-sample CSVs): put the downloaded files in `data/raw/`; their names must contain
+- **MODIS NDVI and SMAP via the AppEEARS API** (needs a free NASA Earthdata account that has accepted the AppEEARS terms):
+  `cp .env.example .env`, fill in `EARTHDATA_USERNAME` and `EARTHDATA_PASSWORD` (`.env` is git-ignored), then
+  `.venv/bin/python scripts/appeears_fetch.py run`. It checks the product and layer names against the API, submits one point
+  task for both demo fields (MOD13Q1.061 NDVI + pixel reliability; SPL3SMP_E.006 AM soil moisture + retrieval quality flag;
+  2015-04-01 to today), polls until it is done and saves the `*-results.csv` files into `data/raw/`. Credentials are used only for
+  the login request and never printed. (`verify`, `submit`, `status`, `download` run the steps separately.)
+- **Or by hand**: put AppEEARS point-sample CSVs from the web interface in `data/raw/`; their names must contain
   `MOD13Q1` (MOD13Q1.061, layers `250m_16_days_NDVI` and `pixel_reliability`) or `SPL3SMP` (SPL3SMP_E, AM/PM soil moisture
   and retrieval-quality flags). The quality layers are applied before use (see `docs/methodology.md`). If a file is missing
   or its columns do not match, the app still runs and lists it as an information gap. The parser was written against the
