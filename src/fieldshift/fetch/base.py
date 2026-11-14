@@ -9,7 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from ..config import CACHE_DIR
+from ..config import CACHE_DIR, DEMO_CACHE_DIR
 
 
 @dataclass
@@ -40,9 +40,11 @@ def _json_path(path: Path) -> Path:
 
 
 def read_json_cache(path: Path) -> Any | None:
-    p = _json_path(path)
-    if p.exists():
-        return json.loads(p.read_text())
+    """Read a cached response: the committed demo cache first, then the live cache."""
+    for base in (DEMO_CACHE_DIR, path.parent):
+        p = _json_path(base / path.name)
+        if p.exists():
+            return json.loads(p.read_text())
     return None
 
 

@@ -82,3 +82,14 @@ def test_supply_deficit_penalises_by_drought_tolerance_and_keeps_water_score():
     assert tol_short["yield_loss"].median() < short["yield_loss"].median()
     d = pd.Series([1, 2, 3, 4, 5, 6], index=range(6))
     assert list(classify_by_demand(d))[0] == "wet" and list(classify_by_demand(d))[-1] == "dry"
+
+
+def test_vectorised_summarize_matches_pandas_quantiles():
+    from fieldshift.scoring import summarize
+    rng = np.random.default_rng(1)
+    df = pd.DataFrame({"a": rng.normal(size=40), "b": rng.uniform(size=40),
+                       "year_class": ["dry", "normal", "wet", "normal"] * 10})
+    out = summarize(df, ["a", "b"])
+    assert out["a"]["median"] == pytest.approx(df["a"].median())
+    assert out["a"]["p10"] == pytest.approx(df["a"].quantile(.1)) and out["b"]["p90"] == pytest.approx(df["b"].quantile(.9))
+    assert out["b"]["median_dry"] == pytest.approx(df.loc[df.year_class == "dry", "b"].median())

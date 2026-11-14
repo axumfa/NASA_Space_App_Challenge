@@ -76,6 +76,7 @@ class DailyClimate:
         self.tmin, self.tmax = df["T2M_MIN"].values, df["T2M_MAX"].values
         self.tmean, self.et0, self.p = df["T2M"].values, df["ET0"].values, df["PRECTOTCORR"].values
         self.first_year, self.last_year = df.index.year.min(), df.index.year.max()
+        self.memo: dict = {}   # (crop, start, days, year) -> planting result, shared by all rotations
 
     def window(self, year: int, start: int, days: int) -> slice | None:
         i0 = (pd.Timestamp(year=year, month=1, day=1) - self.start).days + start
@@ -120,13 +121,20 @@ def static_subscores(rot: Rotation, db: dict[str, Crop]) -> dict[str, float]:
                 bare_days=rot.bare_days_per_year())
 
 
+def _memo_planting(p: Planting, crop: Crop, clim: DailyClimate, sl: slice, year: int) -> dict:
+    key = (p.crop_id, p.start, p.days, year)
+    if key not in clim.memo:
+        clim.memo[key] = score_planting(p, crop, clim, sl)
+    return clim.memo[key]
+
+
 def planting_table(rot: Rotation, db: dict[str, Crop], clim: DailyClimate) -> dict[int, list[dict]]:
     """Raw (full-demand) per-planting results for every start year with complete data."""
     out: dict[int, list[dict]] = {}
     for y in range(clim.first_year, clim.last_year + 1):
         sls = [clim.window(y, p.start, p.days) for p in rot.plantings]
         if all(sl is not None for sl in sls):
-            out[y] = [score_planting(p, db[p.crop_id], clim, sl) for p, sl in zip(rot.plantings, sls)]
+            out[y] = [_memo_planting(p, db[p.crop_id], clim, sl, y) for p, sl in zip(rot.plantings, sls)]
     return out
 
 
@@ -189,14 +197,17 @@ def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weigh
 
 
 def summarize(scores: pd.DataFrame, cols: list[str] | None = None) -> dict[str, dict[str, float]]:
-    """Median and p10-p90 across all years and for each year class, per column."""
+    """Median and p10-p90 across all years and for each year class, per column (vectorised)."""
     cols = cols or ["total_abs", *PRIORITIES, "suitability", "pest_break", "irrigation_mm_per_year",
                     "heat_days", "frost_days", "yield_loss", "irrigation_demand_mm", "n_kg", "bare_days"]
-    out: dict[str, dict[str, float]] = {}
-    for c in cols:
-        s = scores[c]
-        d = {"median": s.median(), "p10": s.quantile(.1), "p90": s.quantile(.9)}
-        for cls, g in scores.groupby("year_class"):
-            d[f"median_{cls}"] = g[c].median()
-        out[c] = d
+    arr = scores[cols].to_numpy(float)
+    med = np.nanmedian(arr, axis=0)
+    p10, p90 = np.nanpercentile(arr, [10, 90], axis=0)
+    out = {c: {"median": float(med[i]), "p10": float(p10[i]), "p90": float(p90[i])} for i, c in enumerate(cols)}
+    cls = scores["year_class"].to_numpy(object)
+    for k in sorted({x for x in cls if isinstance(x, str)}):
+        m = np.array([x == k for x in cls])
+        mm = np.nanmedian(arr[m], axis=0)
+        for i, c in enumerate(cols):
+            out[c][f"median_{k}"] = float(mm[i])
     return out

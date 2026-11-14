@@ -43,15 +43,22 @@ st.markdown('<div class="disclaimer"><b>This tool supports, and does not replace
 
 
 # ------------------------------------------------------------------ cached heavy work
-@st.cache_resource(show_spinner="Getting NASA climate data for this field…")
+# st.cache_data keys: field (lat, lon), current rotation, what-if values (and priority weights for the display choice).
+@st.cache_data(show_spinner="Getting NASA climate data for this field…", max_entries=16)
 def get_context(lat: float, lon: float, rain_pct: int, temp_c: float):
     return build_context(lat, lon, rain_factor=1 + rain_pct / 100, temp_delta=temp_c)
 
 
-@st.cache_resource(show_spinner="Comparing rotation options…")
+@st.cache_data(show_spinner="Comparing rotation options…", max_entries=16)
 def get_pool(lat: float, lon: float, rain_pct: int, temp_c: float, current: tuple[str, ...], supply: float):
     ctx = get_context(lat, lon, rain_pct, temp_c)
     return run(ctx, current, Weights(), n_alternatives=500, n_per_rule=500, irrigation_supply=supply)
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def get_display(lat: float, lon: float, rain_pct: int, temp_c: float, current: tuple[str, ...], supply: float,
+                weights: tuple[float, ...], force: tuple[tuple[str, ...], ...]):
+    return choose(get_pool(lat, lon, rain_pct, temp_c, current, supply), Weights(*weights), n=4, force=force)
 
 
 @st.cache_data(show_spinner=False)
@@ -111,10 +118,13 @@ with st.sidebar:
              "forage": "Feed for animals (hay, grazing).", "income": "Expected market income from the crops."}
     w = Weights(**{m: float(st.slider(LABEL[m], 0, 10, key=f"w_{m}", help=helps[m])) for m in PRIORITIES})
     st.subheader("What if…?")
-    rain_pct = st.slider("Rainfall change (%)", -30, 20, step=5, key="rain", help="Applied to every day of the climate record.")
-    temp_c = st.slider("Temperature rise (°C)", 0.0, 3.0, step=0.5, key="temp")
-    supply = st.slider("Irrigation water available (% of what crops need)", 40, 100, step=5, key="supply",
-                       help="100% = enough water in almost every year. Lower values show how much yield is put at risk by a shortage.") / 100
+    with st.form("whatif"):   # one recompute per click, not one per slider move
+        rain_pct = st.slider("Rainfall change (%)", -30, 20, step=5, key="rain", help="Applied to every day of the climate record.")
+        temp_c = st.slider("Temperature rise (°C)", 0.0, 3.0, step=0.5, key="temp")
+        supply = st.slider("Irrigation water available (% of what crops need)", 40, 100, step=5, key="supply",
+                           help="100% = enough water in almost every year. Lower values show how much yield is put at risk by a shortage.")
+        st.form_submit_button("Apply what-if", type="primary")
+    supply = supply / 100
 
 lat, lon = float(S.lat), float(S.lon)
 if not current:
@@ -126,11 +136,11 @@ if schedule(current, DB) is None:
 
 try:
     ctx = get_context(lat, lon, rain_pct, temp_c)
-    pool = get_pool(lat, lon, rain_pct, temp_c, current, supply)
 except Exception as e:  # noqa: BLE001
     st.error(f"Could not get NASA POWER climate data for this place ({e}). Check your connection; demo fields work offline once downloaded.")
     st.stop()
-display, tied = choose(pool, w, n=4, force=(("winter_wheat", "mung_bean", "cotton"),) if current == ("winter_wheat", "cotton") else ())
+display, tied = get_display(lat, lon, rain_pct, temp_c, current, supply, tuple(w.as_dict().values()),
+                            (("winter_wheat", "mung_bean", "cotton"),) if current == ("winter_wheat", "cotton") else ())
 cur = display[0]
 if rain_pct or temp_c or supply < 1:
     st.info(f"What-if active: rainfall {rain_pct:+d}%, temperature +{temp_c:.1f} °C, irrigation water {supply*100:.0f}%.")

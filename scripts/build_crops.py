@@ -13,11 +13,11 @@ FIELDS = ["name", "season", "sow", "days", "stages", "kc", "gdd_base", "gdd_req"
 # kc = (ini, mid, end); stages = days (ini, dev, mid, late)
 T = {
  "cotton": ("Cotton", "summer", (100,125), 180, (30,50,55,45), (.35,1.18,.60), 15.5, 1300, 15, (22,32), 40, 0, 38, 700, .5, .6, 0, 1.4, .35, .30, .05, .85, "malvaceae", "Often sold via contracts/clusters; check current procurement terms and prices."),
- "winter_wheat": ("Winter wheat", "winter", (265,315), 250, (30,140,40,40), (.40,1.15,.25), 0, 1800, -10, (8,22), 32, -18, 32, 450, .5, .5, 0, 1.5, .60, .50, .30, .60, "small_grain", "Food-security crop; procurement/quota rules may apply locally."),
+ "winter_wheat": ("Winter wheat", "winter", (265,315), 240, (30,140,40,30), (.40,1.15,.25), 0, 1800, -10, (8,22), 32, -18, 32, 450, .5, .5, 0, 1.5, .60, .50, .30, .60, "small_grain", "Food-security crop; procurement/quota rules may apply locally."),
  "barley": ("Winter barley", "winter", (265,305), 230, (30,120,40,40), (.30,1.15,.25), 0, 1600, -10, (8,20), 30, -14, 32, 400, .65, .8, 0, 1.2, .60, .45, .35, .50, "small_grain", "Feed/malting market; lower price than wheat in most regions."),
  "maize": ("Maize (grain)", "summer", (100,135), 125, (20,35,40,30), (.30,1.20,.60), 10, 1500, 10, (18,30), 38, -2, 35, 600, .35, .4, 0, 1.2, .50, .55, .50, .75, "warm_grass", "Strong feed demand; drying/storage costs matter."),
- "sorghum": ("Sorghum", "summer", (120,150), 130, (20,35,45,30), (.30,1.05,.55), 10, 1400, 10, (20,32), 40, -1, 38, 450, .85, .6, 0, 1.5, .50, .50, .60, .50, "warm_grass", "Thin local market in some regions; feed use; check buyers."),
- "millet": ("Millet", "summer", (130,160), 110, (15,25,40,30), (.30,1.00,.30), 10, 1000, 10, (22,34), 42, -1, 40, 350, .90, .5, 0, 1.2, .40, .35, .50, .35, "warm_grass", "Small niche market; mostly feed/food local use."),
+ "sorghum": ("Sorghum", "summer", (120,150), 130, (20,35,40,30), (.30,1.05,.55), 10, 1400, 10, (20,32), 40, -1, 38, 450, .85, .6, 0, 1.5, .50, .50, .60, .50, "warm_grass", "Thin local market in some regions; feed use; check buyers."),
+ "millet": ("Millet", "summer", (130,160), 105, (15,25,40,25), (.30,1.00,.30), 10, 1000, 10, (22,34), 42, -1, 40, 350, .90, .5, 0, 1.2, .40, .35, .50, .35, "warm_grass", "Small niche market; mostly feed/food local use."),
  "alfalfa": ("Alfalfa (1 yr stand modelled)", "perennial", (235,270), 330, (10,30,200,90), (.40,.95,.90), 5, 1500, 5, (15,28), 38, -12, 38, 900, .70, .4, 100, 2.5, .85, .80, 1.00, .65, "legume_forage", "Local hay/feed demand; livestock needed or hay sold; seed cost."),
  "mung_bean": ("Mung bean", "summer", (160,200), 70, (10,15,25,20), (.40,1.15,.35), 10, 1000, 12, (25,32), 40, 0, 40, 300, .60, .3, 30, .8, .50, .40, .30, .55, "legume_grain", "Often grown as post-wheat short-season crop; check buyers/export prices."),
  "chickpea": ("Chickpea (spring sown)", "summer", (60,90), 110, (20,30,35,25), (.40,1.00,.35), 5, 1300, 5, (15,26), 35, -4, 35, 350, .85, .3, 30, 1.2, .35, .35, .20, .60, "legume_grain_cool", "Good export demand historically; price volatile."),
@@ -35,6 +35,24 @@ T = {
 }
 APPROX = ["gdd_req", "heat_thr_c", "frost_kill_c", "drought_tol", "salinity_tol", "n_credit", "cover",
           "om", "forage", "income", "stages", "water_need_mm", "t_opt"]
+# Stage lengths vs FAO-56 Table 11 (re-read from fao.org, html table). "published" = matches a Table 11 row.
+STAGE_SRC = {
+ "cotton": "published: Table 11, Texas row 30/50/55/45",
+ "winter_wheat": "published: Table 11, Mediterranean row 30/140/40/30 (240 d); frozen climates are much longer (Idaho 335 d)",
+ "maize": "published: Table 11, Nigeria row 20/35/40/30; US rows are 150-170 d, so season may be short for the US",
+ "soybean": "published: Table 11, Central USA row 20/30/60/25 (FAO lists dev 30-35)",
+ "sorghum": "published: Table 11, USA/Pakistan/Med. row 20/35/40/30 (FAO total 130)",
+ "millet": "published: Table 11, Pakistan row 15/25/40/25",
+ "sunflower": "published: Table 11, Mediterranean/California row 25/35/45/25",
+ "potato": "published: Table 11, Continental row 25/30/45/30",
+ "sugar_beet": "published: Table 11, California row 30/45/90/15",
+ "melon": "published: Table 11, Mediterranean row 25/35/40/20",
+ "alfalfa": "partly published: Table 11 gives ini 10 and dev 30 only (mid and late are 'var.'); mid/late are the author's estimate",
+ "barley": "estimate: no winter-barley row in Table 11; adapted from the winter wheat row with a longer late stage",
+ "mung_bean": "estimate: not in Table 11; shortened from 'Beans (dry)' 20/30/40/20 (110 d) to a 70-day catch crop",
+ "lentil": "estimate: Table 11 Europe row is 20/30/60/40 (150 d); shortened here to a 100-day spring crop",
+ "safflower": "estimate: Table 11 rows are 20/35/45/25 (California) and 25/35/55/30 (high latitudes); in between",
+}
 # Seasonal Ky: FAO Irrigation & Drainage Paper 33, Table 1 (read from the reproduction in FAO paper 66, Table 1).
 # value, note. "analog" = a different species in the same FAO group, used as a stand-in.
 KY = {"cotton": (0.85, ""), "winter_wheat": (1.05, ""), "maize": (1.25, ""), "soybean": (0.85, ""),
@@ -43,7 +61,7 @@ KY = {"cotton": (0.85, ""), "winter_wheat": (1.05, ""), "maize": (1.25, ""), "so
       "mung_bean": (1.15, "analog: FAO 'beans'"), "chickpea": (1.15, "analog: FAO 'peas'"),
       "lentil": (1.15, "analog: FAO 'peas'"), "melon": (1.10, "analog: FAO 'watermelon'")}
 SRC = {
- "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+ "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12; stage lengths checked against Table 11 where a row exists (see each crop's stages_source); hairy vetch, rye, clover, chickpea, rapeseed have no Table 11 row (author's estimate); hairy vetch and cereal-rye cover Kc are analogues (approx)",
  "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
  "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
  "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
@@ -62,6 +80,7 @@ for cid, row in T.items():
     d["n_fixing"] = d["n_credit"] > 0
     d["market_note"] = d.pop("market")
     d["sources"] = SRC
+    d["stages_source"] = STAGE_SRC.get(cid, "estimate: not in FAO-56 Table 11 (author's estimate, approximate)")
     if cid in KY:
         d["ky"], note = KY[cid]
         d["ky_source"] = "FAO-33 Table 1" + (f" ({note})" if note else "")

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from . import features as F
+from .config import end_year_for
 from .crops import load_crops
 from .fetch.appeears import load_ndvi, load_smap
 from .fetch.base import FetchResult
@@ -50,7 +51,7 @@ class RotationResult:
 def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int | None = None,
                   rain_factor: float = 1.0, temp_delta: float = 0.0) -> FieldContext:
     """Fetch (cached) POWER data, optionally perturb it for what-if runs, compute features."""
-    end_year = end_year or dt.date.today().year - 1
+    end_year = end_year or end_year_for(lat, lon)
     res = fetch_power(lat, lon, start_year, end_year)
     if not res.ok:
         raise RuntimeError(f"NASA POWER is required but failed: {res.message}")
@@ -116,12 +117,18 @@ def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = N
     demand = irrigation_demand_by_year(cur, planting_table(cur, db, dc))
     classes = classify_by_demand(demand)
 
+    scored: dict[tuple, pd.DataFrame] = {}
+
+    def score(rot: Rotation) -> pd.DataFrame:     # one scoring per rotation (memoised planting scores underneath)
+        if rot.crops not in scored:
+            scored[rot.crops] = score_rotation(rot, db, dc, weights, classes, irrigation_supply)
+        return scored[rot.crops]
+
     def quick(rot: Rotation) -> float:  # used only to rank candidates within a rule family
-        return float(score_rotation(rot, db, dc, weights, classes, irrigation_supply)["total_abs"].median())
+        return float(score(rot)["total_abs"].median())
 
     rots = generate_candidates(current, db, ctx.clim, quick, n_alternatives, pinned, n_per_rule)
-    out = [RotationResult(r, sc, summarize(sc)) for r in rots
-           for sc in [score_rotation(r, db, dc, weights, classes, irrigation_supply)]]
+    out = [RotationResult(r, score(r), {}) for r in rots]
     compare.apply(out, weights)
     return out
 

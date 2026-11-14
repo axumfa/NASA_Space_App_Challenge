@@ -1,4 +1,4 @@
-"""ISRIC SoilGrids point values (0-30 cm), two tiers: REST (10 s timeout) -> manual JSON.
+"""ISRIC SoilGrids point values (0-30 cm), two tiers: a filled manual JSON (user input, offline) -> REST (10 s timeout).
 
 Output units: clay/sand/silt %, soc g/kg, phh2o pH, bdod kg/dm3. Depth-weighted over 0-5/5-15/15-30 cm.
 Manual file: data/manual/soil_<field>.json, values read by hand from the SoilGrids web map (0-30 cm);
@@ -74,14 +74,18 @@ def texture_class(clay: float, sand: float, silt: float) -> str:
 
 
 def fetch_soil(lat: float, lon: float, field_key: str | None = None) -> FetchResult:
+    try:    # an explicit manual reading overrides any cached or live service value
+        return _result(_via_manual(field_key), "manual estimate", "manual file")
+    except Exception:  # noqa: BLE001  (missing file or still empty template)
+        pass
     key = cache_key("soil", lat, lon)
     cached = read_json_cache(key)
     if cached is not None:
         c = cached
         return _result(c["values"], c["tier"], "from cache")
     errors: list[str] = []
-    for tier, fn in (("SoilGrids REST", lambda: _via_rest(lat, lon)),
-                     ("manual estimate", lambda: _via_manual(field_key))):
+    for tier, fn in (("manual estimate", lambda: _via_manual(field_key)),      # a filled manual file wins (and needs no network)
+                     ("SoilGrids REST", lambda: _via_rest(lat, lon))):
         try:
             vals = fn()
             if vals:

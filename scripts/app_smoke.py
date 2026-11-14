@@ -11,8 +11,14 @@ at = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py"), defa
 t = time.time(); at.run(); report("fergana default", at, t)
 t = time.time(); at.radio(key="field_choice").set_value("Central Kansas, USA").run(); report("kansas", at, t)
 t = time.time(); at.selectbox(key="profile").set_value("water-first").run(); report("water-first", at, t)
-t = time.time(); at.slider(key="rain").set_value(-20).run(); report("rain -20%", at, t)
-t = time.time(); at.slider(key="temp").set_value(2.0).run(); report("temp +2", at, t)
-t = time.time(); at.slider(key="supply").set_value(60).run(); report("supply 60%", at, t)
+def apply_whatif(**vals):
+    for k, v in vals.items():
+        at.slider(key=k).set_value(v)
+    at.button[0].click()      # the "Apply what-if" form button
+    at.run()
+t = time.time(); at.slider(key="rain").set_value(-20); at.run(); print(f"  (slider move without Apply: {time.time()-t:.1f}s, no recompute expected)")
+t = time.time(); apply_whatif(rain=-20, temp=2.0, supply=60); report("what-if applied: rain -20, +2C, supply 60%", at, t)
+t = time.time(); apply_whatif(rain=-20, temp=2.0, supply=60); report("same what-if again (cache hit)", at, t)
+t = time.time(); at.selectbox(key="profile").set_value("income-first").run(); report("profile change under what-if", at, t)
 at.radio(key="field_choice").set_value("My own location").run(); report("own location", at, time.time())
 at.selectbox(key="crop1").set_value("winter_wheat").run(); report("duplicate crop", at, time.time())
