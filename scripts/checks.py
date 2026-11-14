@@ -28,7 +28,7 @@ def short(r) -> str:
 
 def table(results) -> pd.DataFrame:
     rows = {short(r) + f" [{r.rotation.rule}]": {**{m: r.summary[m]["median"] for m in SUB},
-            "TOTAL": r.summary["total"]["median"], "irr_mm": r.summary["irrigation_mm_per_year"]["median"],
+            "FIT": r.summary["fit"]["median"], "irr_mm": r.summary["irrigation_mm_per_year"]["median"],
             "bare_d": r.rotation.bare_days_per_year()} for r in results}
     return pd.DataFrame(rows).T
 
@@ -59,11 +59,11 @@ def check1(key: str) -> None:
     winners = {}
     for name, w in PROFILES.items():
         allr = run(ctx, f.rotation, w, n_alternatives=500, n_per_rule=500, pinned=pinned)
-        allr.sort(key=lambda r: -r.summary["total"]["median"])
+        allr.sort(key=lambda r: -r.summary["fit"]["median"])
         winners[name] = short(allr[0]) + f" [{allr[0].rotation.rule}]"
         cur = next(r for r in allr if r.rotation.rule == "current")
-        print(f"  {name:13s} n={len(allr)}  winner: {winners[name]} ({allr[0].summary['total']['median']:.0f}) "
-              f"| runner-up: {short(allr[1])} ({allr[1].summary['total']['median']:.0f}) | current {cur.summary['total']['median']:.0f}")
+        print(f"  {name:13s} n={len(allr)}  winner: {winners[name]} ({allr[0].summary["fit"]['median']:.0f}) "
+              f"| runner-up: {short(allr[1])} ({allr[1].summary["fit"]['median']:.0f}) | current {cur.summary["fit"]['median']:.0f}")
     print("  => same winner under all three!" if len(set(winners.values())) == 1 else "  => winners differ across profiles")
 
 
@@ -74,9 +74,9 @@ def check2() -> None:
     for s in (1.0, 0.8, 0.6):
         res = run(ctx, f.rotation, pinned=(MUNG,), irrigation_supply=s)
         print(f"\n-- supply {s:.1f}")
-        print(f"{'rotation':46s} {'score':>5s} {'p10-p90':>8s} {'dry/norm/wet':>13s} {'irr mm':>6s} {'yieldloss med/p90':>18s}")
+        print(f"{'rotation':46s} {'score':>5s} {'p10-p90':>8s} {'dry/norm/wet':>13s} {'irr mm':>6s} {'yield at risk med/p90':>18s}")
         for r in res:
-            t, yl = r.summary["total"], r.summary["yield_loss"]
+            t, yl = r.summary["fit"], r.summary["yield_at_risk"]
             print(f"{short(r)[:45]:46s} {t['median']:5.0f} {t['p10']:3.0f}-{t['p90']:<4.0f} "
                   f"{t['median_dry']:4.0f}/{t['median_normal']:3.0f}/{t['median_wet']:3.0f} "
                   f"{r.summary['irrigation_mm_per_year']['median']:6.0f} {yl['median']*100:8.0f}%/{yl['p90']*100:.0f}%")

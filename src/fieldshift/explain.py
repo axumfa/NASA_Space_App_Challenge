@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from .crops import load_crops
 from .pipeline import FieldContext, RotationResult
+from .compare import FIT_LABEL
 from .scoring import PRIORITIES
 
 LABEL = {"water_saving": "Water saving", "soil_om": "Soil organic matter", "nitrogen": "Nitrogen fixing",
@@ -53,7 +54,7 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
         e.why.append(f"{r.detail}. Your current rotation leaves the field bare about {bare_now:.0f} days a year; "
                      f"this brings it to about {bare_new:.0f}.")
     elif r.rule == "swap_drought":
-        d = s["irrigation_mm_per_year"]["median"] - cs["irrigation_mm_per_year"]["median"]
+        d = s["irrigation_demand_mm"]["median"] - cs["irrigation_demand_mm"]["median"]
         eff = (f"Estimated irrigation need falls by {-d:.0f} mm/year." if d < -5 else
                f"Note: estimated irrigation need is NOT lower here ({d:+.0f} mm/year vs today), "
                f"because the cycle fits more crop-days per year; the benefit is a more drought-tolerant crop.")
@@ -69,36 +70,44 @@ def explain(res: RotationResult, current: RotationResult, ctx: FieldContext) -> 
     e.evidence.append(f"Climate at the field ({ctx.annual.index.min()}–{ctx.annual.index.max()}, NASA POWER): "
                       f"median {frost_med:.0f} frost days/year (last spring frost ~day {last:.0f}, first autumn frost ~day {first:.0f}), "
                       f"{heat_med:.0f} days/year with Tmax ≥ 35 °C, rainfall {ann['precip'].median():.0f} mm vs reference ET0 {ann['et0'].median():.0f} mm.")
-    t, ct = s["total"], cs["total"]
-    e.evidence.append(f"Overall score {t['median']:.0f} (typical range {t['p10']:.0f}–{t['p90']:.0f}); "
+    t, ct = s["fit"], cs["fit"]
+    e.evidence.append(f"{FIT_LABEL}: {t['median']:.0f} (typical range {t['p10']:.0f}–{t['p90']:.0f}); "
                       f"dry years {t['median_dry']:.0f}, normal {t['median_normal']:.0f}, wet {t['median_wet']:.0f}. "
-                      f"Current rotation: {ct['median']:.0f}.")
-    irr, cirr = s["irrigation_mm_per_year"], cs["irrigation_mm_per_year"]
-    e.evidence.append(f"Estimated irrigation need: {irr['median']:.0f} mm/year (dry years {irr['median_dry']:.0f}, wet {irr['median_wet']:.0f}); "
-                      f"current rotation {cirr['median']:.0f} mm/year.")
-    yl = s["yield_loss"]
-    if yl["median"] > 0.005 or yl["p90"] > 0.005:
-        e.evidence.append(f"Water shortage: estimated yield loss {yl['median']*100:.0f}% typical, up to "
-                          f"{yl['p90']*100:.0f}% in the driest years (limited irrigation supply).")
+                      f"Current rotation: {ct['median']:.0f}. This is a relative score among the options shown, not an absolute grade.")
+    irr, cirr = s["irrigation_demand_mm"], cs["irrigation_demand_mm"]
+    pct = 100 * (irr["median"] - cirr["median"]) / cirr["median"] if cirr["median"] else 0.0
+    e.evidence.append(f"Estimated irrigation need: {irr['median']:.0f} mm/year" +
+                      ("" if r.rule == "current" else f" ({pct:+.0f}% vs current {cirr['median']:.0f} mm)") +
+                      f"; dry years {irr['median_dry']:.0f}, wet years {irr['median_wet']:.0f}.")
+    if s["n_kg"]["median"] > 0:
+        e.evidence.append(f"Nitrogen credit from legumes: about {s['n_kg']['median']:.0f} kg N/ha per year (approximate).")
+    yr = s["yield_at_risk"]
+    e.evidence.append(f"Yield at risk (water shortage, heat, frost): {yr['median']*100:.0f}% typical, "
+                      f"{yr['p90']*100:.0f}% in the worst 1 year in 10.")
     e.evidence.append(f"Climate fit {s['suitability']['median']:.0f}/100; pest-cycle break {s['pest_break']['median']:.0f}/100.")
 
     # ---- benefits / trade-offs vs current
     if r.rule != "current":
         for m in PRIORITIES:
-            d = s[m]["median"] - cs[m]["median"]
-            if d >= 5:
-                e.benefits.append(f"{LABEL[m]}: {s[m]['median']:.0f} vs {cs[m]['median']:.0f} today (+{d:.0f}).")
-            elif d <= -5:
-                e.tradeoffs.append(f"{LABEL[m]}: {s[m]['median']:.0f} vs {cs[m]['median']:.0f} today ({d:.0f}).")
+            if res.tied.get(m):
+                continue
+            d = s[f"norm_{m}"]["median"] - cs[f"norm_{m}"]["median"]
+            if d >= 10:
+                e.benefits.append(f"{LABEL[m]}: better than your current rotation (relative score {s[f'norm_{m}']['median']:.0f} vs {cs[f'norm_{m}']['median']:.0f}).")
+            elif d <= -10:
+                e.tradeoffs.append(f"{LABEL[m]}: worse than your current rotation (relative score {s[f'norm_{m}']['median']:.0f} vs {cs[f'norm_{m}']['median']:.0f}).")
         if bare_new < bare_now - 5:
             e.benefits.append(f"Bare soil reduced from ~{bare_now:.0f} to ~{bare_new:.0f} days/year.")
         if not e.benefits:
             e.benefits.append("No priority improves by 5+ points over the current rotation with your weights.")
     else:
         e.benefits.append("Known to you; no new equipment, seed or market arrangements needed.")
-        weak = [LABEL[m] for m in PRIORITIES if s[m]["median"] < 30]
+        weak = [LABEL[m] for m in PRIORITIES if not res.tied.get(m) and s[f"norm_{m}"]["median"] < 30]
         if weak:
-            e.tradeoffs.append("Weak points: " + ", ".join(weak) + " (score below 30).")
+            e.tradeoffs.append("Lowest among the options on: " + ", ".join(weak) + ".")
+    ties = [LABEL[m] for m, v in res.tied.items() if v]
+    if ties:
+        e.evidence.append("No real difference between these options for: " + ", ".join(ties) + " (treated as a tie).")
 
     # ---- gaps
     e.gaps.extend(ctx.gaps)

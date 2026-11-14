@@ -63,9 +63,9 @@ def test_weights_change_total_and_summary_has_classes():
     rot = schedule(("winter_wheat", "hairy_vetch", "cotton"), DB)
     a = score_rotation(rot, DB, _clim(), Weights(nitrogen=5), cls)
     b = score_rotation(rot, DB, _clim(), Weights(water_saving=5), cls)
-    assert a["total"].median() != b["total"].median()
+    assert a["total_abs"].median() != b["total_abs"].median()
     s = summarize(a)
-    assert {"median", "p10", "p90", "median_dry", "median_wet"} <= set(s["total"])
+    assert {"median", "p10", "p90", "median_dry", "median_wet"} <= set(s["total_abs"])
 
 
 def test_supply_deficit_penalises_by_drought_tolerance_and_keeps_water_score():

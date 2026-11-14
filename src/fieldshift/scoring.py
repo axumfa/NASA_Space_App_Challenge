@@ -5,8 +5,10 @@ Per planting, from that year's daily weather:
   ETc = sum(Kc_d * ET0_d);  effective rain = min(0.8 * P, ETc);  irrigation demand = ETc - eff. rain
 Irrigation supply (fraction `s`, default 1): water available to a planting = s * P90 of that
 planting's demand over the record (the "design" demand). If demand > supply:
-  deficit d = (demand - supply)/demand;  yield loss = min(1, ky * d);  ky = 0.6 + 0.9*(1 - drought_tol)
-  (drought-tolerant crops lose less); suitability is multiplied by (1 - loss); applied irrigation = supply.
+  relative ET deficit = (demand - supply)/ETc;  yield loss = min(1, Ky * deficit)   (FAO-33: 1-Ya/Ym = Ky*(1-ETa/ETm));
+  Ky is the published FAO-33 value where available, else 0.6 + 0.9*(1 - drought_tol) (flagged approx).
+  suitability is multiplied by (1 - loss); applied irrigation = supply.
+  yield_at_risk = 1 - (1 - heat/frost stress)*(1 - water loss), averaged over the cycle's plantings.
 Rotation-level (per year of the cycle):
   water_saving = 100 * (1 - FULL irrigation demand per year / 1200)   (a rotation property: shortage does not 'save' water)
   nitrogen     = 100 * sum(n_credit) / years / 50
@@ -16,7 +18,9 @@ Rotation-level (per year of the cycle):
   income       = 100 * sum(income * yield_factor) / years / 0.9    (yield_factor = suitability/100;
                  cover crops have income <= 0 = seed + termination cost)
   pest_break   = 100 * (1 - share of cyclic neighbours from the same family)
-Total = weighted mean of the six priority subscores x (0.6 + 0.4*suitability/100) x (0.85 + 0.15*pest_break/100).
+total_abs = weighted mean of the six priority subscores x (0.6 + 0.4*suitability/100) x (0.85 + 0.15*pest_break/100).
+(total_abs is used only to rank candidates within a rule family; the number shown to users is the
+normalised 'fit' from compare.py.)
 Year classes (dry/normal/wet) come from terciles of irrigation demand (high demand = "dry").
 """
 from __future__ import annotations
@@ -46,6 +50,12 @@ class Weights:
 
     def as_dict(self) -> dict[str, float]:
         return {f.name: getattr(self, f.name) for f in fields(self)}
+
+    def normalized(self) -> dict[str, float]:
+        """Weights rescaled to sum to 1 (equal weights if all are zero)."""
+        d = self.as_dict()
+        tot = sum(d.values())
+        return {k: v / tot for k, v in d.items()} if tot > 0 else {k: 1 / len(d) for k in d}
 
 
 PROFILES = {
@@ -89,7 +99,8 @@ def score_planting(pl: Planting, crop: Crop, clim: DailyClimate, sl: slice) -> d
     etc = float((np.array(kc_curve(crop, pl.days)) * clim.et0[sl]).sum())
     rain = float(clim.p[sl].sum())
     eff = min(0.8 * rain, etc)
-    return dict(suitability=suit, temp_fit=temp_fit, frost_days=frost_days, heat_days=heat_days,
+    stress = 1 - (1 - 0.5 * frost_pen) * (1 - 0.5 * heat_pen)
+    return dict(suitability=suit, stress_loss=stress, temp_fit=temp_fit, frost_days=frost_days, heat_days=heat_days,
                 gdd=gdd, etc_mm=etc, rain_mm=rain, eff_rain_mm=eff, irrigation_mm=etc - eff)
 
 
@@ -146,15 +157,15 @@ def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weigh
     w = weights.as_dict()
     rows_out = []
     for y, rows in table.items():
-        suits, applied, losses, forage, income = [], [], [], 0.0, 0.0
+        suits, applied, losses, risks, forage, income = [], [], [], [], 0.0, 0.0
         for i, (p, r) in enumerate(zip(rot.plantings, rows)):
             c = db[p.crop_id]
             demand, supply = r["irrigation_mm"], irrigation_supply * design[i]
-            d = max(0.0, (demand - supply) / demand) if demand > 0 else 0.0
-            ky = 0.6 + 0.9 * (1 - c["drought_tol"])
-            loss = min(1.0, ky * d)
+            short = max(0.0, demand - supply)
+            loss = min(1.0, c["ky"] * short / r["etc_mm"]) if r["etc_mm"] > 0 else 0.0
             suit = r["suitability"] * (1 - loss)
-            suits.append(suit); losses.append(loss); applied.append(min(demand, supply) if d > 0 else demand)
+            suits.append(suit); losses.append(loss); applied.append(demand - short)
+            risks.append(1 - (1 - r["stress_loss"]) * (1 - loss))
             forage += c["forage"] * suit / 100
             income += c["income"] * suit / 100
         suit_m, irr = float(np.mean(suits)), sum(applied) / k
@@ -165,9 +176,10 @@ def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weigh
                    income=float(np.clip(100 * income / k / 0.9, 0, 100)))
         prior = sum(w[m] * sub[m] for m in PRIORITIES) / max(sum(w.values()), 1e-9)
         total = prior * (0.6 + 0.4 * suit_m / 100) * (0.85 + 0.15 * static["pest_break"] / 100)
-        rows_out.append(dict(year=y, total=total, suitability=suit_m, pest_break=static["pest_break"],
+        rows_out.append(dict(year=y, total_abs=total, suitability=suit_m, pest_break=static["pest_break"],
                              irrigation_mm_per_year=irr, irrigation_demand_mm=full, bare_days=static["bare_days"],
-                             yield_loss=float(np.mean(losses)),
+                             yield_loss=float(np.mean(losses)), yield_at_risk=float(np.mean(risks)),
+                             n_kg=sum(db[p.crop_id]['n_credit'] for p in rot.plantings) / k,
                              heat_days=sum(r["heat_days"] for r in rows) / k,
                              frost_days=sum(r["frost_days"] for r in rows) / k, **sub))
     df = pd.DataFrame(rows_out).set_index("year")
@@ -177,8 +189,8 @@ def score_rotation(rot: Rotation, db: dict[str, Crop], clim: DailyClimate, weigh
 
 def summarize(scores: pd.DataFrame, cols: list[str] | None = None) -> dict[str, dict[str, float]]:
     """Median and p10-p90 across all years and for each year class, per column."""
-    cols = cols or ["total", *PRIORITIES, "suitability", "pest_break", "irrigation_mm_per_year",
-                    "heat_days", "frost_days", "yield_loss"]
+    cols = cols or ["total_abs", *PRIORITIES, "suitability", "pest_break", "irrigation_mm_per_year",
+                    "heat_days", "frost_days", "yield_loss", "yield_at_risk", "irrigation_demand_mm", "n_kg", "bare_days"]
     out: dict[str, dict[str, float]] = {}
     for c in cols:
         s = scores[c]

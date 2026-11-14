@@ -20,7 +20,7 @@
     "mid": 1.18,
     "end": 0.6
    },
-   "gdd_base": 15,
+   "gdd_base": 15.5,
    "gdd_req": 1300,
    "t_min": 15,
    "t_opt": [
@@ -29,7 +29,7 @@
    ],
    "t_max": 40,
    "frost_kill_c": 0,
-   "heat_thr_c": 36,
+   "heat_thr_c": 38,
    "water_need_mm": 700,
    "drought_tol": 0.5,
    "salinity_tol": 0.6,
@@ -47,13 +47,17 @@
    "n_fixing": false,
    "market_note": "Often sold via contracts/clusters; check current procurement terms and prices.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.85,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -112,13 +116,17 @@
    "n_fixing": false,
    "market_note": "Food-security crop; procurement/quota rules may apply locally.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.05,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -177,13 +185,17 @@
    "n_fixing": false,
    "market_note": "Feed/malting market; lower price than wheat in most regions.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.92,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -197,7 +209,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "maize": {
@@ -242,13 +255,17 @@
    "n_fixing": false,
    "market_note": "Strong feed demand; drying/storage costs matter.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.25,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -307,13 +324,17 @@
    "n_fixing": false,
    "market_note": "Thin local market in some regions; feed use; check buyers.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.9,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -372,13 +393,17 @@
    "n_fixing": false,
    "market_note": "Small niche market; mostly feed/food local use.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.69,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -392,7 +417,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "alfalfa": {
@@ -407,7 +433,7 @@
    ],
    "kc": {
     "ini": 0.4,
-    "mid": 1.0,
+    "mid": 0.95,
     "end": 0.9
    },
    "gdd_base": 5,
@@ -437,13 +463,17 @@
    "n_fixing": true,
    "market_note": "Local hay/feed demand; livestock needed or hay sold; seed cost.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.1,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -458,7 +488,8 @@
     "stages",
     "water_need_mm",
     "t_opt"
-   ]
+   ],
+   "notes": "Simplification: modelled as a 1-year stand (establishment + one production year). A real 3-year stand does not fit the 1-3 year rotation cycle used here; longer stands would add benefit not modelled."
   },
   "mung_bean": {
    "name": "Mung bean",
@@ -472,8 +503,8 @@
    ],
    "kc": {
     "ini": 0.4,
-    "mid": 1.05,
-    "end": 0.6
+    "mid": 1.15,
+    "end": 0.35
    },
    "gdd_base": 10,
    "gdd_req": 1000,
@@ -502,13 +533,17 @@
    "n_fixing": true,
    "market_note": "Often grown as post-wheat short-season crop; check buyers/export prices.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.15,
+   "ky_source": "FAO-33 Table 1 (analog: FAO 'beans')",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -522,7 +557,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "chickpea": {
@@ -567,13 +603,17 @@
    "n_fixing": true,
    "market_note": "Good export demand historically; price volatile.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.15,
+   "ky_source": "FAO-33 Table 1 (analog: FAO 'peas')",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -587,7 +627,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "lentil": {
@@ -632,13 +673,17 @@
    "n_fixing": true,
    "market_note": "Export/food market; check local buyers.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.15,
+   "ky_source": "FAO-33 Table 1 (analog: FAO 'peas')",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -652,7 +697,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "soybean": {
@@ -697,13 +743,17 @@
    "n_fixing": true,
    "market_note": "Large commodity market in the US; limited processing in Central Asia.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.85,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -762,13 +812,17 @@
    "n_fixing": false,
    "market_note": "Oil crush demand; check local processors.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.95,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -827,13 +881,17 @@
    "n_fixing": false,
    "market_note": "Niche oil/dye market; few buyers in many regions.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.8,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -892,13 +950,17 @@
    "n_fixing": false,
    "market_note": "Oil crush demand; needs a nearby processor; winter-kill risk.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.05,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -912,7 +974,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "rye_cover": {
@@ -957,13 +1020,17 @@
    "n_fixing": false,
    "market_note": "No direct sale; ~USD 60-100/ha seed+termination (rough); may be grazed.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.82,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -977,7 +1044,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "hairy_vetch": {
@@ -1022,13 +1090,17 @@
    "n_fixing": true,
    "market_note": "No direct sale; seed costly/hard to find (~USD 100/ha incl. termination, rough); N credit for next crop.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 0.96,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -1042,7 +1114,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "clover": {
@@ -1057,8 +1130,8 @@
    ],
    "kc": {
     "ini": 0.4,
-    "mid": 1.0,
-    "end": 0.8
+    "mid": 0.9,
+    "end": 0.85
    },
    "gdd_base": 0,
    "gdd_req": 0,
@@ -1087,13 +1160,17 @@
    "n_fixing": true,
    "market_note": "Forage value (hay/grazing); seed availability varies.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.09,
+   "ky_source": "fallback formula 0.6+0.9*(1-drought_tol)",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -1107,7 +1184,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "potato": {
@@ -1152,13 +1230,17 @@
    "n_fixing": false,
    "market_note": "High value but high cost, storage and price risk.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.1,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -1217,13 +1299,17 @@
    "n_fixing": false,
    "market_note": "High value local/regional demand; labour intensive; perishable.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.1,
+   "ky_source": "FAO-33 Table 1 (analog: FAO 'watermelon')",
    "approx": [
     "gdd_req",
     "heat_thr_c",
@@ -1237,7 +1323,8 @@
     "income",
     "stages",
     "water_need_mm",
-    "t_opt"
+    "t_opt",
+    "ky"
    ]
   },
   "sugar_beet": {
@@ -1282,13 +1369,17 @@
    "n_fixing": false,
    "market_note": "Needs a sugar factory within reach; contract-based.",
    "sources": {
-    "kc_and_stages": "FAO-56 Tables 11-12 (Allen et al. 1998); stage lengths rescaled to 'days' where needed",
+    "kc_and_stages": "Kc ini/mid/end checked against FAO-56 Table 12 (fetched from fao.org); stage lengths are from memory of FAO-56 Table 11 and were NOT re-checked; hairy vetch and cereal-rye cover Kc are analogues (approx)",
+    "ky": "FAO-33 seasonal Ky (Table 1 of FAO paper 66 reproduces it) where listed; otherwise fallback 0.6+0.9*(1-drought_tol), flagged approx",
+    "gdd_base_cotton": "15.5 C = cotton DD60 convention, from memory; FAO paper 66 does not state a cotton base temperature",
     "temperature": "FAO ECOCROP-style ranges (t_min, t_opt, t_max); cover crops from extension-service guidance",
     "gdd": "GDD base and requirement approximate, from cultivar-group literature (modified method, cap 30 C)",
     "trait_scores": "cover/om/forage/income/drought/salinity: 0-1 authors' relative estimates (income index 1 ~ USD 600-700/ha gross margin, rough; cover crops are negative = seed+termination cost; cover-crop forage halved because it is not a harvested crop)",
     "n_credit": "approx. net N credit to the following crop, kg N/ha (extension-service ranges)",
     "sow_doy": "typical sowing window, day of year, mid-latitude northern hemisphere (Central Asia / US Plains)"
    },
+   "ky": 1.0,
+   "ky_source": "FAO-33 Table 1",
    "approx": [
     "gdd_req",
     "heat_thr_c",

@@ -25,3 +25,14 @@ def test_parse_rest_skips_missing_values():
 
 def test_texture_class():
     assert texture_class(45, 20, 35) == "clay" and texture_class(8, 80, 12) == "sandy"
+
+
+def test_manual_tier_skips_null_template(tmp_path, monkeypatch):
+    import json
+    from fieldshift.fetch import soil
+    (tmp_path / "soil_x.json").write_text(json.dumps({"clay_pct": None, "sand_pct": 30, "soc_g_kg": 8.5}))
+    monkeypatch.setattr(soil, "MANUAL_DIR", tmp_path)
+    assert soil._via_manual("x") == {"sand_pct": 30.0, "soc_g_kg": 8.5}
+    (tmp_path / "soil_y.json").write_text(json.dumps({"clay_pct": None}))
+    with pytest.raises(ValueError):
+        soil._via_manual("y")

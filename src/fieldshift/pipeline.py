@@ -10,6 +10,7 @@ from . import features as F
 from .crops import load_crops
 from .fetch.base import FetchResult
 from .fetch.power import fetch_power
+from . import compare
 from .rotations import ClimateClimatology, Rotation, generate_candidates
 from .scoring import (DailyClimate, Weights, classify_by_demand, irrigation_demand_by_year,
                       planting_table, score_rotation, summarize)
@@ -33,6 +34,7 @@ class RotationResult:
     rotation: Rotation
     scores: pd.DataFrame
     summary: dict[str, dict[str, float]]
+    tied: dict[str, bool] = field(default_factory=dict)
 
 
 def build_context(lat: float, lon: float, start_year: int = 2001, end_year: int | None = None,
@@ -89,8 +91,36 @@ def run(ctx: FieldContext, current: tuple[str, ...], weights: Weights | None = N
     classes = classify_by_demand(demand)
 
     def quick(rot: Rotation) -> float:  # used only to rank candidates within a rule family
-        return float(score_rotation(rot, db, dc, weights, classes, irrigation_supply)["total"].median())
+        return float(score_rotation(rot, db, dc, weights, classes, irrigation_supply)["total_abs"].median())
 
     rots = generate_candidates(current, db, ctx.clim, quick, n_alternatives, pinned, n_per_rule)
-    return [RotationResult(r, sc, summarize(sc)) for r in rots
-            for sc in [score_rotation(r, db, dc, weights, classes, irrigation_supply)]]
+    out = [RotationResult(r, sc, summarize(sc)) for r in rots
+           for sc in [score_rotation(r, db, dc, weights, classes, irrigation_supply)]]
+    compare.apply(out, weights)
+    return out
+
+
+def choose(pool: list[RotationResult], weights: Weights, n: int = 4,
+           force: tuple[tuple[str, ...], ...] = ()) -> tuple[list[RotationResult], dict[str, bool]]:
+    """Pick the rotations to display: current + the best candidate of each rule family (top n by fit).
+
+    `pool` is every feasible candidate (current first). Scores are normalised first over the whole pool to
+    choose, then again over the displayed options only (the fit is "compared among these options").
+    Returns (display, tied-criteria flags). Works on copies, so the cached pool is never mutated.
+    """
+    from copy import copy
+    pool = [RotationResult(r.rotation, r.scores.copy(), r.summary) for r in pool]
+    compare.apply(pool, weights)
+    best: dict[str, RotationResult] = {}
+    for r in pool[1:]:
+        if r.rotation.rule not in best or r.summary["fit"]["median"] > best[r.rotation.rule].summary["fit"]["median"]:
+            best[r.rotation.rule] = r
+    picks = sorted(best.values(), key=lambda r: -r.summary["fit"]["median"])[:n]
+    for crops in force:
+        hit = next((r for r in pool[1:] if r.rotation.crops == tuple(crops)), None)
+        if hit and hit not in picks:
+            picks = picks[:n - 1] + [hit]
+    display = [pool[0], *picks]
+    tied = compare.apply(display, weights)
+    display[1:] = sorted(display[1:], key=lambda r: -r.summary["fit"]["median"])
+    return display, tied

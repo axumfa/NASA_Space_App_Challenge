@@ -1,0 +1,11 @@
+{
+ "_source": "SoilGrids web map, read manually",
+ "_depth": "0-30 cm",
+ "_instructions": "Fill the six values from https://soilgrids.org (mean, 0-30 cm). Leave null if not read. Units: %, %, %, g/kg, pH, kg/dm3.",
+ "clay_pct": null,
+ "sand_pct": null,
+ "silt_pct": null,
+ "soc_g_kg": null,
+ "phh2o": null,
+ "bdod_kg_dm3": null
+}
