@@ -37,16 +37,19 @@ CSS = """<style>
 .leaflet-control-layers{border:1px solid #E3DFD3 !important; border-radius:8px !important; box-shadow:none !important;}
 .leaflet-control-layers-expanded{padding:8px 12px !important; font-size:13px; color:#232623;}
 .leaflet-control-layers-separator{margin:6px 0 !important;}
-.fs-maplegend{background:rgba(255,255,255,.94); border:1px solid #E3DFD3; border-radius:8px; padding:8px 11px; width:225px; font-size:11.5px; line-height:1.35; color:#232623;}
-.fs-maplegend b{font-size:12.5px;}
-.fs-maplegend .bar{height:9px; border-radius:3px; margin:6px 0 2px; border:1px solid rgba(0,0,0,.08);}
-.fs-maplegend .rng{display:flex; justify-content:space-between; color:#4a4e46; font-variant-numeric:tabular-nums;}
-.fs-maplegend .src{color:#6B6F66; margin-top:5px;}
-.fs-maplegend .st{margin-top:4px; font-weight:600;}
+.fs-maplegend{background:rgba(255,255,255,.94); border:1px solid #E3DFD3; border-radius:8px; padding:4px 9px; max-width:min(330px,calc(100vw - 40px)); font-size:11.5px; line-height:1.3; color:#232623; cursor:pointer;}
+.fs-maplegend .row{display:flex; align-items:center; gap:7px; white-space:nowrap;}
+.fs-maplegend .row b{font-size:12px; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:0 1 auto;}
+.fs-maplegend .bar{height:8px; width:64px; flex:0 0 64px; border-radius:3px; border:1px solid rgba(0,0,0,.1);}
+.fs-maplegend .rng{color:#4a4e46; font-variant-numeric:tabular-nums; flex:0 0 auto;}
+.fs-maplegend .tg{color:#6B6F66; flex:0 0 auto; margin-left:auto; padding-left:4px;}
+.fs-maplegend .more{margin-top:4px; padding-top:4px; border-top:1px solid #EEEBE0; white-space:normal;}
+.fs-maplegend .src{color:#4a4e46;}
+.fs-maplegend .st{margin-top:3px; font-weight:600;}
 .fs-maplegend .st.err{color:#8A5313;} .fs-maplegend .st.ok{color:#234E35;}
 .fs-maplegend .note{color:#6B6F66; margin-top:3px;}
 .leaflet-top{z-index:1001 !important;}
-@media (max-width: 480px){.fs-maplegend{width:185px; padding:6px 8px;} .fs-maplegend .note{display:none;} .fs-maplegend .src{font-size:10.5px;}}
+@media (max-width: 480px){.fs-maplegend .bar{width:48px; flex-basis:48px;} .fs-maplegend .note{display:none;}}
 </style>"""
 
 
@@ -144,20 +147,27 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
   L.control.zoom({{position: 'topleft', zoomInTitle: T.zoom_in, zoomOutTitle: T.zoom_out}}).addTo(map);
   L.control.scale({{imperial: false}}).addTo(map);
   var panel = L.control({{position: 'bottomleft'}});
-  panel.onAdd = function() {{ this._d = L.DomUtil.create('div', 'fs-maplegend'); this._d.style.display = 'none'; return this._d; }};
-  panel.addTo(map);
   var store = {{ get: function(k) {{ try {{ return window.localStorage.getItem(k); }} catch (e) {{ return null; }} }},
                 set: function(k, v) {{ try {{ if (v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); }} catch (e) {{}} }} }};
+  var sstore = {{ get: function(k) {{ try {{ return window.sessionStorage.getItem(k); }} catch (e) {{ return null; }} }},
+                 set: function(k, v) {{ try {{ if (v === null) window.sessionStorage.removeItem(k); else window.sessionStorage.setItem(k, v); }} catch (e) {{}} }} }};
   var active = null, errs = 0;
   function esc(s) {{ var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }}
+  var open = false;
   function render(name, status, cls) {{
     var i = info[name]; var d = panel._d;
     if (!i) {{ d.style.display = 'none'; return; }}
-    var rng = i.bar !== 'none' ? '<div class="bar" style="background:' + i.bar + '"></div><div class="rng"><span>' + esc(i.lo) + '</span><span>' + esc(i.hi) + '</span></div>' : '';
-    d.innerHTML = '<b>' + esc(i.title) + '</b>' + rng + '<div class="src">' + esc(T.source) + ': ' + esc(i.src) + '<br>' + esc(T.date) + ': ' + esc(i.date) + '</div>' +
-      '<div class="note">' + esc(i.note) + '</div>' + (i.asof ? '<div class="note">' + esc(i.asof) + '</div>' : '') + (status ? '<div class="st ' + (cls || '') + '">' + esc(status) + '</div>' : '');
+    var rng = i.bar !== 'none' ? '<span class="bar" style="background:' + i.bar + '"></span><span class="rng">' + esc(i.lo) + ' – ' + esc(i.hi) + '</span>' : '';
+    var line = '<div class="row"><b>' + esc(i.title) + '</b>' + rng + (cls === 'err' && status ? '<span class="st err">⚠</span>' : '') + '<span class="tg">' + (open ? '▾' : '▸') + '</span></div>';
+    var more = open ? '<div class="more"><div class="src">' + esc(T.source) + ': ' + esc(i.src) + '<br>' + esc(T.date) + ': ' + esc(i.date) + '</div>' +
+      '<div class="note">' + esc(i.note) + '</div>' + (i.asof ? '<div class="note">' + esc(i.asof) + '</div>' : '') + (status ? '<div class="st ' + (cls || '') + '">' + esc(status) + '</div>' : '') + '</div>' : '';
+    d.innerHTML = line + more; d._last = [name, status, cls];
     d.style.display = 'block';
   }}
+  panel.onAdd = function() {{ var d = L.DomUtil.create('div', 'fs-maplegend'); d.style.display = 'none'; d.setAttribute('role', 'button'); d.setAttribute('tabindex', '0');
+    var tog = function() {{ open = !open; if (d._last) render.apply(null, d._last); }};
+    d.addEventListener('click', tog); d.addEventListener('keydown', function(e) {{ if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); tog(); }} }});
+    this._d = d; return d; }};
   function activate(name) {{
     active = name; errs = 0; var l = D[name];
     render(name, T.loading, '');
@@ -166,6 +176,7 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
     l._fsErr = function() {{ errs += 1; if (active === name) render(name, T.tile_error, 'err'); }};
     l.on('load', l._fsLoad); l.on('tileerror', l._fsErr);
   }}
+  panel.addTo(map);
   L.DomEvent.disableClickPropagation(panel._d);
   // Leaflet re-adds a layer removed during the same click (its checkbox is still ticked), so the exclusive switch runs after the click,
   // keeping the layer the user actually clicked.
@@ -178,19 +189,19 @@ def build_map(lat: float, lon: float, layers: dict[str, GibsLayer], lang: str = 
     setTimeout(function() {{
       var keep = (lastClick && D[lastClick] && map.hasLayer(D[lastClick])) ? lastClick : e.name;
       Object.keys(D).forEach(function(k) {{ if (k !== keep && map.hasLayer(D[k])) map.removeLayer(D[k]); }});
-      activate(keep); store.set('fs_data', keep);
+      activate(keep); sstore.set('fs_data', keep);
     }}, 0);
   }});
   map.on('overlayremove', function(e) {{
     if (!D[e.name]) return;
     if (active === e.name) {{ active = null; panel._d.style.display = 'none'; }}
     var any = Object.keys(D).some(function(k) {{ return map.hasLayer(D[k]); }});
-    if (!any) store.set('fs_data', null);
+    if (!any) sstore.set('fs_data', null);
   }});
   map.on('baselayerchange', function(e) {{ store.set('fs_base', e.name); }});
   // restore the remembered choices (the page reruns, e.g. when the field is moved, and rebuilds the map)
   var b = store.get('fs_base'); if (b && B[b] && !map.hasLayer(B[b])) {{ Object.keys(B).forEach(function(k) {{ if (map.hasLayer(B[k])) map.removeLayer(B[k]); }}); B[b].addTo(map); }}
-  var dname = store.get('fs_data'); if (dname && D[dname]) {{ D[dname].addTo(map); }}
+  var dname = sstore.get('fs_data'); if (dname && D[dname]) {{ D[dname].addTo(map); }}
 }})();
 """
     m.add_child(_Behaviour(js))
