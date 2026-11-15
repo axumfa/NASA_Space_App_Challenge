@@ -52,7 +52,7 @@ section[data-testid="stSidebar"][aria-expanded="true"]{min-width:340px; max-widt
 /* ---------- header ---------- */
 .fs-brand{display:flex; align-items:center; gap:.65rem; padding:.2rem 0;}
 .fs-brand b{font-size:1.15rem; letter-spacing:-0.02em; font-weight:700; display:block; line-height:1.1;}
-.fs-brand span{font-size:.74rem; color:var(--fs-muted); display:block; line-height:1.2;}
+.fs-brand span{font-size:.74rem; color:var(--fs-muted); display:block; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .st-key-nav [role="radiogroup"], .st-key-langbox [role="radiogroup"]{gap:.2rem; flex-wrap:wrap;}
 .st-key-nav label[data-testid="stRadioOption"], .st-key-langbox label[data-testid="stRadioOption"]{
   margin:0; padding:.38rem .85rem; border-radius:8px; cursor:pointer; border:1px solid transparent; background:transparent;}
@@ -192,7 +192,9 @@ PIN = '<svg viewBox="0 0 16 16" fill="none" stroke="#2F6B45" stroke-width="1.6">
 
 def hero_left(eyebrow: str, title: str, coords: str, extra: list[str], grows_label: str, crops: list[str], lead: str) -> str:
     """Selected-field card text: name, scannable coordinate chips, rotation chips, one-line purpose."""
-    chips = f'<span class="fs-coord">{PIN}{esc(coords)}</span>' + "".join(f'<span class="fs-coord" style="font-weight:550">{esc(x)}</span>' for x in extra)
+    chips = f'<span class="fs-coord">{PIN}{esc(coords)}</span>' + "".join(
+        f'<span class="fs-coord" style="font-weight:550" title="{esc(x[1])}">{esc(x[0])}</span>' if isinstance(x, tuple) else
+        f'<span class="fs-coord" style="font-weight:550">{esc(x)}</span>' for x in extra)
     rot = '<span class="lbl">' + esc(grows_label) + '</span><span class="fs-rotprev" style="margin:0">' + '<span class="a">→</span>'.join(
         f'<span class="c">{esc(c)}</span>' for c in crops) + "</span>"
     return (f'<div class="fs-hero"><div class="fs-eyebrow">{esc(eyebrow)}</div><h1>{esc(title)}</h1>'

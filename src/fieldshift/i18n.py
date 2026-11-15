@@ -511,7 +511,7 @@ for _c, (_en, _uz) in _MK.items():
 
 
 # ---------------------------------------------------------------- redesign: header, field bar, KPI cards, comparison table
-add("ui.tagline", "Crop-rotation decision support", "Almashlab ekish bo'yicha qarorlarni qo'llab-quvvatlash")
+add("ui.tagline", "Crop-rotation decision support", "Almashlab ekish qaror vositasi", unsure="short for 'decision support': 'qaror vositasi' (decision tool); shortened so it fits one line")
 add("ui.nasa", "Built on NASA Earth observation data", "NASA Yer kuzatuvi ma'lumotlari asosida")
 add("ui.lang", "Language / Til", "Language / Til")
 add("ui.field_label", "Field", "Dala")
@@ -634,7 +634,7 @@ add("ui.g_soil", "Soil and cover", "Tuproq va qoplama")
 add("ui.g_prio", "Relative score by priority (0–100)", "Ustuvorlik bo'yicha nisbiy ball (0–100)")
 add("ui.back_field", "Back to your field", "Dalaga qaytish")
 add("ui.step_trail", "1 Field  ›  2 Climate  ›  3 Compare options  ›  4 Trade-offs", "1 Dala  ›  2 Iqlim  ›  3 Variantlarni solishtirish  ›  4 Foyda va kamchiliklar")
-add("ui.elev", "{m:.0f} m elevation (climate cell)", "dengiz sathidan {m:.0f} m balandlik (iqlim katagi)", unsure="phrasing of elevation")
+add("ui.elev", "~50 km cell average elevation: {m:.0f} m", "~50 km katakning o'rtacha balandligi: {m:.0f} m", unsure="phrasing of the average elevation of the climate grid cell")
 
 # ---------------------------------------------------------------- agricultural map
 add("map.base_sat", "Satellite", "Sun'iy yo'ldosh")
@@ -694,3 +694,4 @@ add("soil.src_manual", "SoilGrids web map, read manually", "SoilGrids veb-xarita
 add("ui.view_label", "View", "Ko'rinish")
 add("map.zoom_in", "Zoom in", "Yaqinlashtirish")
 add("map.zoom_out", "Zoom out", "Uzoqlashtirish")
+add("ui.elev_tip", "Average elevation of the ~50 km NASA POWER climate cell around the point, not the elevation of this field.", "Nuqta atrofidagi ~50 km li NASA POWER iqlim katagining o'rtacha balandligi, bu dalaning balandligi emas.")

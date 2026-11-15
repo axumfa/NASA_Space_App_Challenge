@@ -5,7 +5,7 @@ All Uzbek text (Latin script) was written by the AI assistant and has **not** be
 To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uzbek_review.py` regenerates this file.
 
 
-## 1. Strings I am unsure about (62)
+## 1. Strings I am unsure about (63)
 
 | key | English | Uzbek | why unsure |
 |---|---|---|---|
@@ -65,11 +65,12 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `soil.tex.silty` | silty loam | changli qumoq | 'silty (loam)': 'changli qumoq' |
 | `soil.texture` | texture | tuproq turi | texture class names are not translated |
 | `sum.tradeoff` | **Main trade-off:** {tradeoff}. | **Asosiy kamchilik:** {tradeoff}. | 'trade-off' rendered as 'kamchilik' (drawback) |
-| `ui.elev` | {m:.0f} m elevation (climate cell) | dengiz sathidan {m:.0f} m balandlik (iqlim katagi) | phrasing of elevation |
+| `ui.elev` | ~50 km cell average elevation: {m:.0f} m | ~50 km katakning o'rtacha balandligi: {m:.0f} m | phrasing of the average elevation of the climate grid cell |
 | `ui.grp_env` | Environment | Atrof-muhit | 'Atrof-muhit' for environment |
 | `ui.hemi_e` | E | Shq | compass abbreviations Sh (north), Shq (east), J (south), G' (west) |
 | `ui.kpi_et0` | Reference ET0 | Namlanish talabi (ET0) | 'namlanish talabi' for ET0 |
 | `ui.sidebar_what` | Test a scenario | Stsenariyni sinab ko'ring | 'Stsenariy' for scenario |
+| `ui.tagline` | Crop-rotation decision support | Almashlab ekish qaror vositasi | short for 'decision support': 'qaror vositasi' (decision tool); shortened so it fits one line |
 | `viz.fit_title` | {short} by type of year (bars = typical, whiskers = 10th–90th percentile) | {short}, yil turi bo'yicha (ustun = odatdagi, chiziq = 10–90-protsentil) | 'protsentil' |
 
 ## 2. Crop names
@@ -368,7 +369,6 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `mk.potato` | High value but high cost, storage and price risk. | Qiymati yuqori, lekin xarajat, saqlash va narx xavfi ham yuqori. |
 | `mk.melon` | High value local/regional demand; labour intensive; perishable. | Mahalliy/mintaqaviy talab yuqori; ko'p mehnat talab qiladi; tez buziladi. |
 | `mk.sugar_beet` | Needs a sugar factory within reach; contract-based. | Yaqin atrofda shakar zavodi kerak; shartnoma asosida. |
-| `ui.tagline` | Crop-rotation decision support | Almashlab ekish bo'yicha qarorlarni qo'llab-quvvatlash |
 | `ui.nasa` | Built on NASA Earth observation data | NASA Yer kuzatuvi ma'lumotlari asosida |
 | `ui.lang` | Language / Til | Language / Til |
 | `ui.field_label` | Field | Dala |
@@ -522,6 +522,7 @@ To change a string, edit `src/fieldshift/i18n.py` (key shown below); `scripts/uz
 | `ui.view_label` | View | Ko'rinish |
 | `map.zoom_in` | Zoom in | Yaqinlashtirish |
 | `map.zoom_out` | Zoom out | Uzoqlashtirish |
+| `ui.elev_tip` | Average elevation of the ~50 km NASA POWER climate cell around the point, not the elevation of this field. | Nuqta atrofidagi ~50 km li NASA POWER iqlim katagining o'rtacha balandligi, bu dalaning balandligi emas. |
 
 ## 4. What is NOT translated (stays English in Uzbek mode)
 

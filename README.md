@@ -132,3 +132,7 @@ The field view has an interactive map: satellite / street / terrain basemaps and
 ## Satellite data in the demo
 
 `data/demo_cache/demo-points-*.csv` are trimmed copies (same values, fewer columns and points) of the NASA AppEEARS point-sample downloads for the three demo points with real cropland NDVI: Fergana (213 ha farmland point), Kansas and Karakalpakstan. They are public NASA data (MOD13Q1.061, SPL3SMP_E.006) and make the demo show real satellite greenness and soil moisture offline. To rebuild them after a new download, run `python scripts/make_demo_satellite.py`.
+
+## First paint
+
+The app shows a small splash from its first moment on a new browser session (before the heavy imports and the first computation), then removes it. For the moment before Streamlit's own JavaScript has loaded, `deploy/nginx-splash.conf` is an optional nginx snippet that paints the same splash from the HTML shell (include it inside the proxying `location /` block).

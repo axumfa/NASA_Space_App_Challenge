@@ -6,24 +6,44 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-import pandas as pd
 import streamlit as st
 
-from fieldshift import features as F
-from fieldshift import viz
-from fieldshift.config import DEMO_FIELDS, field_at
-from fieldshift.crops import load_crops
-from fieldshift.explain import explain, is_arid, summary_box
-from fieldshift.fetch.soil import fetch_soil
-from fieldshift import i18n, ui
-from fieldshift import mapview
-from fieldshift.fetch import gibs
-from fieldshift.i18n import GLOSSARY, LANGS, crop_name, tr
-from fieldshift.pipeline import build_context, choose, run
-from fieldshift.rotations import schedule
-from fieldshift.scoring import PRIORITIES, PROFILES, DailyClimate, Weights, planting_table
-
+# First paint: set_page_config and a light splash come BEFORE the heavy imports and the first computation, so a cold load never shows an
+# empty page. Shown once per browser session (reruns on a click must not flash it); a CSS timer hides it by itself if the script dies.
 st.set_page_config(page_title="Field Shift", page_icon="🌾", layout="wide", initial_sidebar_state="auto")
+boot = st.empty()
+if "booted" not in st.session_state:
+    st.session_state["booted"] = True
+    _uz = st.session_state.get("lang_label", "").startswith("O")
+    boot.markdown(
+        "<style>[data-testid=\"stToolbar\"],[data-testid=\"stDecoration\"]{visibility:hidden}.fs-boot{position:fixed;inset:0;z-index:99999;background:#FAF8F3;display:flex;flex-direction:column;align-items:center;"
+        "justify-content:center;gap:14px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#232623;"
+        "animation:fsboothide 0s linear 12s forwards}@keyframes fsboothide{to{opacity:0;visibility:hidden}}"
+        ".fs-boot b{font-size:1.25rem;letter-spacing:-.02em}.fs-boot span{font-size:.85rem;color:#6B6F66}"
+        ".fs-boot i{display:block;width:150px;height:4px;border-radius:3px;background:#E3DFD3;overflow:hidden;position:relative}"
+        ".fs-boot i::after{content:'';position:absolute;inset:0;width:45%;background:#2F6B45;border-radius:3px;animation:fsbootbar 1.2s ease-in-out infinite}"
+        "@keyframes fsbootbar{0%{left:-45%}100%{left:100%}}</style>"
+        '<div class="fs-boot"><svg viewBox="0 0 32 32" width="40" height="40" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2F6B45"/>'
+        '<path d="M6 12.5 L26 7.5" stroke="#CFE0C8" stroke-width="3" stroke-linecap="round"/><path d="M6 19 L26 14" stroke="#EAF1E4" stroke-width="3" stroke-linecap="round"/>'
+        '<path d="M6 25.5 L26 20.5" stroke="#B9C48A" stroke-width="3" stroke-linecap="round"/></svg>'
+        f"<b>Field Shift</b><span>{'Yuklanmoqda…' if _uz else 'Loading…'}</span><i></i></div>", unsafe_allow_html=True)
+
+import pandas as pd  # noqa: E402  (heavy imports after the splash on purpose)
+
+from fieldshift import features as F  # noqa: E402
+from fieldshift import viz  # noqa: E402
+from fieldshift.config import DEMO_FIELDS, field_at  # noqa: E402
+from fieldshift.crops import load_crops  # noqa: E402
+from fieldshift.explain import explain, is_arid, summary_box  # noqa: E402
+from fieldshift.fetch.soil import fetch_soil  # noqa: E402
+from fieldshift import i18n, ui  # noqa: E402
+from fieldshift import mapview  # noqa: E402
+from fieldshift.fetch import gibs  # noqa: E402
+from fieldshift.i18n import GLOSSARY, LANGS, crop_name, tr  # noqa: E402
+from fieldshift.pipeline import build_context, choose, run  # noqa: E402
+from fieldshift.rotations import schedule  # noqa: E402
+from fieldshift.scoring import PRIORITIES, PROFILES, DailyClimate, Weights, planting_table  # noqa: E402
+
 DB = load_crops()
 CROP_IDS = list(DB)
 S = st.session_state
@@ -185,6 +205,7 @@ with st.sidebar:
             st.form_submit_button(t("side.apply"), type="primary")
     supply = supply / 100
 
+boot.empty()                       # header and field bar are on screen: reveal them
 lat, lon = float(S.lat), float(S.lon)
 if not current:
     st.error(t("err.pick")); st.stop()
@@ -238,7 +259,7 @@ if view == "field":
     with st.container(border=True, key="hero"):
         hl, hr = st.columns([3, 2], gap="large")
         with hl:
-            st.markdown(ui.hero_left(t("ui.selected"), title, coords, [t("ui.elev", m=ctx.elevation_m)], t("ui.grows"),
+            st.markdown(ui.hero_left(t("ui.selected"), title, coords, [(t("ui.elev", m=ctx.elevation_m), t("ui.elev_tip"))], t("ui.grows"),
                                      [cname(c) for c in current], t("ui.hero")), unsafe_allow_html=True)
             if st.button(t("ui.cta") + "  →", type="primary", key="cta"):
                 S["view"] = "options"
