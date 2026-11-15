@@ -213,6 +213,12 @@ add("soil.phh2o", "pH", "pH")
 add("soil.bdod_kg_dm3", "bulk density kg/dm³", "hajmiy zichlik kg/dm³", unsure="'hajmiy zichlik' for bulk density")
 add("soil.texture", "texture", "tuproq turi", unsure="texture class names are not translated")
 add("f.gaps", "What data is missing for this field?", "Bu dala uchun qanday ma'lumotlar yetishmayapti?")
+add("g.contracts", "This tool compares crops on climate, soil and economics only. It does not know about any contracts, agreements or obligations you may have about what to plant, so some options may not be available to you. Check before you change a rotation.",
+    "Bu vosita ekinlarni faqat iqlim, tuproq va iqtisodiyot bo'yicha solishtiradi. U nima ekish bo'yicha sizdagi shartnomalar, kelishuvlar yoki majburiyatlardan xabardor emas, shuning uchun ayrim variantlar siz uchun mavjud bo'lmasligi mumkin. Almashlab ekishni o'zgartirishdan oldin tekshiring.",
+    unsure="'majburiyatlar' (obligations) and 'kelishuvlar' (agreements) are near-synonyms in this context; check the register")
+add("o.yield_low", "At full irrigation supply there is almost no water-shortage risk. Lower the irrigation supply in \"{sec}\" to see where each option breaks.",
+    "To'liq sug'orish ta'minotida suv yetishmasligi xavfi deyarli yo'q. Har bir variant qayerda buzilishini ko'rish uchun \"{sec}\" bo'limida sug'orish ta'minotini kamaytiring.",
+    unsure="uses the sidebar section name (ui.sidebar_what) so the wording always matches")
 
 # ---------------------------------------------------------------- tab 2: rotation options
 add("fit.label", "Fit to your priorities (compared among these options)", "Ustuvorliklaringizga moslik (shu variantlar orasida solishtirilgan)")

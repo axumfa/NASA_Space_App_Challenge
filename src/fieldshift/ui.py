@@ -121,6 +121,7 @@ table.fs-table{border-collapse:collapse; width:100%; min-width:560px; font-size:
 .fs-table td{padding:.55rem .8rem; border-bottom:1px solid #F0EDE2; vertical-align:top;}
 .fs-table tr:last-child td{border-bottom:none;}
 .fs-table td.m{color:var(--fs-muted); width:28%;}
+.fs-table tr.nt td{font-size:.78rem; color:var(--fs-muted); white-space:normal; padding:.3rem .8rem; font-style:italic;}
 .fs-table tr.grp td{background:#F6F4EC; font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; font-weight:700; color:var(--fs-olive); padding:.4rem .8rem;}
 .fs-table th.top{background:#EEF4E8; border-top:3px solid var(--fs-forest);}
 .fs-table .tag2{display:inline-block; background:var(--fs-forest); color:#fff; font-size:.64rem; letter-spacing:.05em; text-transform:uppercase; padding:.05rem .4rem; border-radius:4px; margin-bottom:.25rem;}
@@ -252,6 +253,9 @@ def compare_table(head: list[tuple[str, str, bool]], rows: list, metric_label: s
     for row in rows:
         if row[0] == "__group__":
             body += f'<tr class="grp"><td colspan="{len(head) + 1}">{esc(row[1])}</td></tr>'
+            continue
+        if row[0] == "__note__":
+            body += f'<tr class="nt"><td colspan="{len(head) + 1}">{esc(row[1])}</td></tr>'
             continue
         label, cells, best = row
         tds = "".join(f'<td class="num{" best" if i in best else ""}{" cur" if head[i][2] else ""}">{esc(c)}</td>' for i, c in enumerate(cells))

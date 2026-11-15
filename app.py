@@ -400,6 +400,7 @@ if view == "field":
     with st.expander(t("f.gaps")):
         for g in ctx.gaps:
             st.write("• " + i18n.render(g, S.lang))
+        st.write("• " + t("g.contracts"))
 
     st.write("")
     with st.container(border=True, key="panel_next"):
@@ -432,6 +433,7 @@ if view == "options":
         tgt = max(vals) if high else min(vals)
         return {i for i, v in enumerate(vals) if abs(v - tgt) < 1e-9}
     sm = [r.summary for r in display]
+    yield_low = supply >= 1.0 and all(max(x["yield_loss"]["median"], x["yield_loss"]["p90"]) * 100 < 3 for x in sm)
     head = [(" → ".join(cname(c) for c in r.rotation.crops), t("o.current") if i == 0 else t("ui.opt_n", n=i), i == 0) for i, r in enumerate(display)]
     fits = [x["fit"]["median"] for x in sm]
     irrs = [x["irrigation_demand_mm"]["median"] for x in sm]
@@ -448,6 +450,7 @@ if view == "options":
         ("__group__", t("ui.g_water")),
         (t("ui.tbl_irr"), [f"{v:.0f}" for v in irrs], best_idx(irrs, False)),
         (t("ui.tbl_yield"), [f"{x['yield_loss']['median'] * 100:.0f}% / {x['yield_loss']['p90'] * 100:.0f}%" for x in sm], best_idx(ylds, False)),
+        *([("__note__", t("o.yield_low", sec=t("ui.sidebar_what")))] if yield_low else []),
         ("__group__", t("ui.g_soil")),
         (t("ui.tbl_bare"), [f"{v:.0f}" for v in bares], best_idx(bares, False)),
         (t("ui.tbl_n"), [f"{v:.0f}" for v in nitro], best_idx(nitro, True)),
@@ -488,6 +491,7 @@ if view == "options":
                         f'<div class="fs-line">{t("o.bare", d=r.rotation.bare_days_per_year())}</div>'
                         f'<div class="fs-line">{t("o.nitrogen", n=s["n_kg"]["median"])}</div>'
                         f'<div class="fs-line">{t("o.yield", m=yl["median"] * 100, p=yl["p90"] * 100)}</div>'
+                        + (f'<div class="fs-line" style="color:var(--fs-muted);font-size:.78rem">{t("o.yield_low", sec=t("ui.sidebar_what"))}</div>' if yield_low else "") +
                         f'<div class="fs-side-h" style="margin-top:.8rem">{t("ui.heat_h")}</div>' + heat_lines, unsafe_allow_html=True)
             st.caption(t("o.heat_cap"))
             pchart(viz.fig_radar(r, cur, viz.color_for(i), S.lang), width="stretch", key=f"radar{i}")

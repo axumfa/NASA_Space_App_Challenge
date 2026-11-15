@@ -96,6 +96,8 @@ Templated text built only from computed features, scores and crop data: why the 
 ## 11. Known limitations
 
 - POWER is a ~50 km reanalysis blend; over irrigated land it runs hot and dry, so hot-day counts and ET0 are probably overstated (an unverified expectation, not measured against stations).
+- The tool compares crops on climate, soil and economics only. It does not know about any contracts, agreements or obligations the grower may have about what to plant, so some options may not be available; check before changing a rotation. (Shown in the "What data is missing for this field?" section for every field.)
+- At full irrigation supply the water-shortage yield risk is near zero for every option (all under 3%), so the table and cards say so instead of showing an empty-looking row; the calculation is unchanged and the note disappears when the supply slider is lowered.
 - Irrigation supply, soil salinity, slope, labour, machinery and prices are not observed.
 - Crop parameters are regional approximations; stage lengths, GDD, heat thresholds and trait scores are unverified estimates.
 - Year classes come from model-estimated irrigation demand, not from river flow or snowpack.
