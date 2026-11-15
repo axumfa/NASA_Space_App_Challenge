@@ -20,3 +20,16 @@ data/raw/*-metadata.xml
 
 # full AppEEARS downloads (re-creatable with scripts/appeears_fetch.py); the trimmed demo copies live in data/demo_cache/
 data/raw/*.csv
+
+# Node & Next.js
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+package-lock.json
+**/package-lock.json
+.DS_Store
